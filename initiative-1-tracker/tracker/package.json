@@ -1,0 +1,13 @@
+{
+  "name": "tracker-bot",
+  "version": "0.1.0",
+  "description": "Tracker Competitors Bot — collect signals, gap report, response schema, Slack",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "collect": "node index.js collect",
+    "test": "node test/run.js"
+  },
+  "keywords": ["tracker", "competitors", "slack"],
+  "license": "MIT"
+}

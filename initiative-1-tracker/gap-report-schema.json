@@ -1,0 +1,38 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "GapReport",
+  "type": "object",
+  "required": ["report_id", "product_id", "period_start", "period_end", "gaps", "generated_at"],
+  "properties": {
+    "report_id": { "type": "string" },
+    "product_id": { "type": "string" },
+    "period_start": { "type": "string", "format": "date" },
+    "period_end": { "type": "string", "format": "date" },
+    "generated_at": { "type": "string", "format": "date-time" },
+    "gaps": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["gap_id", "product_id", "dimension", "title", "priority", "detected_at"],
+        "properties": {
+          "gap_id": { "type": "string" },
+          "product_id": { "type": "string" },
+          "dimension": { "type": "string", "enum": ["features", "pricing", "messaging", "support", "positioning"] },
+          "title": { "type": "string" },
+          "description": { "type": "string" },
+          "competitor_signal": { "type": "string" },
+          "priority": { "type": "string", "enum": ["high", "medium", "low"] },
+          "recommended_action": { "type": "string" },
+          "detected_at": { "type": "string", "format": "date" }
+        }
+      }
+    },
+    "summary": {
+      "type": "object",
+      "properties": {
+        "by_priority": { "type": "object" },
+        "by_dimension": { "type": "object" }
+      }
+    }
+  }
+}

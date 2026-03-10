@@ -1,0 +1,68 @@
+# Copy this file to your REPO ROOT as .github/workflows/tracker-ci.yml
+# when "Tracker Competitors Bot" is a subfolder of the repo (e.g. Desktop).
+# All steps run with working-directory: "Tracker Competitors Bot".
+
+name: Tracker CI
+
+on:
+  push:
+    branches: [main, master]
+    paths:
+      - 'Tracker Competitors Bot/**'
+  pull_request:
+    branches: [main, master]
+    paths:
+      - 'Tracker Competitors Bot/**'
+
+defaults:
+  run:
+    working-directory: Tracker Competitors Bot
+
+jobs:
+  tracker:
+    name: Tracker smoke & test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Tracker deps
+        run: |
+          if [ -f initiative-1-tracker/tracker/package.json ]; then
+            cd initiative-1-tracker/tracker && npm install
+          fi
+
+      - name: Tracker smoke
+        run: |
+          cd initiative-1-tracker/tracker && node index.js
+          test "$(cd initiative-1-tracker/tracker && node index.js)" = "Tracker"
+
+      - name: Tracker test
+        run: cd initiative-1-tracker/tracker && node test/run.js
+
+  gaps:
+    name: Gaps check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Run gaps-check
+        run: |
+          chmod +x scripts/gaps-check.sh
+          ./scripts/gaps-check.sh
+        working-directory: Tracker Competitors Bot
+
+      - name: Upload GAPS
+        uses: actions/upload-artifact@v4
+        with:
+          name: gaps
+          path: Tracker Competitors Bot/GAPS.md

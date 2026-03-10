@@ -1,0 +1,56 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  tracker:
+    name: Tracker smoke & test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Tracker deps (if any)
+        run: |
+          if [ -f initiative-1-tracker/tracker/package.json ]; then
+            cd initiative-1-tracker/tracker && npm install
+          fi
+
+      - name: Tracker smoke
+        run: |
+          cd initiative-1-tracker/tracker && node index.js
+          test "$(node index.js)" = "Tracker"
+
+      - name: Tracker test
+        run: cd initiative-1-tracker/tracker && node test/run.js
+
+  gaps:
+    name: Gaps check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Run gaps-check
+        run: |
+          chmod +x scripts/gaps-check.sh
+          ./scripts/gaps-check.sh
+        working-directory: .
+
+      - name: Upload GAPS
+        uses: actions/upload-artifact@v4
+        with:
+          name: gaps
+          path: GAPS.md

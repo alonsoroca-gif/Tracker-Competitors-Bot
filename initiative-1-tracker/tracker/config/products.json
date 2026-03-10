@@ -1,0 +1,8 @@
+{
+  "products": [
+    { "id": "ProductA", "name": "Product A" }
+  ],
+  "competitors": [
+    { "id": "competitor-x", "name": "Competitor X" }
+  ]
+}
