@@ -1,6 +1,77 @@
 # Tracker Bot — Task list (Initiative 1)
 
-Small, testable tasks. Check off when done. **Suggested Mon–Thu:** Phase 1 Mon–Tue AM; Phase 2 Tue PM–Wed; Phase 3–4 Thu (or spill to next week). Refs: [gap-report-schema](gap-report-schema.md), [response-schema](response-schema.md), [PRD](../../PRD.md).
+Small, testable tasks. Check off when done. Refs: [gap-report-schema](gap-report-schema.md), [response-schema](response-schema.md), [TRACKER-FEEDBACK-SPRINTS](docs/TRACKER-FEEDBACK-SPRINTS.md), [DATA-SOURCES-BRAINSTORM](docs/DATA-SOURCES-BRAINSTORM.md).
+
+---
+
+## Priority: Before Thursday (main tasks for automation bot)
+
+**Focus:** Better sources + better "What competitor is doing" (facts, metrics, PM/manager useful); Sprint 2 (filter by source); Sprint 3 (fewer collect failures). Do these first. One task per run; check off when done. If a task is already implemented (e.g. RSS description or fact-like extraction), verify in code and check off, then take the next unchecked task.
+
+### P1 — Better sources and "What competitor is doing" (fact-rich, tailored)
+
+| ID | Sub-task | Acceptance criteria | Done |
+|----|----------|---------------------|------|
+| P1.1 | Prefer RSS description over title in collect.js | When feed item has description/content longer than 50 chars, use it as snippet (strip HTML/CDATA); else use title. Snippet max 600 chars. | [x] |
+| P1.2 | Extract fact-like sentences from page body in collect.js | For pricing/features/careers pages: skip first 1200 chars, then extract sentences containing digits, %, $, or words like million, percent, ROI, growth; join up to 800 chars as snippet. Fallback to body slice if none. | [ ] |
+| P1.3 | Add more boilerplate phrases to cleanSnippet in gapReport.js | Strip additional nav/marketing phrases so "What competitor is doing" shows substantive copy only (e.g. "request demo", "schedule a call", "learn more"). | [ ] |
+| P1.4 | Document how to add/find working feed URLs in README | Short section: where to find competitor blog/press/changelog RSS URLs; how to validate URL returns XML; link to config/products.json sources. | [ ] |
+| P1.5 | Optional: try content from main/article in page collector | In collectFromPage, if HTML has `<main>` or `<article>`, extract text from that first; else use current body slice. Improves relevance for "What competitor is doing". | [ ] |
+
+### P2 — Sprint 2: Filter to prove accuracy of data
+
+| ID | Sub-task | Acceptance criteria | Done |
+|----|----------|---------------------|------|
+| P2.1 | Add filter by source in report UI | Dropdown or chips: filter gaps by source (blog, press, changelog, pricing_page, features_page, careers). When selected, only gaps from that source are shown. | [ ] |
+| P2.2 | Add "Data sources" summary above or below Gaps table | One line: "Gaps from: N blog, M pricing_page, …" so users see the mix and can judge accuracy. | [ ] |
+| P2.3 | Ensure each gap row shows Source column | Source is already in API; verify UI shows it and filter uses it. If missing, add. | [ ] |
+
+### P3 — Sprint 3: Fewer collect failures (404 and config)
+
+| ID | Sub-task | Acceptance criteria | Done |
+|----|----------|---------------------|------|
+| P3.1 | Validate URL before fetch in collect.js | Skip fetch if URL is empty, or not http(s), or invalid; log "Skipped invalid URL: …" per source. | [ ] |
+| P3.2 | On 404, log competitor id + source + URL | When a source returns HTTP 404, log one line: e.g. "Collect 404: eliseai blog https://…" so config can be fixed. | [ ] |
+| P3.3 | Document optional URLs and how to find working ones in README | Which sources are optional; how to find blog/press/changelog URLs for a competitor; that 404 means update config. | [ ] |
+| P3.4 | Optional: add GET /api/collect-status or last_collected_at | Return last collect time and optionally "X signals, Y sources failed" so UI can show health without terminal. | [ ] |
+
+---
+
+## Backup: Agent sprint (do if bot runs out of main tasks)
+
+Small tasks for the coding-automation agent. One task per run.
+
+| ID | Sub-task | Acceptance criteria | Done |
+|----|----------|---------------------|------|
+| AS1 | Add GET /health endpoint to server.js | Returns 200 with `{ status: "ok" }`; used for uptime checks | [ ] |
+| AS2 | Add validateConfig() in loadConfig.js | Checks products and competitors arrays exist and are non-empty; throws clear error if invalid | [ ] |
+| AS3 | Add CONTRIBUTING.md in tracker/ | Short doc: "How to add a new data source" with 3–5 steps (pick source, add URL to config, implement fetch in collect) | [ ] |
+| AS4 | Add JSDoc to collect.js main export | Function collect() has @param, @returns, @example in JSDoc block | [ ] |
+| AS5 | Add last_collected_at to data/signals.json | When collect runs, write `last_collected_at` (ISO timestamp) at top level of JSON | [ ] |
+| AS6 | Add --days N flag to collect command | `node index.js collect --days 14` uses 14 instead of 7 for the filter | [ ] |
+| AS7 | Add README Troubleshooting section | Covers: "No signals returned" (check env vars), "Config load fails" (check products.json) | [ ] |
+| AS8 | Add npm script "health" to package.json | Runs `node -e "require('http').get('http://localhost:3000/health',r=>console.log(r.statusCode))"` or similar quick check | [ ] |
+| AS9 | Add smoke test in test/run.js | Asserts loadConfig() returns object with products and competitors; exits 0 on pass | [ ] |
+| AS10 | Ensure .gitignore has .env | .env is in .gitignore so secrets are not committed | [ ] |
+
+---
+
+## Backup: medium tasks (after sprint)
+
+Next tasks when AS1–AS10 are done. Medium complexity.
+
+| ID | Sub-task | Acceptance criteria | Done |
+|----|----------|---------------------|------|
+| BM1 | Add retry logic to collect fetch | On fetch failure, retry up to 3 times with 2s delay; log each attempt; return empty array if all fail | [ ] |
+| BM2 | Add dry-run mode to collect | `node index.js collect --dry-run` logs URLs and competitor IDs that would be fetched, no fetch, no write | [ ] |
+| BM3 | Add export-csv command | `node index.js export-csv` writes signals to data/signals.csv with columns: date, source, competitor_id, product_id, type, snippet | [ ] |
+| BM4 | Add date range to report API | GET /api/report?periodStart=YYYY-MM-DD&periodEnd=YYYY-MM-DD filters signals by date; default last 7 days | [ ] |
+| BM5 | Add env validation at startup | In index.js or loadConfig: check required vars (e.g. TRACKER_FEED_URL_* for configured competitors); warn to console if missing | [ ] |
+| BM6 | Add rate limiting to collect | Delay 500ms between competitor fetches to avoid hammering external APIs; configurable via env | [ ] |
+| BM7 | Add structured logging to collect | Use timestamps: `[2024-01-15T10:00:00] collect: competitor-x, 3 signals`; log start/end per competitor | [ ] |
+| BM8 | Add config validation for sources | Warn if competitor in products.json has no configured sources (blog, press, etc.); list which competitors are skipped | [ ] |
+| BM9 | Add getSignals pagination | getSignals(productId, periodStart, periodEnd, { limit, offset }) for large datasets; used by report API | [ ] |
+| BM10 | Add "what changed" since last run | After collect, compare new signals with previous; log or return "new: N, unchanged: M" summary | [ ] |
 
 ---
 
