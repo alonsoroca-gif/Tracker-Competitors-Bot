@@ -1,0 +1,99 @@
+# Agent loop: get next task → (implement via OpenAI OR prepare for Cursor) → open PR.
+# No API key? Workflow prepares branch + AGENT-NEXT-TASK.md and opens draft PR; you implement in Cursor.
+# With OPENAI_API_KEY? Workflow implements via API, runs tests, then opens PR.
+
+name: Run agent (next task)
+
+on:
+  schedule:
+    - cron: '0 9 * * *'
+    - cron: '0 15 * * *'
+  workflow_dispatch:
+
+jobs:
+  run-agent:
+    name: Get task → implement or prepare → PR
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Get next task
+        id: task
+        run: |
+          OUT=$(node scripts/agent-get-next-task.js)
+          echo "task_json=$OUT" >> $GITHUB_OUTPUT
+          ID=$(echo "$OUT" | node -e "let d=require('fs').readFileSync(0,'utf8'); try { const j=JSON.parse(d); process.stdout.write(j.id||''); } catch(e) { process.stdout.write(''); }")
+          echo "id=$ID" >> $GITHUB_OUTPUT
+          if [ -z "$ID" ]; then echo "No unchecked task; exiting."; exit 0; fi
+          echo "Next task: $ID"
+
+      # Optional: implement via OpenAI (skip if no API key)
+      - name: Run agent (OpenAI implement + test)
+        id: openai
+        if: steps.task.outputs.id != '' && secrets.OPENAI_API_KEY != ''
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          GITHUB_WORKSPACE: ${{ github.workspace }}
+        run: node scripts/agent-run-task.js "${{ steps.task.outputs.id }}"
+
+      # When no API key: prepare task file for Cursor
+      - name: Prepare task for Cursor
+        if: steps.task.outputs.id != '' && secrets.OPENAI_API_KEY == ''
+        run: node scripts/agent-get-next-task.js --write-file
+
+      - name: Create branch and push
+        id: push
+        if: steps.task.outputs.id != ''
+        run: |
+          echo "pushed=false" >> $GITHUB_OUTPUT
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add initiative-1-tracker/
+          if git diff --staged --quiet; then
+            echo "No changes to commit. Skipping branch and PR."
+            exit 0
+          fi
+          BRANCH="agent/${{ steps.task.outputs.id }}"
+          git checkout -b "$BRANCH"
+          git commit -m "task: ${{ steps.task.outputs.id }} (agent)"
+          git push origin "$BRANCH"
+          echo "pushed=true" >> $GITHUB_OUTPUT
+
+      - name: Open pull request
+        if: steps.push.outputs.pushed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TASK_ID: ${{ steps.task.outputs.id }}
+          OPENAI_RAN: ${{ steps.openai.outcome == 'success' }}
+        run: |
+          BRANCH="agent/$TASK_ID"
+          TITLE="task: $TASK_ID (agent)"
+          if [ "$OPENAI_RAN" = "true" ]; then
+            BODY="Task from TASKS.md. Virtual me will run tests on this PR."
+            DRAFT="false"
+          else
+            BODY="Implement in Cursor: check out this branch, open initiative-1-tracker/AGENT-NEXT-TASK.md, ask Cursor to implement the task. Run tests, mark task done in TASKS.md, commit and push. Virtual me will run on this PR when you push."
+            DRAFT="true"
+          fi
+          node -e "
+            const fs = require('fs');
+            const p = { title: process.env.TITLE, head: process.env.BRANCH, base: 'main', body: process.env.BODY, draft: process.env.DRAFT === 'true' };
+            fs.writeFileSync('/tmp/pr.json', JSON.stringify(p));
+          "
+          curl -sS -X POST \
+            -H "Authorization: token $GH_TOKEN" \
+            -H "Accept: application/vnd.github.v3+json" \
+            -d @/tmp/pr.json \
+            "https://api.github.com/repos/${{ github.repository }}/pulls"
+          echo "PR opened for $BRANCH"

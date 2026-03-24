@@ -1,223 +1,733 @@
 /**
- * Collect signals from open sources.
- * collect(competitorId, productId, days) → array of { date, source, competitor_id, product_id, type, snippet }
- * Sources: blog RSS, press/news RSS, changelog RSS, pricing page, features page, careers page.
+ * Collect signals from public sources using rss-parser + cheerio.
+ * Richer snippets, event_type, confidence, entities — compatible with gapReport (type, headline, snippet, evidence_snippet, source_url).
  */
 
+const Parser = require('rss-parser');
+const cheerio = require('cheerio');
 const { loadConfig } = require('./loadConfig');
 
-const TIMEOUT_MS = 10000;
+const parser = new Parser({
+  timeout: 15000,
+  headers: {
+    'user-agent':
+      'Mozilla/5.0 (compatible; CompetitorTracker/1.0; +https://example.internal)',
+  },
+});
 
-async function fetchWithTimeout(url, options = {}) {
-  const ac = typeof AbortController !== 'undefined' ? new AbortController() : null;
-  const timeout = setTimeout(() => ac && ac.abort(), options.timeout || TIMEOUT_MS);
+const DEFAULT_TIMEOUT_MS = 15000;
+const MAX_HTML_CHARS = 200000;
+const MAX_SNIPPET = 600;
+const MAX_EVIDENCE = 1200;
+
+const JOB_TITLE_PATTERNS = [
+  /engineer/i,
+  /developer/i,
+  /product manager/i,
+  /designer/i,
+  /sales/i,
+  /account executive/i,
+  /solutions engineer/i,
+  /customer success/i,
+  /implementation/i,
+  /partnership/i,
+  /marketing/i,
+  /growth/i,
+  /data/i,
+  /machine learning/i,
+  /\bml\b/i,
+  /\bai\b/i,
+  /operations/i,
+  /revenue/i,
+];
+
+const FEATURE_KEYWORDS = [
+  'ai',
+  'automation',
+  'leasing',
+  'tour scheduling',
+  'lead nurturing',
+  'self-guided tours',
+  'crm',
+  'resident communication',
+  'voice ai',
+  'sms',
+  'email',
+  'contact center',
+  'lead scoring',
+  'application',
+  'screening',
+  'pricing',
+  'integrations',
+  'analytics',
+  'reporting',
+  'chatbot',
+  'conversion',
+];
+
+const POSITIONING_KEYWORDS = [
+  'industry leading',
+  'enterprise',
+  'multifamily',
+  'property management',
+  'leasing funnel',
+  'conversion',
+  'centralized leasing',
+  'ai-powered',
+  'assistant',
+  'platform',
+  'end-to-end',
+];
+
+const ARTICLE_EVENT_RULES = [
+  {
+    event_type: 'integration_launch',
+    patterns: [/integrat(es|ion|ed)/i, /connected to/i, /now supports/i],
+    importance: 0.82,
+  },
+  {
+    event_type: 'feature_launch',
+    patterns: [/introducing/i, /launch(es|ed|ing)?/i, /new feature/i, /now available/i],
+    importance: 0.85,
+  },
+  {
+    event_type: 'pricing_change',
+    patterns: [/pricing/i, /plans/i, /\$\d+/, /starting at/i, /enterprise plan/i],
+    importance: 0.9,
+  },
+  {
+    event_type: 'partnership',
+    patterns: [/partner(ship|ed)?/i, /strategic alliance/i],
+    importance: 0.78,
+  },
+  {
+    event_type: 'positioning_shift',
+    patterns: [/ai-powered/i, /reimagining/i, /transform/i, /industry leading/i],
+    importance: 0.65,
+  },
+];
+
+function todayISO() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function parseDays(days) {
+  return Math.min(90, Math.max(1, parseInt(days, 10) || 7));
+}
+
+function cutoffISO(days) {
+  const d = new Date();
+  d.setDate(d.getDate() - parseDays(days));
+  return d.toISOString().slice(0, 10);
+}
+
+function filterLastDays(signals, days) {
+  const cutoff = cutoffISO(days);
+  return (Array.isArray(signals) ? signals : []).filter(
+    (s) => s && typeof s.date === 'string' && s.date >= cutoff
+  );
+}
+
+function envSuffixForCompetitor(competitorId) {
+  return String(competitorId || '')
+    .trim()
+    .replace(/-/g, '_')
+    .toUpperCase();
+}
+
+function isValidPublicUrl(value) {
+  if (value == null || typeof value !== 'string') return false;
+  const v = value.trim();
+  if (!v) return false;
   try {
-    const res = await fetch(url, ac ? { signal: ac.signal, ...options } : options);
-    clearTimeout(timeout);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    return res;
-  } catch (e) {
-    clearTimeout(timeout);
-    throw e;
+    const url = new URL(v);
+    return url.protocol === 'http:' || url.protocol === 'https:';
+  } catch (_) {
+    return false;
   }
 }
 
-/**
- * Parse RSS or Atom XML into { title, description, date }[].
- * Prefer description/content for snippet (more facts/details than title alone).
- */
-function parseRssOrAtom(xml) {
-  const items = [];
-  const getTag = (block, tag) => {
-    const m = new RegExp(`<${tag}[^>]*>([\\s\\S]*?)<\\/${tag}>`, 'i').exec(block);
-    if (!m) return '';
-    const raw = m[1].replace(/<!\[CDATA\[([\s\S]*?)\]\]>/gi, '$1').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
-    return raw;
+function getSourceUrls(competitorId) {
+  const config = loadConfig();
+  const base = (config.sources && config.sources[competitorId]) || {};
+  const suffix = envSuffixForCompetitor(competitorId);
+
+  const urls = {
+    blog: process.env[`TRACKER_FEED_URL_${suffix}`] || base.blog || '',
+    press: process.env[`TRACKER_PRESS_URL_${suffix}`] || base.press || base.news || '',
+    changelog: process.env[`TRACKER_CHANGELOG_URL_${suffix}`] || base.changelog || '',
+    youtube_rss: process.env[`TRACKER_YOUTUBE_RSS_${suffix}`] || base.youtube_rss || base.youtube || '',
+    pricing_url: base.pricing_url || '',
+    features_url: base.features_url || '',
+    careers_url: base.careers_url || '',
+    docs_url: base.docs_url || '',
   };
 
-  // RSS <item>
-  const itemRegex = /<item>([\s\S]*?)<\/item>/gi;
-  let m;
-  while ((m = itemRegex.exec(xml)) !== null) {
-    const block = m[1];
-    const title = getTag(block, 'title');
-    const description = getTag(block, 'description') || getTag(block, 'content:encoded') || getTag(block, 'content');
-    const pubDate = getTag(block, 'pubDate') || getTag(block, 'dc:date');
-    const date = pubDate ? new Date(pubDate).toISOString().slice(0, 10) : new Date().toISOString().slice(0, 10);
-    items.push({ title: title || '(no title)', description: description || '', date });
-  }
+  return Object.fromEntries(
+    Object.entries(urls).map(([k, v]) => [k, isValidPublicUrl(v) ? v : ''])
+  );
+}
 
-  // Atom <entry>
-  if (items.length === 0) {
-    const entryRegex = /<entry>([\s\S]*?)<\/entry>/gi;
-    while ((m = entryRegex.exec(xml)) !== null) {
-      const block = m[1];
-      const title = getTag(block, 'title');
-      const description = getTag(block, 'summary') || getTag(block, 'content');
-      const updated = getTag(block, 'updated') || getTag(block, 'published');
-      const date = updated ? new Date(updated).toISOString().slice(0, 10) : new Date().toISOString().slice(0, 10);
-      items.push({ title: title || '(no title)', description: description || '', date });
+async function fetchText(url, timeoutMs = DEFAULT_TIMEOUT_MS) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+
+  try {
+    const res = await fetch(url, {
+      redirect: 'follow',
+      signal: controller.signal,
+      headers: {
+        'user-agent':
+          'Mozilla/5.0 (compatible; CompetitorTracker/1.0; +https://example.internal)',
+        accept: 'text/html,application/xhtml+xml,application/xml,text/xml;q=0.9,*/*;q=0.8',
+      },
+    });
+
+    if (!res.ok) {
+      throw new Error(`HTTP ${res.status} for ${url}`);
     }
+
+    const text = await res.text();
+    return text.slice(0, MAX_HTML_CHARS);
+  } finally {
+    clearTimeout(timer);
   }
-
-  return items;
 }
 
-/**
- * Fetch one RSS/Atom feed and return signals with given source and type.
- */
-async function collectFromRssFeed(competitorId, productId, feedUrl, sourceLabel, signalType) {
-  if (!feedUrl) return [];
-  const res = await fetchWithTimeout(feedUrl);
-  const xml = await res.text();
-  const entries = parseRssOrAtom(xml);
-  return entries.map(({ title, description, date }) => {
-    const desc = (description || '').trim();
-    const useDesc = desc.length > 50 && desc !== (title || '').trim();
-    const raw = useDesc ? desc : (title || '(no title)');
-    const snippet = raw.length > 600 ? raw.slice(0, 597) + '...' : raw;
-    return {
-      date,
-      source: sourceLabel,
-      competitor_id: competitorId,
-      product_id: productId,
-      type: signalType,
-      snippet,
-    };
-  });
-}
-
-/**
- * Prefer sentences that look like facts (numbers, %, $, metrics). Join up to maxLen.
- */
-function extractFactLikeSnippet(text, maxLen = 800) {
-  if (!text || typeof text !== 'string') return '';
-  const factPattern = /\d|%|\$|million|billion|percent|customers|users|reduction|increase|growth|ROI|savings|pricing|tier|plan/i;
-  const sentences = text.split(/(?<=[.!?])\s+/).filter((s) => s.length > 15 && factPattern.test(s));
-  if (sentences.length === 0) return '';
-  let out = '';
-  for (const s of sentences) {
-    if (out.length + s.length + 1 > maxLen) break;
-    out += (out ? ' ' : '') + s.trim();
-  }
-  return out || '';
-}
-
-/**
- * Fetch HTML page, strip tags, return one signal with body/fact-like text.
- */
-async function collectFromPage(competitorId, productId, pageUrl, sourceLabel, signalType) {
-  if (!pageUrl) return [];
-  const res = await fetchWithTimeout(pageUrl);
-  const html = await res.text();
-  const text = html
-    .replace(/<script[\s\S]*?<\/script>/gi, '')
-    .replace(/<style[\s\S]*?<\/style>/gi, '')
-    .replace(/<[^>]+>/g, ' ')
-    .replace(/\s+/g, ' ')
-    .replace(/&#x27;/g, "'")
-    .replace(/&#39;/g, "'")
-    .replace(/&amp;/g, '&')
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-    .replace(/&quot;/g, '"')
+function normalizeWhitespace(str) {
+  return String(str || '')
+    .replace(/\u00a0/g, ' ')
+    .replace(/[ \t]+/g, ' ')
+    .replace(/\n{3,}/g, '\n\n')
+    .replace(/\s+\n/g, '\n')
+    .replace(/\n\s+/g, '\n')
     .trim();
-  const skip = 1200;
-  const take = 1200;
-  const bodyText = text.length > skip ? text.slice(skip) : text;
-  const factLike = extractFactLikeSnippet(bodyText, take);
-  const snippet = (factLike || bodyText.slice(0, take).trim() || text.slice(0, 500).trim()).trim() || '(no text)';
-  const today = new Date().toISOString().slice(0, 10);
+}
+
+function truncate(str, max) {
+  const s = normalizeWhitespace(str);
+  if (s.length <= max) return s;
+  return `${s.slice(0, max - 1).trim()}…`;
+}
+
+function unique(values) {
+  return [...new Set((values || []).filter(Boolean))];
+}
+
+function loadHtml(html) {
+  const $ = cheerio.load(html || '');
+  $('script, style, noscript, svg, iframe').remove();
+  return $;
+}
+
+function extractMeta($, pageUrl) {
+  const title =
+    $('meta[property="og:title"]').attr('content') ||
+    $('meta[name="twitter:title"]').attr('content') ||
+    $('title').first().text() ||
+    $('h1').first().text() ||
+    '';
+
+  const description =
+    $('meta[name="description"]').attr('content') ||
+    $('meta[property="og:description"]').attr('content') ||
+    '';
+
+  const headings = unique(
+    $('h1, h2, h3')
+      .map((_, el) => normalizeWhitespace($(el).text()))
+      .get()
+      .filter((t) => t.length >= 4 && t.length <= 140)
+  ).slice(0, 20);
+
+  const bullets = unique(
+    $('li')
+      .map((_, el) => normalizeWhitespace($(el).text()))
+      .get()
+      .filter((t) => t.length >= 8 && t.length <= 220)
+  ).slice(0, 40);
+
+  const bodyText = normalizeWhitespace($('body').text());
+
+  return {
+    pageUrl,
+    title: normalizeWhitespace(title),
+    description: normalizeWhitespace(description),
+    headings,
+    bullets,
+    bodyText,
+  };
+}
+
+function extractMoneyValues(text) {
+  const matches =
+    String(text || '').match(/\$\s?\d[\d,]*(?:\.\d{1,2})?(?:\s*\/\s*(?:mo|month|yr|year))?/gi) || [];
+  return unique(matches).slice(0, 20);
+}
+
+function detectKeywords(text, keywords) {
+  const haystack = String(text || '').toLowerCase();
+  return keywords.filter((kw) => haystack.includes(kw.toLowerCase()));
+}
+
+function scoreConfidence({ evidenceCount = 0, hasAmounts = false, hasHeadings = false, directPage = false }) {
+  let score = 0.45;
+  if (directPage) score += 0.15;
+  if (evidenceCount >= 2) score += 0.15;
+  if (evidenceCount >= 5) score += 0.1;
+  if (hasAmounts) score += 0.1;
+  if (hasHeadings) score += 0.05;
+  return Math.min(0.95, Number(score.toFixed(2)));
+}
+
+function buildSignalBase({
+  competitorId,
+  productId,
+  source,
+  type,
+  event_type,
+  headline,
+  source_url,
+  date,
+  snippet,
+  evidence_snippet,
+  confidence,
+  importance,
+  entities,
+  metadata,
+}) {
+  return {
+    date: date || todayISO(),
+    source,
+    competitor_id: competitorId,
+    product_id: productId,
+    type,
+    event_type,
+    headline: truncate(headline || '', 180),
+    snippet: truncate(snippet || '', MAX_SNIPPET),
+    evidence_snippet: truncate(evidence_snippet || '', MAX_EVIDENCE),
+    source_url,
+    confidence: typeof confidence === 'number' ? confidence : 0.6,
+    importance: typeof importance === 'number' ? importance : 0.6,
+    entities: entities || {},
+    metadata: metadata || {},
+  };
+}
+
+function extractPricingSignals(meta, pageUrl, competitorId, productId) {
+  const combined = [meta.title, meta.description, ...meta.headings, ...meta.bullets, meta.bodyText]
+    .filter(Boolean)
+    .join('\n');
+
+  const prices = extractMoneyValues(combined);
+  const tierCandidates = unique(
+    [...meta.headings, ...meta.bullets]
+      .filter((t) => /plan|tier|starter|pro|premium|enterprise|growth|basic/i.test(t))
+      .map((t) => t.replace(/\s+/g, ' ').trim())
+  ).slice(0, 10);
+
+  const featureKeywords = detectKeywords(combined, FEATURE_KEYWORDS);
+  const evidenceParts = [
+    meta.description,
+    ...tierCandidates.slice(0, 5),
+    ...prices.slice(0, 5),
+    ...meta.bullets.slice(0, 5),
+  ].filter(Boolean);
+
+  if (!prices.length && !tierCandidates.length && !featureKeywords.length) return [];
+
+  const eventType = prices.length ? 'pricing_change' : 'pricing_positioning';
+  const snippet = [
+    prices.length ? `Detected pricing values: ${prices.slice(0, 5).join(', ')}` : '',
+    tierCandidates.length ? `Tier language: ${tierCandidates.slice(0, 4).join(' | ')}` : '',
+    featureKeywords.length ? `Packaging keywords: ${featureKeywords.slice(0, 8).join(', ')}` : '',
+  ]
+    .filter(Boolean)
+    .join('. ');
+
   return [
-    {
-      date: today,
-      source: sourceLabel,
-      competitor_id: competitorId,
-      product_id: productId,
-      type: signalType,
+    buildSignalBase({
+      competitorId,
+      productId,
+      source: 'pricing_page',
+      type: 'pricing',
+      event_type: eventType,
+      headline: meta.title || 'Pricing page update',
+      source_url: pageUrl,
+      date: todayISO(),
       snippet,
-    },
+      evidence_snippet: evidenceParts.join(' • '),
+      confidence: scoreConfidence({
+        evidenceCount: evidenceParts.length,
+        hasAmounts: prices.length > 0,
+        hasHeadings: meta.headings.length > 0,
+        directPage: true,
+      }),
+      importance: prices.length ? 0.92 : 0.72,
+      entities: {
+        prices,
+        tiers: tierCandidates,
+        keywords: featureKeywords,
+      },
+      metadata: {
+        page_kind: 'pricing',
+      },
+    }),
   ];
 }
 
-/**
- * Fetch careers page and emit job signal(s). For now one signal with page text summary.
- */
-async function collectFromCareers(competitorId, productId, careersUrl) {
-  if (!careersUrl) return [];
-  const signals = await collectFromPage(competitorId, productId, careersUrl, 'careers', 'job');
-  return signals;
+function extractFeatureSignals(meta, pageUrl, competitorId, productId) {
+  const headings = meta.headings.filter((h) => h.length >= 6);
+  const bullets = meta.bullets.filter((b) => b.length >= 10 && b.length <= 200);
+  const featureKeywords = detectKeywords(
+    [meta.title, meta.description, ...headings, ...bullets, meta.bodyText].join('\n'),
+    FEATURE_KEYWORDS
+  );
+  const positioningKeywords = detectKeywords(
+    [meta.title, meta.description, ...headings, ...bullets, meta.bodyText].join('\n'),
+    POSITIONING_KEYWORDS
+  );
+
+  const featureCandidates = unique(
+    [...headings, ...bullets].filter(
+      (t) =>
+        !/cookie|privacy|login|book a demo|request a demo|contact us|learn more/i.test(t) &&
+        (FEATURE_KEYWORDS.some((kw) => t.toLowerCase().includes(kw)) ||
+          /ai|automation|leasing|tour|crm|application|analytics|screening|assistant|messaging/i.test(t))
+    )
+  ).slice(0, 10);
+
+  if (!featureCandidates.length && !positioningKeywords.length) return [];
+
+  const eventType =
+    featureCandidates.length >= 3
+      ? 'feature_set_update'
+      : positioningKeywords.length
+        ? 'positioning_shift'
+        : 'feature_launch';
+
+  const snippet = [
+    featureCandidates.length ? `Detected feature/solution themes: ${featureCandidates.slice(0, 4).join(' | ')}` : '',
+    featureKeywords.length ? `Repeated product keywords: ${featureKeywords.slice(0, 8).join(', ')}` : '',
+    positioningKeywords.length ? `Positioning cues: ${positioningKeywords.slice(0, 6).join(', ')}` : '',
+  ]
+    .filter(Boolean)
+    .join('. ');
+
+  return [
+    buildSignalBase({
+      competitorId,
+      productId,
+      source: 'features_page',
+      type: 'features',
+      event_type: eventType,
+      headline: meta.title || 'Feature page update',
+      source_url: pageUrl,
+      date: todayISO(),
+      snippet,
+      evidence_snippet: [...featureCandidates.slice(0, 5), ...meta.bullets.slice(0, 5)].join(' • '),
+      confidence: scoreConfidence({
+        evidenceCount: featureCandidates.length + positioningKeywords.length,
+        hasHeadings: headings.length > 0,
+        directPage: true,
+      }),
+      importance: featureCandidates.length >= 3 ? 0.84 : 0.68,
+      entities: {
+        features: featureCandidates,
+        keywords: featureKeywords,
+        positioning_keywords: positioningKeywords,
+      },
+      metadata: {
+        page_kind: 'features',
+      },
+    }),
+  ];
 }
 
-/**
- * Filter signals to last N days (by date string YYYY-MM-DD).
- */
-function filterLastDays(signals, days) {
-  const cutoff = new Date();
-  cutoff.setDate(cutoff.getDate() - days);
-  const cutoffStr = cutoff.toISOString().slice(0, 10);
-  return signals.filter((s) => s.date >= cutoffStr);
+function extractCareerSignals(meta, pageUrl, competitorId, productId) {
+  const roleCandidates = unique(
+    [...meta.headings, ...meta.bullets, ...meta.bodyText.split(/\n|\./)]
+      .map((t) => normalizeWhitespace(t))
+      .filter((t) => t.length >= 8 && t.length <= 120)
+      .filter((t) => JOB_TITLE_PATTERNS.some((rx) => rx.test(t)))
+  ).slice(0, 20);
+
+  if (!roleCandidates.length) return [];
+
+  const grouped = {
+    engineering: roleCandidates.filter((r) => /engineer|developer|ml|ai|data/i.test(r)),
+    sales: roleCandidates.filter((r) => /sales|account executive|revenue/i.test(r)),
+    customer: roleCandidates.filter((r) => /customer success|implementation|support/i.test(r)),
+    product: roleCandidates.filter((r) => /product manager|designer/i.test(r)),
+    partnerships: roleCandidates.filter((r) => /partnership/i.test(r)),
+    marketing: roleCandidates.filter((r) => /marketing|growth/i.test(r)),
+  };
+
+  const activeGroups = Object.entries(grouped)
+    .filter(([, roles]) => roles.length)
+    .map(([group]) => group);
+
+  const snippet = [
+    `Detected hiring focus: ${activeGroups.join(', ') || 'general hiring'}`,
+    `Roles seen: ${roleCandidates.slice(0, 6).join(' | ')}`,
+  ].join('. ');
+
+  return [
+    buildSignalBase({
+      competitorId,
+      productId,
+      source: 'careers',
+      type: 'job',
+      event_type: 'hiring_signal',
+      headline: meta.title || 'Careers page update',
+      source_url: pageUrl,
+      date: todayISO(),
+      snippet,
+      evidence_snippet: roleCandidates.slice(0, 10).join(' • '),
+      confidence: scoreConfidence({
+        evidenceCount: roleCandidates.length,
+        hasHeadings: meta.headings.length > 0,
+        directPage: true,
+      }),
+      importance: grouped.engineering.length || grouped.sales.length ? 0.86 : 0.7,
+      entities: {
+        roles: roleCandidates,
+        role_groups: activeGroups,
+      },
+      metadata: {
+        page_kind: 'careers',
+      },
+    }),
+  ];
 }
 
-/**
- * Get source URLs for a competitor from config (sources[competitorId] and env overrides).
- */
-function urlOrNull(v) {
-  const s = typeof v === 'string' ? v.trim() : v;
-  return s ? s : null;
-}
-
-function getSourceUrls(config, competitorId) {
-  const envId = (competitorId || '').toUpperCase().replace(/-/g, '_');
-  const sources = config.sources && config.sources[competitorId] ? config.sources[competitorId] : {};
+function inferArticleEventType(title, content) {
+  const haystack = `${title}\n${content}`;
+  for (const rule of ARTICLE_EVENT_RULES) {
+    if (rule.patterns.some((rx) => rx.test(haystack))) {
+      return {
+        event_type: rule.event_type,
+        importance: rule.importance,
+      };
+    }
+  }
   return {
-    blog: urlOrNull(process.env[`TRACKER_FEED_URL_${envId}`] || sources.blog),
-    press: urlOrNull(process.env[`TRACKER_PRESS_URL_${envId}`] || sources.press || sources.news),
-    changelog: urlOrNull(process.env[`TRACKER_CHANGELOG_URL_${envId}`] || sources.changelog),
-    pricing_url: urlOrNull(sources.pricing_url),
-    features_url: urlOrNull(sources.features_url),
-    careers_url: urlOrNull(sources.careers_url),
+    event_type: 'content_update',
+    importance: 0.55,
   };
 }
 
-/**
- * collect(competitorId, productId, days) → signals[]
- * Aggregates: blog, press, changelog RSS + pricing/features/careers pages from config.sources[competitorId].
- */
-async function collect(competitorId, productId, days = 7) {
-  let config;
+function extractNamedEntities(text) {
+  const source = normalizeWhitespace(text);
+  const integrations = unique(
+    (source.match(/\b(Yardi|RealPage|Entrata|AppFolio|Salesforce|Zapier|HubSpot|MRI|Knock)\b/gi) || []).map((x) =>
+      x.trim()
+    )
+  );
+  const aiTerms = unique(
+    (source.match(/\b(AI|voice AI|chatbot|assistant|automation|machine learning)\b/gi) || []).map((x) => x.trim())
+  );
+  return { integrations, ai_terms: aiTerms };
+}
+
+async function fetchArticleEvidence(url) {
+  if (!isValidPublicUrl(url)) return { title: '', description: '', content: '' };
+
   try {
-    config = loadConfig();
-  } catch (e) {
+    const html = await fetchText(url, DEFAULT_TIMEOUT_MS);
+    const $ = loadHtml(html);
+    const meta = extractMeta($, url);
+
+    const articleText = unique(
+      $('article p, main p, .post p, .entry-content p, .content p, p')
+        .map((_, el) => normalizeWhitespace($(el).text()))
+        .get()
+        .filter((t) => t.length >= 40)
+    ).slice(0, 20);
+
+    return {
+      title: meta.title,
+      description: meta.description,
+      content: normalizeWhitespace(articleText.join('\n\n') || meta.bodyText).slice(0, 6000),
+    };
+  } catch (_) {
+    return { title: '', description: '', content: '' };
+  }
+}
+
+function coerceItemDate(item) {
+  const raw = item.isoDate || item.pubDate || item.published || item.updated || '';
+  const d = raw ? new Date(raw) : null;
+  if (!d || Number.isNaN(d.getTime())) return todayISO();
+  return d.toISOString().slice(0, 10);
+}
+
+async function extractFeedSignals(feedUrl, sourceType, competitorId, productId, days) {
+  if (!isValidPublicUrl(feedUrl)) return [];
+
+  let feed;
+  try {
+    feed = await parser.parseURL(feedUrl);
+  } catch (_) {
     return [];
   }
-  const urls = getSourceUrls(config, competitorId);
-  const allSignals = [];
 
-  try {
-    const pushFrom = async (fn) => {
-      try {
-        const list = await fn();
-        allSignals.push(...list);
-      } catch (err) {
-        console.error(`Collect source failed for ${competitorId}:`, err.message);
-      }
+  const cutoff = cutoffISO(days);
+  const items = Array.isArray(feed.items) ? feed.items.slice(0, 20) : [];
+  const signals = [];
+
+  for (const item of items) {
+    const date = coerceItemDate(item);
+    if (date < cutoff) continue;
+
+    const title = normalizeWhitespace(item.title || '');
+    const link = item.link || item.guid || feedUrl;
+    const rssSnippet = normalizeWhitespace(item.contentSnippet || item.content || item.summary || '');
+    const article = await fetchArticleEvidence(link);
+
+    const combined = [title, rssSnippet, article.title, article.description, article.content]
+      .filter(Boolean)
+      .join('\n\n');
+
+    const { event_type, importance } = inferArticleEventType(title, combined);
+    const entities = extractNamedEntities(combined);
+
+    const evidence = [article.description, ...article.content.split('\n\n').slice(0, 3)]
+      .filter(Boolean)
+      .join(' • ');
+
+    const typeMap = {
+      blog: 'blog',
+      press: 'press',
+      changelog: 'changelog',
+      youtube: 'youtube',
     };
 
-    if (urls.blog) await pushFrom(() => collectFromRssFeed(competitorId, productId, urls.blog, 'blog', 'blog'));
-    if (urls.press) await pushFrom(() => collectFromRssFeed(competitorId, productId, urls.press, 'press', 'press'));
-    if (urls.changelog) await pushFrom(() => collectFromRssFeed(competitorId, productId, urls.changelog, 'changelog', 'changelog'));
-    if (urls.pricing_url) await pushFrom(() => collectFromPage(competitorId, productId, urls.pricing_url, 'pricing_page', 'pricing'));
-    if (urls.features_url) await pushFrom(() => collectFromPage(competitorId, productId, urls.features_url, 'features_page', 'features'));
-    if (urls.careers_url) await pushFrom(() => collectFromCareers(competitorId, productId, urls.careers_url));
+    signals.push(
+      buildSignalBase({
+        competitorId,
+        productId,
+        source: sourceType,
+        type: typeMap[sourceType] || 'blog',
+        event_type,
+        headline: title || article.title || `${sourceType} update`,
+        source_url: link,
+        date,
+        snippet:
+          rssSnippet ||
+          article.description ||
+          article.content.split('\n\n')[0] ||
+          title,
+        evidence_snippet: evidence,
+        confidence: scoreConfidence({
+          evidenceCount: evidence ? evidence.split('•').length : 1,
+          hasHeadings: Boolean(title),
+          directPage: Boolean(article.content),
+        }),
+        importance,
+        entities,
+        metadata: {
+          page_kind: sourceType,
+          feed_title: normalizeWhitespace(feed.title || ''),
+        },
+      })
+    );
+  }
 
-    let signals = allSignals;
-    if (days) signals = filterLastDays(signals, days);
-    return signals;
-  } catch (err) {
-    console.error(`Collect failed for ${competitorId}:`, err.message);
+  return signals;
+}
+
+async function extractPageSignals(pageUrl, pageKind, competitorId, productId) {
+  if (!isValidPublicUrl(pageUrl)) return [];
+
+  try {
+    const html = await fetchText(pageUrl, DEFAULT_TIMEOUT_MS);
+    const $ = loadHtml(html);
+    const meta = extractMeta($, pageUrl);
+
+    if (pageKind === 'pricing_url') {
+      return extractPricingSignals(meta, pageUrl, competitorId, productId);
+    }
+    if (pageKind === 'features_url' || pageKind === 'docs_url') {
+      return extractFeatureSignals(meta, pageUrl, competitorId, productId);
+    }
+    if (pageKind === 'careers_url') {
+      return extractCareerSignals(meta, pageUrl, competitorId, productId);
+    }
+
+    return [];
+  } catch (_) {
     return [];
   }
 }
 
-module.exports = { collect, filterLastDays, getSourceUrls };
+function dedupeSignals(signals) {
+  const seen = new Set();
+  const out = [];
+
+  for (const s of signals) {
+    const key = [
+      s.date,
+      s.competitor_id,
+      s.product_id,
+      s.type,
+      s.event_type,
+      s.source_url,
+      (s.snippet || '').slice(0, 120),
+    ].join('|');
+
+    if (!seen.has(key)) {
+      seen.add(key);
+      out.push(s);
+    }
+  }
+
+  return out;
+}
+
+async function collect(competitorId, productId, days = 7) {
+  let sourceUrls;
+  try {
+    sourceUrls = getSourceUrls(competitorId);
+  } catch (_) {
+    return [];
+  }
+
+  const safeDays = parseDays(days);
+  const collected = [];
+
+  const feedTasks = [
+    ['blog', sourceUrls.blog],
+    ['press', sourceUrls.press],
+    ['changelog', sourceUrls.changelog],
+    ['youtube', sourceUrls.youtube_rss],
+  ];
+
+  for (const [sourceType, url] of feedTasks) {
+    if (!url) continue;
+    const signals = await extractFeedSignals(url, sourceType, competitorId, productId, safeDays);
+    collected.push(...signals);
+  }
+
+  const pageTasks = [
+    ['pricing_url', sourceUrls.pricing_url],
+    ['features_url', sourceUrls.features_url],
+    ['careers_url', sourceUrls.careers_url],
+    ['docs_url', sourceUrls.docs_url],
+  ];
+
+  for (const [pageKind, url] of pageTasks) {
+    if (!url) continue;
+    const signals = await extractPageSignals(url, pageKind, competitorId, productId);
+    collected.push(...signals);
+  }
+
+  return dedupeSignals(filterLastDays(collected, safeDays));
+}
+
+module.exports = {
+  collect,
+  filterLastDays,
+  getSourceUrls,
+  isValidPublicUrl,
+};

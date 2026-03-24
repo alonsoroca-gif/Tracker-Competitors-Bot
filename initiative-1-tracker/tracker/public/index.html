@@ -1,0 +1,845 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Competitor Tracker — Entrata</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --entrata-red: #E42127;
+      --entrata-red-hover: #c41d22;
+      --bg: #0d0d0f;
+      --surface: #16161a;
+      --surface-elevated: #1c1c21;
+      --border: #2a2a30;
+      --text: #f4f4f5;
+      --text-secondary: #a1a1aa;
+      --muted: #71717a;
+      --priority-high: #ef4444;
+      --priority-medium: #f59e0b;
+      --priority-low: #22c55e;
+    }
+    * { box-sizing: border-box; }
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      margin: 0;
+      padding: 0;
+      line-height: 1.5;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Header */
+    .app-header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 64px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 1.5rem;
+      z-index: 100;
+    }
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    .logo-link {
+      display: flex;
+      align-items: center;
+    }
+    .logo-img {
+      height: 44px;
+      width: auto;
+      display: block;
+    }
+    .logo-wordmark {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--entrata-red);
+      letter-spacing: -0.02em;
+    }
+    .header-divider {
+      width: 1px;
+      height: 24px;
+      background: var(--border);
+    }
+    .app-title {
+      font-size: 0.9375rem;
+      font-weight: 600;
+      color: var(--text);
+    }
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    .monitoring-badge {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.375rem 0.75rem;
+      background: rgba(34, 197, 94, 0.12);
+      border: 1px solid rgba(34, 197, 94, 0.35);
+      border-radius: 6px;
+      font-size: 0.8125rem;
+      font-weight: 500;
+      color: #4ade80;
+    }
+    .monitoring-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #4ade80;
+      animation: pulse-dot 2s ease-in-out infinite;
+    }
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(74, 222, 128, 0.5); }
+      50% { opacity: 0.9; box-shadow: 0 0 0 6px rgba(74, 222, 128, 0); }
+    }
+    .btn-run {
+      padding: 0.5rem 1rem;
+      font-size: 0.8125rem;
+      font-weight: 500;
+      color: var(--text);
+      background: var(--surface-elevated);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      cursor: pointer;
+      font-family: inherit;
+    }
+    .btn-run:hover:not(:disabled) {
+      background: var(--border);
+    }
+    .btn-run:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+    .btn-refresh {
+      padding: 0.5rem 1rem;
+      font-size: 0.8125rem;
+      font-weight: 500;
+      color: #fff;
+      background: var(--entrata-red);
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-family: inherit;
+    }
+    .btn-refresh:hover:not(:disabled) {
+      background: var(--entrata-red-hover);
+    }
+    .btn-refresh:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+    .header-status {
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+      max-width: 200px;
+      text-align: right;
+    }
+    .header-status.error { color: var(--priority-high); }
+
+    /* Main content */
+    .main {
+      flex: 1;
+      margin-top: 64px;
+      padding: 1.5rem;
+      min-height: calc(100vh - 64px);
+    }
+    .summary-bar {
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+      padding: 0.75rem 1rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      margin-bottom: 1.5rem;
+      font-size: 0.875rem;
+    }
+    .summary-bar .product { font-weight: 600; color: var(--text); }
+    .summary-bar .period { color: var(--text-secondary); }
+    .summary-bar .gap-count { color: var(--muted); }
+    .summary-bar .gap-count strong { color: var(--entrata-red); }
+    .period-filter {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+      font-size: 0.8125rem;
+    }
+    .period-filter span { color: var(--text-secondary); margin-right: 0.25rem; }
+    .period-filter button {
+      padding: 0.35rem 0.65rem;
+      font-size: 0.8125rem;
+      background: var(--surface-elevated);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--text);
+      cursor: pointer;
+      font-family: inherit;
+    }
+    .period-filter button:hover { background: var(--border); }
+    .period-filter button.active {
+      background: var(--entrata-red);
+      border-color: var(--entrata-red);
+      color: #fff;
+    }
+    .period-hint {
+      margin: -0.5rem 0 1rem;
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+      max-width: 52rem;
+      line-height: 1.4;
+    }
+    .source-filter {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+      font-size: 0.8125rem;
+    }
+    .source-filter label { color: var(--text-secondary); }
+    .source-filter select {
+      padding: 0.35rem 0.65rem;
+      font-size: 0.8125rem;
+      background: var(--surface-elevated);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--text);
+      font-family: inherit;
+      min-width: 180px;
+    }
+    .data-sources-summary {
+      font-size: 0.8125rem;
+      color: var(--text-secondary);
+      margin-bottom: 0.75rem;
+      padding: 0.5rem 0.75rem;
+      background: var(--surface-elevated);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+    }
+    .collect-status-line {
+      font-size: 0.75rem;
+      color: var(--muted);
+      margin-top: 0.35rem;
+    }
+
+    .config-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+    @media (max-width: 700px) {
+      .config-row { grid-template-columns: 1fr; }
+    }
+    .config-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .config-card .config-card-header {
+      padding: 0.625rem 1rem;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .config-card .config-card-body {
+      padding: 0.75rem 1rem;
+      font-size: 0.8125rem;
+    }
+    .config-card ul {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+    .config-card li {
+      padding: 0.35rem 0;
+      color: var(--text);
+    }
+    .config-card li .priority-badge {
+      margin-left: 0.5rem;
+    }
+    .config-card .competitor-focus {
+      font-size: 0.75rem;
+      color: var(--muted);
+      margin-top: 0.25rem;
+    }
+    .config-card .competitor-website {
+      font-size: 0.75rem;
+    }
+    .config-card .competitor-website a {
+      color: var(--entrata-red);
+      text-decoration: none;
+    }
+    .config-card .competitor-website a:hover { text-decoration: underline; }
+
+    .project-focus-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      margin-bottom: 1.5rem;
+      overflow: hidden;
+    }
+    .project-focus-card .pf-header {
+      padding: 1rem 1.25rem;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.9375rem;
+      font-weight: 600;
+      color: var(--text);
+    }
+    .project-focus-card .pf-body {
+      padding: 1rem 1.25rem;
+      font-size: 0.8125rem;
+    }
+    .project-focus-card .pf-purpose {
+      color: var(--text-secondary);
+      margin-bottom: 0.75rem;
+    }
+    .project-focus-card .pf-funnel {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-bottom: 0.75rem;
+    }
+    .project-focus-card .pf-funnel span {
+      padding: 0.25rem 0.5rem;
+      background: var(--surface-elevated);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--text-secondary);
+    }
+    .project-focus-card .pf-research summary {
+      cursor: pointer;
+      color: var(--muted);
+    }
+    .project-focus-card .pf-research ul {
+      margin: 0.5rem 0 0 1rem;
+      padding: 0;
+      color: var(--text-secondary);
+      line-height: 1.5;
+    }
+
+    .content-grid {
+      display: grid;
+      grid-template-columns: 1fr 380px;
+      gap: 1.5rem;
+      align-items: start;
+    }
+    @media (max-width: 900px) {
+      .content-grid { grid-template-columns: 1fr; }
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .card-header {
+      padding: 1rem 1.25rem;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.8125rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .card-body {
+      padding: 0;
+    }
+    .gaps-card .card-body {
+      max-height: calc(100vh - 320px);
+      min-height: 280px;
+      overflow: auto;
+    }
+    .gaps-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.875rem;
+    }
+    .gaps-table th,
+    .gaps-table td {
+      text-align: left;
+      padding: 0.75rem 1.25rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .gaps-table th {
+      color: var(--muted);
+      font-weight: 500;
+      font-size: 0.8125rem;
+    }
+    .gaps-table tbody tr:hover {
+      background: var(--surface-elevated);
+    }
+    .gaps-table td.cell-wrap {
+      white-space: normal;
+      word-break: break-word;
+      max-width: 280px;
+      vertical-align: top;
+    }
+    .gaps-table .btn-details {
+      padding: 0.25rem 0.5rem;
+      font-size: 0.75rem;
+      background: var(--surface-elevated);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--text-secondary);
+      cursor: pointer;
+      font-family: inherit;
+    }
+    .gaps-table .btn-details:hover { color: var(--text); }
+    .gaps-table tr.gap-details-row td {
+      padding: 0.75rem 1.25rem;
+      background: var(--surface-elevated);
+      border-bottom: 1px solid var(--border);
+      font-size: 0.8125rem;
+      white-space: normal;
+    }
+    .gaps-table .detail-label { color: var(--muted); margin-right: 0.5rem; }
+    .gaps-table .detail-hint { font-size: 0.75rem; color: var(--muted); }
+    .gaps-table .state-Starting { color: var(--priority-medium); }
+    .gaps-table .state-Inprocess { color: #3b82f6; }
+    .gaps-table .state-Delivered { color: var(--priority-low); }
+    .gaps-legend { font-size: 0.75rem; color: var(--muted); margin-top: 0.5rem; }
+    .priority-badge {
+      display: inline-block;
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: capitalize;
+    }
+    .priority-badge.high { background: rgba(239, 68, 68, 0.2); color: #f87171; }
+    .priority-badge.medium { background: rgba(245, 158, 11, 0.2); color: #fbbf24; }
+    .priority-badge.low { background: rgba(34, 197, 94, 0.2); color: #4ade80; }
+
+    .changes-list {
+      list-style: none;
+      margin: 0;
+      padding: 1rem 1.25rem;
+    }
+    .changes-list li {
+      padding: 1rem;
+      margin-bottom: 0.75rem;
+      background: var(--surface-elevated);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 0.875rem;
+      line-height: 1.5;
+    }
+    .changes-list li:last-child { margin-bottom: 0; }
+    .changes-list .change-item { line-height: 1.6; }
+    .changes-list .change-item br { display: block; content: ''; margin-bottom: 0.25rem; }
+    .empty { color: var(--muted); font-style: italic; padding: 1.25rem; }
+    .error { color: var(--priority-high); padding: 1rem 1.25rem; }
+
+    .app-footer {
+      padding: 0.75rem 1.5rem;
+      border-top: 1px solid var(--border);
+      font-size: 0.75rem;
+      color: var(--muted);
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <header class="app-header">
+    <div class="header-left">
+      <a href="https://www.entrata.com" target="_blank" rel="noopener" class="logo-link" aria-label="Entrata">
+        <img src="https://docs.entrata.com/img/brand_resources/entrata_white_wordmark.png" alt="" class="logo-img" onerror="this.style.display='none';this.nextElementSibling.style.display='inline';">
+        <span class="logo-wordmark" style="display:none">Entrata</span>
+      </a>
+      <span class="header-divider" aria-hidden="true"></span>
+      <span class="app-title">Competitor Tracker</span>
+    </div>
+    <div class="header-right">
+      <div class="monitoring-badge" aria-label="Analysis running 24/7">
+        <span class="monitoring-dot" aria-hidden="true"></span>
+        <span>Analysis running 24/7</span>
+      </div>
+      <span class="header-status" id="headerStatus" aria-live="polite"></span>
+      <button type="button" class="btn-refresh" id="refreshBtn">Refresh data</button>
+      <button type="button" class="btn-run" id="runBtn">Reload report</button>
+    </div>
+  </header>
+
+  <main class="main">
+    <div class="summary-bar" id="summaryBar">
+      <div>
+        <span class="product" id="summaryProduct">—</span>
+        <span class="period" id="summaryPeriod">—</span>
+        <span class="gap-count" id="summaryGaps">—</span>
+        <div class="collect-status-line" id="collectStatusLine" aria-live="polite"></div>
+      </div>
+    </div>
+
+    <div class="period-filter" aria-label="Report period">
+      <span>Report period:</span>
+      <button type="button" data-days="7" class="active" id="period7">Last 7 days</button>
+      <button type="button" data-days="14" id="period14">Last 14 days</button>
+      <button type="button" data-days="30" id="period30">Last 30 days</button>
+    </div>
+    <p class="period-hint">Refresh data fetches sources for this same window and <strong>drops stored signals older than it</strong>, so the file matches a rolling tracker (not an ever-growing archive).</p>
+
+    <div class="project-focus-card" id="projectFocusCard" style="display: none;">
+      <div class="pf-header" id="projectFocusTitle"></div>
+      <div class="pf-body">
+        <p class="pf-purpose" id="projectFocusPurpose"></p>
+        <div class="pf-funnel" id="projectFocusFunnel"></div>
+        <details class="pf-research">
+          <summary>Research focus (intern project)</summary>
+          <ul id="projectFocusResearch"></ul>
+        </details>
+      </div>
+    </div>
+
+    <div class="config-row" id="configRow">
+      <div class="config-card">
+        <div class="config-card-header">Products we analyze</div>
+        <div class="config-card-body">
+          <ul id="configProducts"></ul>
+        </div>
+      </div>
+      <div class="config-card">
+        <div class="config-card-header">Competitors we track</div>
+        <div class="config-card-body">
+          <ul id="configCompetitors"></ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="source-filter" aria-label="Filter gaps by source">
+      <label for="sourceFilter">Source:</label>
+      <select id="sourceFilter">
+        <option value="">All sources</option>
+        <option value="blog">blog</option>
+        <option value="press">press</option>
+        <option value="changelog">changelog</option>
+        <option value="pricing_page">pricing_page</option>
+        <option value="features_page">features_page</option>
+        <option value="careers">careers</option>
+        <option value="youtube">youtube</option>
+      </select>
+    </div>
+
+    <div class="content-grid">
+      <section class="card gaps-card" aria-labelledby="gapsHeading">
+        <h2 class="card-header" id="gapsHeading">Gaps</h2>
+        <div class="card-body">
+          <div id="dataSourcesSummary" class="data-sources-summary" style="display:none;"></div>
+          <div id="gapsContent"></div>
+        </div>
+      </section>
+      <section class="card changes-card" aria-labelledby="changesHeading">
+        <h2 class="card-header" id="changesHeading">What to change this week</h2>
+        <div class="card-body">
+          <ul class="changes-list" id="changesContent"></ul>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <footer class="app-footer">Tracker Competitors Bot · v1</footer>
+
+  <script>
+    function setStatus(msg, isError) {
+      var el = document.getElementById('headerStatus');
+      el.textContent = msg || '';
+      el.className = 'header-status' + (isError ? ' error' : '');
+    }
+
+    /** Fetch URL and parse JSON; if server returns HTML, show a clear error instead of parse error. */
+    async function fetchJson(url, options) {
+      var res = await fetch(url, options);
+      var text = await res.text();
+      var ct = (res.headers.get('Content-Type') || '').toLowerCase();
+      if (ct.indexOf('application/json') === -1 && text.trim().toLowerCase().indexOf('<!doctype') === 0) {
+        var msg = 'Server returned a page instead of data. Is the Tracker server running? Start it from the tracker folder with: npm run serve';
+        throw new Error(msg);
+      }
+      try {
+        return JSON.parse(text);
+      } catch (e) {
+        throw new Error('Invalid response: ' + (text.slice(0, 80) || res.status));
+      }
+    }
+
+    var lastReportPayload = null;
+    var currentSourceFilter = '';
+
+    function buildDataSourcesSummary(gaps) {
+      var counts = {};
+      (gaps || []).forEach(function(g) {
+        var s = (g.source && String(g.source).trim()) ? g.source.trim() : 'unknown';
+        counts[s] = (counts[s] || 0) + 1;
+      });
+      var parts = Object.keys(counts).sort().map(function(k) {
+        return counts[k] + ' ' + k;
+      });
+      return parts.length ? 'Gaps from: ' + parts.join(', ') : '';
+    }
+
+    function renderGapsTable(report, changes) {
+      const gapsContent = document.getElementById('gapsContent');
+      const changesContent = document.getElementById('changesContent');
+      const summaryEl = document.getElementById('dataSourcesSummary');
+      const summaryGaps = document.getElementById('summaryGaps');
+
+      var allGaps = report.gaps || [];
+      var summaryText = buildDataSourcesSummary(allGaps);
+      if (summaryText) {
+        summaryEl.textContent = summaryText;
+        summaryEl.style.display = 'block';
+      } else {
+        summaryEl.textContent = '';
+        summaryEl.style.display = 'none';
+      }
+
+      var filtered = allGaps;
+      if (currentSourceFilter) {
+        filtered = allGaps.filter(function(g) { return (g.source || '') === currentSourceFilter; });
+      }
+      summaryGaps.innerHTML = '<strong>' + filtered.length + '</strong> gap' + (filtered.length === 1 ? '' : 's') + ' shown' + (currentSourceFilter ? ' (filtered)' : ' in period');
+
+      if (filtered.length === 0) {
+        gapsContent.innerHTML = '<p class="empty">' + (currentSourceFilter ? 'No gaps for this source.' : 'No gaps in this period.') + '</p>';
+      } else {
+        var priorityOrder = { high: 0, medium: 1, low: 2 };
+        var sortedGaps = filtered.slice().sort(function(a, b) {
+          return (priorityOrder[a.priority] ?? 2) - (priorityOrder[b.priority] ?? 2);
+        });
+        var rows = [];
+        sortedGaps.forEach(function(g) {
+          var move = g.competitor_move || g.title || '';
+          var ourRaw = g.our_gap || 'Starting';
+          var stateClass = 'state-' + ourRaw.replace(/\s/g, '');
+          var ourDisplay = '<span class="' + stateClass + '">' + escapeHtml(ourRaw) + '</span>';
+          var src = (g.source && g.source !== 'unknown') ? g.source : '';
+          var srcDisplay = src ? escapeHtml(src) : '<span title="Re-run Refresh data to see source">—</span>';
+          var detailId = 'detail-' + g.gap_id;
+          var fullSignal = g.competitor_signal || move;
+          var headlineRow = g.headline ? '<br><span class="detail-label">Headline:</span>' + escapeHtml(g.headline) : '';
+          var urlRow = '';
+          if (g.source_url && /^https?:\/\//i.test(String(g.source_url))) {
+            var u = String(g.source_url);
+            urlRow = '<br><span class="detail-label">Public page:</span><a href="' + escapeHtml(u) + '" target="_blank" rel="noopener noreferrer">' + escapeHtml(u.length > 96 ? u.slice(0, 96) + '…' : u) + '</a>';
+          }
+          rows.push(
+            '<tr><td>' + escapeHtml(g.gap_id) + '</td><td><span class="priority-badge ' + escapeHtml(g.priority) + '">' + escapeHtml(g.priority) + '</span></td><td>' + escapeHtml(g.dimension) + '</td><td class="cell-wrap">' + escapeHtml(move) + '</td><td class="cell-wrap">' + ourDisplay + '</td><td class="cell-wrap">' + srcDisplay + '</td><td><button type="button" class="btn-details" data-detail="' + escapeHtml(detailId) + '" aria-expanded="false">Details</button></td></tr>' +
+            '<tr class="gap-details-row" id="' + detailId + '" style="display:none"><td colspan="7"><span class="detail-label">Full signal:</span>' + escapeHtml(fullSignal) + headlineRow + '<br><span class="detail-label">Our state:</span>' + escapeHtml(ourRaw) + '<br><span class="detail-label">Source:</span>' + escapeHtml(src || '—') + urlRow + '<br><span class="detail-label">Detected:</span>' + escapeHtml(g.detected_at || '—') + '</td></tr>'
+          );
+        });
+        gapsContent.innerHTML = '<table class="gaps-table"><thead><tr><th>ID</th><th>Priority</th><th>Dimension</th><th>What competitor is doing</th><th>Our state</th><th>Source</th><th></th></tr></thead><tbody>' + rows.join('') + '</tbody></table><p class="gaps-legend">Each row is a short insight: <strong>Competitor · action · source</strong>. Open <strong>Details</strong> for headline, evidence, and full text. Gaps: High → Medium → Low. Our state: Starting · In process · Delivered.</p>';
+        gapsContent.querySelectorAll('.btn-details').forEach(function(btn) {
+          btn.addEventListener('click', function() {
+            var id = this.getAttribute('data-detail');
+            var row = document.getElementById(id);
+            if (!row) return;
+            var open = row.style.display !== 'none';
+            row.style.display = open ? 'none' : 'table-row';
+            this.setAttribute('aria-expanded', open ? 'false' : 'true');
+            this.textContent = open ? 'Details' : 'Hide';
+          });
+        });
+      }
+
+      if (!changes || changes.length === 0) {
+        changesContent.innerHTML = '<li class="empty">Nothing to change.</li>';
+      } else {
+        changesContent.innerHTML = changes.map(function(c) {
+          var text = (c.formatted || '').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
+          return '<li class="change-item">' + text + '</li>';
+        }).join('');
+      }
+    }
+
+    async function loadCollectStatus() {
+      var el = document.getElementById('collectStatusLine');
+      try {
+        var s = await fetchJson('/api/collect-status');
+        if (s.last_collected_at) {
+          var d = new Date(s.last_collected_at);
+          var parts = ['Last collect: ' + d.toLocaleString()];
+          if (s.signals_stored != null) parts.push(s.signals_stored + ' new');
+          if (s.retention_days != null) parts.push('last ' + s.retention_days + 'd kept');
+          if (s.signals_kept != null) parts.push(s.signals_kept + ' in file');
+          el.textContent = parts.join(' · ');
+        } else {
+          el.textContent = 'No collect yet — use Refresh data.';
+        }
+      } catch (_) {
+        el.textContent = '';
+      }
+    }
+
+    async function loadReport() {
+      const summaryProduct = document.getElementById('summaryProduct');
+      const summaryPeriod = document.getElementById('summaryPeriod');
+      const gapsContent = document.getElementById('gapsContent');
+      const changesContent = document.getElementById('changesContent');
+      const runBtn = document.getElementById('runBtn');
+
+      runBtn.disabled = true;
+      runBtn.textContent = 'Loading…';
+      setStatus('');
+
+      var days = typeof currentReportDays === 'number' ? currentReportDays : 7;
+      try {
+        var data = await fetchJson('/api/report?days=' + days);
+
+        if (data.error) {
+          summaryProduct.textContent = '—';
+          summaryPeriod.textContent = '—';
+          document.getElementById('summaryGaps').innerHTML = '—';
+          gapsContent.innerHTML = '<p class="error">' + escapeHtml(data.error) + '</p>';
+          changesContent.innerHTML = '';
+          lastReportPayload = null;
+          return;
+        }
+
+        lastReportPayload = data;
+        const { product, periodStart, periodEnd, report, changes } = data;
+
+        summaryProduct.textContent = product.name;
+        summaryPeriod.textContent = periodStart + ' – ' + periodEnd;
+
+        renderGapsTable(report, changes);
+        loadCollectStatus();
+      } catch (err) {
+        summaryProduct.textContent = '—';
+        summaryPeriod.textContent = '—';
+        document.getElementById('summaryGaps').innerHTML = '—';
+        gapsContent.innerHTML = '<p class="error">' + escapeHtml(err.message) + '</p>';
+        changesContent.innerHTML = '';
+        lastReportPayload = null;
+      } finally {
+        runBtn.disabled = false;
+        runBtn.textContent = 'Reload report';
+      }
+    }
+
+    async function refreshData() {
+      var refreshBtn = document.getElementById('refreshBtn');
+      var runBtn = document.getElementById('runBtn');
+      refreshBtn.disabled = true;
+      runBtn.disabled = true;
+      setStatus('Collecting… (may take 1–2 min)');
+
+      try {
+        var days = typeof currentReportDays === 'number' ? currentReportDays : 7;
+        var data = await fetchJson('/api/collect?days=' + encodeURIComponent(days), { method: 'POST' });
+        if (data.error) {
+          setStatus(data.error || 'Refresh failed', true);
+          return;
+        }
+        setStatus('Updated. Loading report…');
+        await loadReport();
+        await loadCollectStatus();
+        var msg = 'Rolling window: last ' + (data.retentionDays || days) + ' days.';
+        if (data.signalsStored) msg += ' +' + data.signalsStored + ' new.';
+        if (data.signalsRemovedByRetention) msg += ' Removed ' + data.signalsRemovedByRetention + ' older.';
+        if (!data.signalsStored && !data.signalsRemovedByRetention) msg += ' No new items; data matches selected period.';
+        setStatus(msg);
+        setTimeout(function() { setStatus(''); }, 4000);
+      } catch (err) {
+        setStatus(err.message || 'Refresh failed', true);
+      } finally {
+        refreshBtn.disabled = false;
+      }
+    }
+
+    function escapeHtml(s) {
+      const div = document.createElement('div');
+      div.textContent = s;
+      return div.innerHTML;
+    }
+
+    async function loadConfig() {
+      const productsEl = document.getElementById('configProducts');
+      const competitorsEl = document.getElementById('configCompetitors');
+      const focusCard = document.getElementById('projectFocusCard');
+      const focusTitle = document.getElementById('projectFocusTitle');
+      const focusPurpose = document.getElementById('projectFocusPurpose');
+      const focusFunnel = document.getElementById('projectFocusFunnel');
+      const focusResearch = document.getElementById('projectFocusResearch');
+      try {
+        var data = await fetchJson('/api/config');
+        if (data.error) {
+          productsEl.innerHTML = '<li class="empty">' + escapeHtml(data.error) + '</li>';
+          competitorsEl.innerHTML = '';
+          return;
+        }
+        productsEl.innerHTML = (data.products || []).length === 0
+          ? '<li class="empty">None configured. Edit config/products.json.</li>'
+          : (data.products || []).map(function(p) { return '<li>' + escapeHtml(p.name) + '</li>'; }).join('');
+        competitorsEl.innerHTML = (data.competitors || []).length === 0
+          ? '<li class="empty">None configured. Edit config/products.json.</li>'
+          : (data.competitors || []).map(function(c) {
+              var html = '<li>' + escapeHtml(c.name) + ' <span class="priority-badge ' + escapeHtml(c.priority) + '">' + escapeHtml(c.priority) + '</span>';
+              if (c.focus) html += '<div class="competitor-focus">' + escapeHtml(c.focus) + '</div>';
+              if (c.website) html += '<div class="competitor-website"><a href="' + escapeHtml(c.website) + '" target="_blank" rel="noopener">' + escapeHtml(c.website) + '</a></div>';
+              return html + '</li>';
+            }).join('');
+        if (data.projectFocus) {
+          focusCard.style.display = 'block';
+          focusTitle.textContent = data.projectFocus.title || 'Project focus';
+          focusPurpose.textContent = data.projectFocus.purpose || '';
+          focusFunnel.innerHTML = (data.projectFocus.scope || []).map(function(s) {
+            return '<span>' + escapeHtml(s) + '</span>';
+          }).join('');
+          focusResearch.innerHTML = (data.projectFocus.research_areas || []).map(function(r) {
+            return '<li>' + escapeHtml(r) + '</li>';
+          }).join('');
+        } else {
+          focusCard.style.display = 'none';
+        }
+      } catch (err) {
+        productsEl.innerHTML = '<li class="empty">Could not load config.</li>';
+        competitorsEl.innerHTML = '';
+        focusCard.style.display = 'none';
+      }
+    }
+
+    var currentReportDays = 7;
+    function setPeriod(days) {
+      currentReportDays = days;
+      document.querySelectorAll('.period-filter button').forEach(function(btn) {
+        btn.classList.toggle('active', parseInt(btn.getAttribute('data-days'), 10) === days);
+      });
+      loadReport();
+    }
+    document.getElementById('period7').addEventListener('click', function() { setPeriod(7); });
+    document.getElementById('period14').addEventListener('click', function() { setPeriod(14); });
+    document.getElementById('period30').addEventListener('click', function() { setPeriod(30); });
+    document.getElementById('sourceFilter').addEventListener('change', function() {
+      currentSourceFilter = this.value || '';
+      if (lastReportPayload && lastReportPayload.report) {
+        renderGapsTable(lastReportPayload.report, lastReportPayload.changes);
+      }
+    });
+    document.getElementById('runBtn').addEventListener('click', loadReport);
+    document.getElementById('refreshBtn').addEventListener('click', refreshData);
+    loadConfig();
+    loadReport();
+  </script>
+</body>
+</html>

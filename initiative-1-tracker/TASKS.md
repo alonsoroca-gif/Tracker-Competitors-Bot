@@ -13,27 +13,27 @@ Small, testable tasks. Check off when done. Refs: [gap-report-schema](gap-report
 | ID | Sub-task | Acceptance criteria | Done |
 |----|----------|---------------------|------|
 | P1.1 | Prefer RSS description over title in collect.js | When feed item has description/content longer than 50 chars, use it as snippet (strip HTML/CDATA); else use title. Snippet max 600 chars. | [x] |
-| P1.2 | Extract fact-like sentences from page body in collect.js | For pricing/features/careers pages: skip first 1200 chars, then extract sentences containing digits, %, $, or words like million, percent, ROI, growth; join up to 800 chars as snippet. Fallback to body slice if none. | [ ] |
-| P1.3 | Add more boilerplate phrases to cleanSnippet in gapReport.js | Strip additional nav/marketing phrases so "What competitor is doing" shows substantive copy only (e.g. "request demo", "schedule a call", "learn more"). | [ ] |
-| P1.4 | Document how to add/find working feed URLs in README | Short section: where to find competitor blog/press/changelog RSS URLs; how to validate URL returns XML; link to config/products.json sources. | [ ] |
-| P1.5 | Optional: try content from main/article in page collector | In collectFromPage, if HTML has `<main>` or `<article>`, extract text from that first; else use current body slice. Improves relevance for "What competitor is doing". | [ ] |
+| P1.2 | Extract fact-like sentences from page body in collect.js | For pricing/features/careers pages: skip first 1200 chars, then extract sentences containing digits, %, $, or words like million, percent, ROI, growth; join up to 800 chars as snippet. Fallback to body slice if none. | [x] |
+| P1.3 | Add more boilerplate phrases to cleanSnippet in gapReport.js | Strip additional nav/marketing phrases so "What competitor is doing" shows substantive copy only (e.g. "request demo", "schedule a call", "learn more"). | [x] |
+| P1.4 | Document how to add/find working feed URLs in README | Short section: where to find competitor blog/press/changelog RSS URLs; how to validate URL returns XML; link to config/products.json sources. | [x] |
+| P1.5 | Optional: try content from main/article in page collector | In collectFromPage, if HTML has `<main>` or `<article>`, extract text from that first; else use current body slice. Improves relevance for "What competitor is doing". | [x] |
 
 ### P2 — Sprint 2: Filter to prove accuracy of data
 
 | ID | Sub-task | Acceptance criteria | Done |
 |----|----------|---------------------|------|
-| P2.1 | Add filter by source in report UI | Dropdown or chips: filter gaps by source (blog, press, changelog, pricing_page, features_page, careers). When selected, only gaps from that source are shown. | [ ] |
-| P2.2 | Add "Data sources" summary above or below Gaps table | One line: "Gaps from: N blog, M pricing_page, …" so users see the mix and can judge accuracy. | [ ] |
-| P2.3 | Ensure each gap row shows Source column | Source is already in API; verify UI shows it and filter uses it. If missing, add. | [ ] |
+| P2.1 | Add filter by source in report UI | Dropdown or chips: filter gaps by source (blog, press, changelog, pricing_page, features_page, careers). When selected, only gaps from that source are shown. | [x] |
+| P2.2 | Add "Data sources" summary above or below Gaps table | One line: "Gaps from: N blog, M pricing_page, …" so users see the mix and can judge accuracy. | [x] |
+| P2.3 | Ensure each gap row shows Source column | Source is already in API; verify UI shows it and filter uses it. If missing, add. | [x] |
 
 ### P3 — Sprint 3: Fewer collect failures (404 and config)
 
 | ID | Sub-task | Acceptance criteria | Done |
 |----|----------|---------------------|------|
-| P3.1 | Validate URL before fetch in collect.js | Skip fetch if URL is empty, or not http(s), or invalid; log "Skipped invalid URL: …" per source. | [ ] |
-| P3.2 | On 404, log competitor id + source + URL | When a source returns HTTP 404, log one line: e.g. "Collect 404: eliseai blog https://…" so config can be fixed. | [ ] |
-| P3.3 | Document optional URLs and how to find working ones in README | Which sources are optional; how to find blog/press/changelog URLs for a competitor; that 404 means update config. | [ ] |
-| P3.4 | Optional: add GET /api/collect-status or last_collected_at | Return last collect time and optionally "X signals, Y sources failed" so UI can show health without terminal. | [ ] |
+| P3.1 | Validate URL before fetch in collect.js | Skip fetch if URL is empty, or not http(s), or invalid; log "Skipped invalid URL: …" per source. | [x] |
+| P3.2 | On 404, log competitor id + source + URL | When a source returns HTTP 404, log one line: e.g. "Collect 404: eliseai blog https://…" so config can be fixed. | [x] |
+| P3.3 | Document optional URLs and how to find working ones in README | Which sources are optional; how to find blog/press/changelog URLs for a competitor; that 404 means update config. | [x] |
+| P3.4 | Optional: add GET /api/collect-status or last_collected_at | Return last collect time and optionally "X signals, Y sources failed" so UI can show health without terminal. | [x] |
 
 ---
 

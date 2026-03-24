@@ -1,8 +1,96 @@
 {
+  "sources": {
+    "eliseai": {
+      "blog": "https://eliseai.com/blog/feed/",
+      "press": "",
+      "changelog": "",
+      "pricing_url": "https://eliseai.com/pricing/",
+      "features_url": "https://eliseai.com/",
+      "careers_url": "https://eliseai.com/careers/"
+    },
+    "funnel-leasing": {
+      "blog": "",
+      "press": "",
+      "changelog": "",
+      "youtube_rss": "",
+      "pricing_url": "https://funnelleasing.com/pricing/",
+      "features_url": "https://funnelleasing.com/",
+      "careers_url": "https://funnelleasing.com/careers/"
+    },
+    "leasehawk": {
+      "blog": "",
+      "press": "",
+      "changelog": "",
+      "youtube_rss": "",
+      "pricing_url": "https://leasehawk.com/",
+      "features_url": "https://leasehawk.com/",
+      "careers_url": "https://leasehawk.com/careers/"
+    },
+    "anyone-home": {
+      "blog": "",
+      "press": "",
+      "changelog": "",
+      "pricing_url": "https://anyonehome.com/",
+      "features_url": "https://anyonehome.com/",
+      "careers_url": "https://anyonehome.com/careers/"
+    },
+    "jonah-digital": {
+      "blog": "",
+      "press": "",
+      "changelog": "",
+      "pricing_url": "https://jonahdigital.com/",
+      "features_url": "https://jonahdigital.com/",
+      "careers_url": "https://jonahdigital.com/careers/"
+    }
+  },
   "products": [
-    { "id": "ProductA", "name": "Product A" }
+    { "id": "prospect-portal", "name": "ProspectPortal" },
+    { "id": "lead-manager", "name": "LeadManager" },
+    { "id": "message-center", "name": "Message Center" },
+    { "id": "online-applications", "name": "Online Applications" },
+    { "id": "resident-verify", "name": "Resident Verify" },
+    { "id": "docx", "name": "DocX" },
+    { "id": "ils-portal", "name": "ILS Portal" },
+    { "id": "marketing-strategy-hub", "name": "Marketing Strategy Hub" },
+    { "id": "reputation-advisor", "name": "ReputationAdvisor" },
+    { "id": "leasing-ai", "name": "LeasingAI" },
+    { "id": "eli-plus", "name": "ELI+" }
   ],
   "competitors": [
-    { "id": "competitor-x", "name": "Competitor X" }
+    {
+      "id": "eliseai",
+      "name": "EliseAI",
+      "priority": "high",
+      "website": "https://eliseai.com",
+      "focus": "Full AI platform for lead-to-lease funnel (ChatAI, EmailAI, VoiceAI, EliseCRM). PMS-agnostic."
+    },
+    {
+      "id": "funnel-leasing",
+      "name": "Funnel Leasing",
+      "priority": "medium",
+      "website": "https://funnelleasing.com",
+      "focus": "Leasing CRM with AI communication, tour scheduling, application management."
+    },
+    {
+      "id": "leasehawk",
+      "name": "LeaseHawk (ACE)",
+      "priority": "medium",
+      "website": "https://leasehawk.com",
+      "focus": "AI virtual leasing agent, call tracking, lead scoring, tour booking."
+    },
+    {
+      "id": "anyone-home",
+      "name": "Anyone Home",
+      "priority": "medium",
+      "website": "https://anyonehome.com",
+      "focus": "AI chatbot + voice for leasing, lead capture, tour scheduling."
+    },
+    {
+      "id": "jonah-digital",
+      "name": "Jonah Digital Agency",
+      "priority": "medium",
+      "website": "https://jonahdigital.com",
+      "focus": "Digital marketing and property websites; services-based lead generation."
+    }
   ]
 }

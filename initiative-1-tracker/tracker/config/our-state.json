@@ -1,0 +1,25 @@
+{
+  "ProductA": {
+    "support": "In process",
+    "pricing_messaging": "In process",
+    "positioning": "Starting",
+    "features": "In process"
+  },
+  "L2L": {
+    "support": "In process",
+    "pricing_messaging": "In process",
+    "positioning": "Starting",
+    "features": "In process"
+  },
+  "prospect-portal": { "support": "Starting", "pricing_messaging": "Starting", "positioning": "Starting", "features": "Starting" },
+  "lead-manager": { "support": "Starting", "pricing_messaging": "Starting", "positioning": "Starting", "features": "Starting" },
+  "message-center": { "support": "Starting", "pricing_messaging": "Starting", "positioning": "Starting", "features": "Starting" },
+  "online-applications": { "support": "Starting", "pricing_messaging": "Starting", "positioning": "Starting", "features": "Starting" },
+  "resident-verify": { "support": "Starting", "pricing_messaging": "Starting", "positioning": "Starting", "features": "Starting" },
+  "docx": { "support": "Starting", "pricing_messaging": "Starting", "positioning": "Starting", "features": "Starting" },
+  "ils-portal": { "support": "Starting", "pricing_messaging": "Starting", "positioning": "Starting", "features": "Starting" },
+  "marketing-strategy-hub": { "support": "Starting", "pricing_messaging": "Starting", "positioning": "Starting", "features": "Starting" },
+  "reputation-advisor": { "support": "Starting", "pricing_messaging": "Starting", "positioning": "Starting", "features": "Starting" },
+  "leasing-ai": { "support": "Starting", "pricing_messaging": "Starting", "positioning": "Starting", "features": "Starting" },
+  "eli-plus": { "support": "Starting", "pricing_messaging": "Starting", "positioning": "Starting", "features": "Starting" }
+}

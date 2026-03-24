@@ -20,3 +20,9 @@ Thumbs.db
 *.log
 tmp/
 temp/
+
+# Independent agent repo (do not track)
+coding-automation-agent/
+
+# Tracker data (collected signals)
+initiative-1-tracker/tracker/data/

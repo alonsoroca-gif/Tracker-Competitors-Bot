@@ -1,0 +1,22 @@
+{
+  "title": "Lead-to-Lease Marketing & Leasing",
+  "purpose": "Focused list of marketing and leasing competitors in the lead-to-lease funnel. For intern project research.",
+  "scope": [
+    "Lead generation",
+    "Lead nurturing",
+    "Tour booking",
+    "Application",
+    "Lease signing"
+  ],
+  "research_areas": [
+    "Lead Generation: How do they capture leads? (Website, ads, referrals)",
+    "Lead Nurturing: How do they follow up? (Emails, SMS, calls, chatbots)",
+    "Tour Booking: How do they schedule and manage tours? (AI scheduling, calendar)",
+    "Application Process: Do they help with applications? (Forms, document collection)",
+    "Lease Signing: Do they support lease generation and signing?",
+    "Integration: How do they integrate with PMS? (API, native, manual)",
+    "Pricing Models: Per unit, per lead, per property, flat fee?",
+    "Customer Evidence: Who uses them? What results do they report?",
+    "Gaps vs. Entrata: Where does Entrata have advantages? Where are we behind?"
+  ]
+}

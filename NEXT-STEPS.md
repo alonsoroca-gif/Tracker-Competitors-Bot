@@ -1,5 +1,25 @@
 # What’s done and what to do now
 
+## Repository status
+
+**This folder is now its own Git repo.** Initial commit is done. To put it on GitHub:
+
+1. **Create a new repo on GitHub**  
+   Go to [github.com/new](https://github.com/new). Name it e.g. `tracker-competitors-bot`. Do **not** add a README, .gitignore, or license (this repo already has them).
+
+2. **Add the remote and push** (run from this folder):
+   ```bash
+   cd "/Users/alonso.roca/Desktop/Tracker Competitors Bot"
+   git remote add origin https://github.com/YOUR_USERNAME/tracker-competitors-bot.git
+   git push -u origin main
+   ```
+   Replace `YOUR_USERNAME` with your GitHub username (or org). If you use SSH: `git@github.com:YOUR_USERNAME/tracker-competitors-bot.git`.
+
+3. **Enable Actions**  
+   In the repo on GitHub, open **Actions** and enable workflows if prompted. CI will run on every push.
+
+---
+
 ## Is the automation already set?
 
 **Yes — in this folder.** Everything is in place:
@@ -16,21 +36,16 @@ So the **system** for automation is set. It will “fully” run on GitHub only 
 
 ## One-time: so GitHub Actions actually run
 
-GitHub only runs workflows from the **repo root**. Right now your git repo root is **Desktop** (CursorOnboarding), and this project lives in **Tracker Competitors Bot/** with its own **.github/** inside it. So Actions will **not** see this workflow until you do one of the following.
+GitHub only runs workflows from the **repo root**. This folder is now its own Git repo, so the workflow at `.github/workflows/ci.yml` will run as soon as you push to GitHub (Option A below). Option B is only if you had kept everything in another repo (e.g. Desktop).
 
-### Option A — Recommended: Tracker Competitors Bot as its own repo
+### Option A — Tracker Competitors Bot as its own repo ✓ (done locally)
 
-Then this folder **is** the repo root, and the existing `.github/workflows/ci.yml` is used as-is.
+This folder is already a Git repo with an initial commit. Create the repo on GitHub and push:
 
-1. On GitHub: create a **new repo** (e.g. `tracker-competitors-bot`). Do not add a README or .gitignore.
-2. Locally:
+1. On GitHub: create a **new repo** (e.g. `tracker-competitors-bot`). Do **not** add a README, .gitignore, or license.
+2. Locally (from this folder):
    ```bash
-   cd "/Users/alonso.roca/Desktop/Tracker Competitors Bot"
-   git init
-   git add .
-   git commit -m "Initial: Tracker bot + automation"
    git remote add origin https://github.com/YOUR_USER/tracker-competitors-bot.git
-   git branch -M main
    git push -u origin main
    ```
 3. On GitHub: open the repo → **Actions**. If asked, enable workflows. The **CI** workflow will run on every push.
