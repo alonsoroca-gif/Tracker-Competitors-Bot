@@ -1,0 +1,58 @@
+{
+  "_comment": "Set ENTRATA_MONO_ROOT to your entrata-core root (inside Core Repo). Example: export ENTRATA_MONO_ROOT=\"/Users/alonso.roca/Desktop/Core Repo/entrata-core\". repo_root picks package.json or composer.json automatically. Refine ambiguous mappings (lead-manager, docx, etc.) with your team.",
+  "prospect-portal": {
+    "artifacts": [
+      { "label": "Prospect Portal", "repo_root": "${ENTRATA_MONO_ROOT}/Applications/ProspectPortal" }
+    ]
+  },
+  "lead-manager": {
+    "artifacts": [
+      { "label": "Call Center (lead routing — verify)", "repo_root": "${ENTRATA_MONO_ROOT}/Applications/CallCenter" }
+    ]
+  },
+  "message-center": {
+    "artifacts": [
+      { "label": "Chat / Message Center", "repo_root": "${ENTRATA_MONO_ROOT}/Applications/Chat" }
+    ]
+  },
+  "online-applications": {
+    "artifacts": [
+      { "label": "Entrata core app", "repo_root": "${ENTRATA_MONO_ROOT}/Applications/Entrata" }
+    ]
+  },
+  "resident-verify": {
+    "artifacts": [
+      { "label": "Resident Verify Portal", "repo_root": "${ENTRATA_MONO_ROOT}/Applications/ResidentVerifyPortal" }
+    ]
+  },
+  "docx": {
+    "artifacts": [
+      { "label": "Entrata monolith (refine to DocX path)", "composer_json": "${ENTRATA_MONO_ROOT}/composer.json" }
+    ]
+  },
+  "ils-portal": {
+    "artifacts": [
+      { "label": "Vacancy / ILS (verify)", "repo_root": "${ENTRATA_MONO_ROOT}/Applications/Vacancy" }
+    ]
+  },
+  "marketing-strategy-hub": {
+    "artifacts": [
+      { "label": "Marketing", "repo_root": "${ENTRATA_MONO_ROOT}/Applications/Marketing" }
+    ]
+  },
+  "reputation-advisor": {
+    "artifacts": [
+      { "label": "Marketing (reputation — verify)", "repo_root": "${ENTRATA_MONO_ROOT}/Applications/Marketing" }
+    ]
+  },
+  "leasing-ai": {
+    "artifacts": [
+      { "label": "Entrata Leasing Website", "repo_root": "${ENTRATA_MONO_ROOT}/Applications/EntrataLeasingWebsite" }
+    ]
+  },
+  "eli-plus": {
+    "artifacts": [
+      { "label": "Entrata (ELI+ — verify)", "repo_root": "${ENTRATA_MONO_ROOT}/Applications/Entrata" }
+    ]
+  }
+}

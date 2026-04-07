@@ -2,6 +2,8 @@
 
 Structure for **market vs us** comparison. Use this to store and render gap reports (e.g. in the weekly newsletter or a dedicated Slack section).
 
+**How we present this to users (L1 summary vs evidence vs response):** see [docs/COMPETITIVE-INTEL-PRESENTATION.md](docs/COMPETITIVE-INTEL-PRESENTATION.md).
+
 ---
 
 ## 1. Dimensions (what we compare)
@@ -29,9 +31,14 @@ Each gap is one comparable item where **market (competitors)** has something we 
 | `gap_id` | string | Unique id (e.g. `gap-2025-02-001`) |
 | `product_id` | string | Our product this gap belongs to |
 | `dimension` | string | One of: features, pricing, messaging, support, positioning |
-| `title` | string | Short label (e.g. "Live chat support") |
+| `title` | string | Short label (often derived from `competitor_move`) |
 | `description` | string | What the gap is (competitor X has Y; we don’t) |
-| `competitor_signal` | string | Source: which competitor, which effort or fact (link or ref) |
+| `competitor_move` | string | **L1 — table summary:** `CompetitorName: factual move` (actions + metrics; see [COMPETITIVE-INTEL-PRESENTATION.md](docs/COMPETITIVE-INTEL-PRESENTATION.md)) |
+| `competitor_signal` | string | **L2 — evidence body** for Details (excerpts, proof text) |
+| `headline` | string \| null | Optional feed/page title — Details only, not the L1 line |
+| `source` | string \| null | Machine source id (blog, pricing_page, …) |
+| `source_url` | string \| null | Public URL when available |
+| `our_gap` | string | Our delivery state: Starting \| In process \| Delivered |
 | `priority` | string | `high` \| `medium` \| `low` |
 | `recommended_action` | string | Optional: "Add feature Z", "Adjust positioning to A" |
 | `response_id` | string | Optional: links to the **response schema** entry for *how we respond* to this gap (see [response-schema.md](response-schema.md)) |

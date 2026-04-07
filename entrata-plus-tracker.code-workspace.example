@@ -1,0 +1,13 @@
+{
+  "folders": [
+    {
+      "name": "Tracker Competitors Bot",
+      "path": "."
+    },
+    {
+      "name": "Entrata Core Repo",
+      "path": "/ABSOLUTE/PATH/TO/Core Repo"
+    }
+  ],
+  "settings": {}
+}

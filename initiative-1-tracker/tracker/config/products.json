@@ -6,7 +6,15 @@
       "changelog": "",
       "pricing_url": "https://eliseai.com/pricing/",
       "features_url": "https://eliseai.com/",
-      "careers_url": "https://eliseai.com/careers/"
+      "careers_url": "https://eliseai.com/careers/",
+      "g2_reviews_url": "",
+      "youtube_comment_video_ids": [],
+      "youtube_discovery_queries": [
+        "EliseAI review multifamily",
+        "Elise AI honest review property management"
+      ],
+      "youtube_discovery_max_results": 5,
+      "youtube_discovery_max_queries": 2
     },
     "funnel-leasing": {
       "blog": "",

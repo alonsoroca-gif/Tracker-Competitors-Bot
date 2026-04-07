@@ -1,5 +1,6 @@
 const path = require('path');
 const fs = require('fs');
+const { readSignalsArray, writeSignalsArray } = require('./signalsAtRest');
 
 const DATA_DIR = path.join(__dirname, '..', 'data');
 const SIGNALS_FILE = path.join(DATA_DIR, 'signals.json');
@@ -24,16 +25,11 @@ function pruneSignalsToRetentionDays(days) {
   ensureDataDir();
   if (!fs.existsSync(SIGNALS_FILE)) return { kept: 0, removed: 0 };
   const cutoff = retentionCutoffDate(days);
-  let list = [];
-  try {
-    list = JSON.parse(fs.readFileSync(SIGNALS_FILE, 'utf8'));
-  } catch (_) {
-    return { kept: 0, removed: 0 };
-  }
-  if (!Array.isArray(list)) return { kept: 0, removed: 0 };
+  const list = readSignalsArray(SIGNALS_FILE);
+  if (!Array.isArray(list) || !list.length) return { kept: 0, removed: 0 };
   const before = list.length;
   const keptList = list.filter((s) => s && typeof s.date === 'string' && s.date >= cutoff);
-  fs.writeFileSync(SIGNALS_FILE, JSON.stringify(keptList, null, 2), 'utf8');
+  writeSignalsArray(SIGNALS_FILE, keptList);
   return { kept: keptList.length, removed: before - keptList.length };
 }
 
@@ -45,9 +41,7 @@ function writeSignals(signals, replace = false) {
   ensureDataDir();
   let existing = [];
   if (!replace && fs.existsSync(SIGNALS_FILE)) {
-    try {
-      existing = JSON.parse(fs.readFileSync(SIGNALS_FILE, 'utf8'));
-    } catch (_) {}
+    existing = readSignalsArray(SIGNALS_FILE);
   }
   if (!Array.isArray(existing)) existing = [];
 
@@ -66,7 +60,7 @@ function writeSignals(signals, replace = false) {
       }
     }
   }
-  fs.writeFileSync(SIGNALS_FILE, JSON.stringify(existing, null, 2), 'utf8');
+  writeSignalsArray(SIGNALS_FILE, existing);
   return { total: existing.length, added };
 }
 
@@ -75,13 +69,8 @@ function writeSignals(signals, replace = false) {
  */
 function getSignals(productId, periodStart, periodEnd) {
   if (!fs.existsSync(SIGNALS_FILE)) return [];
-  const raw = fs.readFileSync(SIGNALS_FILE, 'utf8');
-  let list = [];
-  try {
-    list = JSON.parse(raw);
-  } catch (_) {
-    return [];
-  }
+  const list = readSignalsArray(SIGNALS_FILE);
+  if (!Array.isArray(list)) return [];
   return list.filter(
     (s) => s.product_id === productId && s.date >= periodStart && s.date <= periodEnd
   );

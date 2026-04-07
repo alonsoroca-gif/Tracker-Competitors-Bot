@@ -6,6 +6,10 @@
 const Parser = require('rss-parser');
 const cheerio = require('cheerio');
 const { loadConfig } = require('./loadConfig');
+const { attachIntelPillarMetadata } = require('./intelPillar');
+const { fetchYouTubeCommentThreads } = require('./youtubeComments');
+const { searchYouTubeVideos, listVideoDetails } = require('./youtubeDiscovery');
+const { fetchG2ReviewSnippets } = require('./g2Scrape');
 
 const parser = new Parser({
   timeout: 15000,
@@ -147,6 +151,46 @@ function isValidPublicUrl(value) {
   }
 }
 
+function isValidYoutubeVideoId(v) {
+  return typeof v === 'string' && /^[a-zA-Z0-9_-]{11}$/.test(v.trim());
+}
+
+function parseYoutubeCommentVideoIds(base) {
+  const raw = base && base.youtube_comment_video_ids;
+  if (Array.isArray(raw)) {
+    return raw.map((x) => String(x).trim()).filter(isValidYoutubeVideoId);
+  }
+  if (typeof raw === 'string' && raw.trim()) {
+    return raw.split(/[\s,]+/).map((x) => x.trim()).filter(isValidYoutubeVideoId);
+  }
+  return [];
+}
+
+function parseYoutubeDiscoveryQueries(base) {
+  const raw = base && base.youtube_discovery_queries;
+  if (Array.isArray(raw)) {
+    return raw.map((x) => String(x).trim()).filter(Boolean).slice(0, 8);
+  }
+  if (typeof raw === 'string' && raw.trim()) {
+    return raw
+      .split(/\n/)
+      .map((s) => s.trim())
+      .filter(Boolean)
+      .slice(0, 8);
+  }
+  return [];
+}
+
+function youtubeDiscoveryMaxResults(base) {
+  const n = parseInt(base && base.youtube_discovery_max_results, 10);
+  return Math.min(15, Math.max(1, Number.isFinite(n) ? n : 5));
+}
+
+function youtubeDiscoveryMaxQueries(base) {
+  const n = parseInt(base && base.youtube_discovery_max_queries, 10);
+  return Math.min(8, Math.max(1, Number.isFinite(n) ? n : 4));
+}
+
 function getSourceUrls(competitorId) {
   const config = loadConfig();
   const base = (config.sources && config.sources[competitorId]) || {};
@@ -163,9 +207,18 @@ function getSourceUrls(competitorId) {
     docs_url: base.docs_url || '',
   };
 
-  return Object.fromEntries(
+  const baseUrls = Object.fromEntries(
     Object.entries(urls).map(([k, v]) => [k, isValidPublicUrl(v) ? v : ''])
   );
+  const g2 = isValidPublicUrl(base.g2_reviews_url || '') ? String(base.g2_reviews_url).trim() : '';
+  return {
+    ...baseUrls,
+    g2_reviews_url: g2,
+    youtube_comment_video_ids: parseYoutubeCommentVideoIds(base),
+    youtube_discovery_queries: parseYoutubeDiscoveryQueries(base),
+    youtube_discovery_max_results: youtubeDiscoveryMaxResults(base),
+    youtube_discovery_max_queries: youtubeDiscoveryMaxQueries(base),
+  };
 }
 
 async function fetchText(url, timeoutMs = DEFAULT_TIMEOUT_MS) {
@@ -310,7 +363,7 @@ function buildSignalBase({
     confidence: typeof confidence === 'number' ? confidence : 0.6,
     importance: typeof importance === 'number' ? importance : 0.6,
     entities: entities || {},
-    metadata: metadata || {},
+    metadata: attachIntelPillarMetadata(metadata || {}, source, type),
   };
 }
 
@@ -685,7 +738,226 @@ function dedupeSignals(signals) {
   return out;
 }
 
-async function collect(competitorId, productId, days = 7) {
+async function collectYouTubeDiscoverySignals(
+  competitorId,
+  productId,
+  queries,
+  maxResultsPerQuery,
+  maxQueriesPerRun,
+  days
+) {
+  const apiKey = process.env.YOUTUBE_DATA_API_KEY || '';
+  if (!apiKey || !queries || !queries.length) return [];
+
+  const cutoff = cutoffISO(days);
+  const runQueries = queries.slice(0, maxQueriesPerRun);
+  const publishedAfterDate = new Date();
+  publishedAfterDate.setDate(publishedAfterDate.getDate() - parseDays(days));
+  const publishedAfter = publishedAfterDate.toISOString();
+
+  /** @type {Map<string, { videoId: string, title: string, description: string, channelTitle: string, publishedAt: string, queries: string[] }>} */
+  const byId = new Map();
+
+  for (const q of runQueries) {
+    try {
+      const rows = await searchYouTubeVideos(apiKey, q, {
+        maxResults: maxResultsPerQuery,
+        publishedAfter,
+      });
+      for (const row of rows) {
+        if (!row.publishedAt || row.publishedAt < cutoff) continue;
+        if (!byId.has(row.videoId)) {
+          byId.set(row.videoId, { ...row, queries: [q] });
+        } else {
+          const cur = byId.get(row.videoId);
+          if (!cur.queries.includes(q)) cur.queries.push(q);
+        }
+      }
+    } catch (_) {
+      /* quota or network — skip query */
+    }
+  }
+
+  if (!byId.size) return [];
+
+  const ids = [...byId.keys()];
+  let details = new Map();
+  try {
+    for (let i = 0; i < ids.length; i += 50) {
+      const chunk = ids.slice(i, i + 50);
+      const part = await listVideoDetails(apiKey, chunk);
+      part.forEach((v, k) => details.set(k, v));
+    }
+  } catch (_) {
+    details = new Map();
+  }
+
+  const signals = [];
+  for (const [videoId, row] of byId) {
+    const d = details.get(videoId) || {};
+    const combined = [row.title, row.description, row.channelTitle].join('\n');
+    const { event_type, importance } = inferArticleEventType(row.title, combined);
+    const entities = {
+      ...extractNamedEntities(combined),
+      video_id: videoId,
+      channel_title: row.channelTitle,
+      discovery_queries: row.queries,
+    };
+
+    const watchUrl = `https://www.youtube.com/watch?v=${videoId}`;
+    const queryNote = `Queries: ${row.queries.join(' | ')}`;
+    const statsNote = [d.viewCount ? `${d.viewCount} views` : '', d.duration ? `duration ${d.duration}` : '']
+      .filter(Boolean)
+      .join(' · ');
+
+    signals.push(
+      buildSignalBase({
+        competitorId,
+        productId,
+        source: 'youtube_search',
+        type: 'review_youtube',
+        event_type,
+        headline: row.title || `YouTube video ${videoId}`,
+        source_url: watchUrl,
+        date: row.publishedAt,
+        snippet: `${queryNote}. ${row.description.slice(0, 400)}`,
+        evidence_snippet: [row.channelTitle, statsNote, row.description.slice(0, 800)].filter(Boolean).join(' • '),
+        confidence: scoreConfidence({
+          evidenceCount: 2,
+          hasHeadings: Boolean(row.title),
+          directPage: Boolean(row.description),
+        }),
+        importance: Math.min(0.92, (importance || 0.7) + 0.05),
+        entities,
+        metadata: {
+          page_kind: 'youtube_search',
+          video_id: videoId,
+          channel_title: row.channelTitle,
+          view_count: d.viewCount || null,
+          duration_iso: d.duration || null,
+        },
+      })
+    );
+  }
+
+  return signals;
+}
+
+async function collectYouTubeCommentSignals(competitorId, productId, videoIds) {
+  const apiKey = process.env.YOUTUBE_DATA_API_KEY || '';
+  if (!apiKey || !videoIds || !videoIds.length) return [];
+
+  const signals = [];
+  for (const videoId of videoIds) {
+    try {
+      const comments = await fetchYouTubeCommentThreads(videoId, apiKey, { maxResults: 20 });
+      if (!comments.length) continue;
+
+      /* Snapshot date = run day so the row stays inside the report window after collect. */
+      const date = todayISO();
+      const quotes = comments.slice(0, 8).map((c) => c.text);
+      const evidence = comments
+        .slice(0, 5)
+        .map((c) => (c.author ? `${c.author}: ${c.text}` : c.text))
+        .join(' • ');
+
+      const combined = quotes.join('\n');
+      const { event_type, importance } = inferArticleEventType('YouTube comments', combined);
+      const entities = { ...extractNamedEntities(combined), review_quotes: quotes.slice(0, 5) };
+
+      signals.push(
+        buildSignalBase({
+          competitorId,
+          productId,
+          source: 'youtube_comments',
+          type: 'review_youtube',
+          event_type,
+          headline: `YouTube comments (${videoId})`,
+          source_url: `https://www.youtube.com/watch?v=${videoId}`,
+          date,
+          snippet: `Sampled ${comments.length} thread(s). Themes: ${quotes[0].slice(0, 200)}`,
+          evidence_snippet: evidence,
+          confidence: scoreConfidence({
+            evidenceCount: quotes.length,
+            hasHeadings: false,
+            directPage: true,
+          }),
+          importance,
+          entities,
+          metadata: { page_kind: 'youtube_comments', video_id: videoId },
+        })
+      );
+    } catch (_) {
+      /* skip video on API error */
+    }
+  }
+  return signals;
+}
+
+async function collectG2ReviewSignals(competitorId, productId, g2Url) {
+  if (!isValidPublicUrl(g2Url)) return [];
+  try {
+    const { reviews, note } = await fetchG2ReviewSnippets(g2Url, { maxReviews: 12 });
+    const texts = reviews.map((r) => r.text);
+    if (!texts.length) {
+      return [
+        buildSignalBase({
+          competitorId,
+          productId,
+          source: 'g2_reviews',
+          type: 'review_g2',
+          event_type: 'content_update',
+          headline: 'G2 reviews (no static HTML excerpts)',
+          source_url: g2Url,
+          date: todayISO(),
+          snippet: note,
+          evidence_snippet: note,
+          confidence: 0.35,
+          importance: 0.5,
+          entities: { review_quotes: [], g2_parse_note: note },
+          metadata: { page_kind: 'g2', parse_ok: false },
+        }),
+      ];
+    }
+
+    const combined = texts.join('\n');
+    const { event_type, importance } = inferArticleEventType('G2 user reviews', combined);
+    const entities = { ...extractNamedEntities(combined), review_quotes: texts.slice(0, 6) };
+
+    return [
+      buildSignalBase({
+        competitorId,
+        productId,
+        source: 'g2_reviews',
+        type: 'review_g2',
+        event_type,
+        headline: 'G2 user review excerpts',
+        source_url: g2Url,
+        date: todayISO(),
+        snippet: `${texts.length} excerpt(s). ${note} First: ${texts[0].slice(0, 220)}`,
+        evidence_snippet: texts.slice(0, 4).join('\n\n'),
+        confidence: scoreConfidence({
+          evidenceCount: texts.length,
+          hasHeadings: false,
+          directPage: true,
+        }),
+        importance,
+        entities,
+        metadata: { page_kind: 'g2', parse_ok: true },
+      }),
+    ];
+  } catch (_) {
+    return [];
+  }
+}
+
+/**
+ * @param {string} competitorId
+ * @param {string} productId
+ * @param {number} [days=7]
+ * @param {{ youtubeDiscovery?: Map<string, object[]> } | null} [session]  Per-batch cache so YouTube search runs once per competitor, not once per product row.
+ */
+async function collect(competitorId, productId, days = 7, session = null) {
   let sourceUrls;
   try {
     sourceUrls = getSourceUrls(competitorId);
@@ -720,6 +992,56 @@ async function collect(competitorId, productId, days = 7) {
     if (!url) continue;
     const signals = await extractPageSignals(url, pageKind, competitorId, productId);
     collected.push(...signals);
+  }
+
+  const ytCommentSignals = await collectYouTubeCommentSignals(
+    competitorId,
+    productId,
+    sourceUrls.youtube_comment_video_ids || []
+  );
+  collected.push(...ytCommentSignals);
+
+  let ytDiscoverySignals = [];
+  const discQueries = sourceUrls.youtube_discovery_queries || [];
+  const ytApiKey = process.env.YOUTUBE_DATA_API_KEY || '';
+  if (discQueries.length && ytApiKey) {
+    const discKey = [
+      competitorId,
+      safeDays,
+      discQueries.join('\t'),
+      sourceUrls.youtube_discovery_max_results ?? 5,
+      sourceUrls.youtube_discovery_max_queries ?? 4,
+    ].join('|');
+    const discMap = session && session.youtubeDiscovery;
+    if (discMap instanceof Map) {
+      if (!discMap.has(discKey)) {
+        const raw = await collectYouTubeDiscoverySignals(
+          competitorId,
+          productId,
+          discQueries,
+          sourceUrls.youtube_discovery_max_results ?? 5,
+          sourceUrls.youtube_discovery_max_queries ?? 4,
+          safeDays
+        );
+        discMap.set(discKey, raw);
+      }
+      ytDiscoverySignals = (discMap.get(discKey) || []).map((s) => ({ ...s, product_id: productId }));
+    } else {
+      ytDiscoverySignals = await collectYouTubeDiscoverySignals(
+        competitorId,
+        productId,
+        discQueries,
+        sourceUrls.youtube_discovery_max_results ?? 5,
+        sourceUrls.youtube_discovery_max_queries ?? 4,
+        safeDays
+      );
+    }
+  }
+  collected.push(...ytDiscoverySignals);
+
+  if (sourceUrls.g2_reviews_url) {
+    const g2Signals = await collectG2ReviewSignals(competitorId, productId, sourceUrls.g2_reviews_url);
+    collected.push(...g2Signals);
   }
 
   return dedupeSignals(filterLastDays(collected, safeDays));

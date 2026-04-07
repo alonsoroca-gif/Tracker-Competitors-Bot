@@ -8,7 +8,7 @@
 
 ## 0. One-paragraph summary
 
-For each **product** × **competitor**, `collect(competitorId, productId, days)` loads URLs from `config/products.json` (`sources.<competitorId>`) with optional **environment overrides**, fetches **RSS/Atom** (blog, press, changelog, YouTube channel feed) and **HTML pages** (pricing, features, careers), normalizes into **signal** objects, filters to the last **`days`**, merges into `data/signals.json` (dedupe by date + competitor + product + type + snippet prefix), then **prunes** rows older than that window. The UI triggers this via **`POST /api/collect?days=N`**. **No YouTube Data API search yet** — only optional per-competitor Atom feed URL. **No video transcripts.**
+For each **product** × **competitor**, `collect(competitorId, productId, days, session)` loads URLs from `config/products.json` (`sources.<competitorId>`) with optional **environment overrides**, fetches **RSS/Atom** (blog, press, changelog, YouTube channel feed), **HTML pages** (pricing, features, careers), optional **YouTube Data API** (**`search.list`** + **`videos.list`** when `youtube_discovery_queries` + `YOUTUBE_DATA_API_KEY` are set; **`commentThreads.list`** when `youtube_comment_video_ids` is set), optional **G2** HTML excerpt probe, normalizes into **signal** objects, filters to the last **`days`**, merges into `data/signals.json` (dedupe by date + competitor + product + type + snippet prefix), then **prunes** rows older than that window. The UI triggers this via **`POST /api/collect?days=N`**. **`session.youtubeDiscovery`** caches search results **once per competitor per batch** so API quota is not multiplied by the number of products. **No video transcripts** in-repo yet.
 
 ---
 

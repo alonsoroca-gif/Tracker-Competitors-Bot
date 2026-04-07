@@ -1,0 +1,264 @@
+{
+  "_comment": "Per tracker product: repo_terms (code scan), display_name, match_focus / differentiate_focus (rotates by gap_id for varied copy), fallback_no_hits (optional). Legacy: entry may be a string[] = repo_terms only.",
+  "prospect-portal": {
+    "display_name": "Prospect Portal",
+    "repo_terms": [
+      "prospect",
+      "guestcard",
+      "guest_card",
+      "guest card",
+      "tour",
+      "scheduling",
+      "appointment",
+      "syndication",
+      "vacancy",
+      "ils",
+      "leasing",
+      "waitlist",
+      "self-guided",
+      "self guided"
+    ],
+    "match_focus": [
+      "Guestcard + tour scheduling are the usual parity levers—trace their claim into your ILS handoff and self-schedule flows.",
+      "If they emphasize speed-to-tour, audit waitlist, syndication, and agent handoff before you promise feature parity.",
+      "Prospect experience wins on clarity: compare their messaging to your actual guestcard and tour confirmation paths."
+    ],
+    "differentiate_focus": [
+      "Lead with Entrata stack depth (PMS + portals + ops) instead of a standalone tour widget story.",
+      "Stress operator workflow and reporting—what happens after the tour is booked matters more than the booking modal alone.",
+      "Position reliability and integrations (ILS, CRM) where thin competitors over-rotate on demos."
+    ],
+    "fallback_no_hits": "Add symbols you actually use under Applications/ProspectPortal (routes, modules, Vue/React entries) to repo_terms."
+  },
+  "lead-manager": {
+    "display_name": "Lead Manager / Call Center",
+    "repo_terms": [
+      "lead",
+      "leads",
+      "routing",
+      "callcenter",
+      "call_center",
+      "queue",
+      "agent",
+      "dialer",
+      "ivr",
+      "callback"
+    ],
+    "match_focus": [
+      "Routing, queues, and agent desktop behavior are where lead products diverge—verify their story against your dialer and IVR paths.",
+      "If the move is AI or speed, check callback, skill routing, and SLA timers—not just the marketing slide.",
+      "Parity claims on omnichannel usually mean SMS/voice/email handoff; trace that in your lead pipeline code."
+    ],
+    "differentiate_focus": [
+      "Highlight Entrata-native routing and auditability vs bolt-on dialer startups.",
+      "Emphasize compliance, recording, and multi-site operations for enterprise PMs.",
+      "Show how leads flow into leasing and applications—not a disconnected call log."
+    ],
+    "fallback_no_hits": "Confirm Applications/CallCenter (or your routed path) in app-inventory and add queue/dialer symbols to repo_terms."
+  },
+  "message-center": {
+    "display_name": "Message Center",
+    "repo_terms": [
+      "chat",
+      "message",
+      "messaging",
+      "sms",
+      "conversation",
+      "thread",
+      "inbox",
+      "notification"
+    ],
+    "match_focus": [
+      "Threading, delivery receipts, and template governance are the real feature surface—compare there first.",
+      "If they tout AI replies, map claims to your conversation model, escalation rules, and human takeover.",
+      "SMS compliance (opt-in/opt-out) is often where parity breaks; align product and legal before roadmap."
+    ],
+    "differentiate_focus": [
+      "Message Center sits inside the full prospect/resident journey—sell continuity, not a siloed chat box.",
+      "Contrast enterprise controls (roles, retention, audit) vs lightweight chat vendors.",
+      "Stress PMS and portal context so agents are not switching systems per thread."
+    ],
+    "fallback_no_hits": "Wire Applications/Chat in inventory and extend repo_terms with your thread/SMS module names."
+  },
+  "online-applications": {
+    "display_name": "Online Applications",
+    "repo_terms": [
+      "application",
+      "applicant",
+      "apply",
+      "screening",
+      "lease",
+      "signing",
+      "workflow",
+      "conditional"
+    ],
+    "match_focus": [
+      "Application parity is workflow + rules (conditions, fees, guarantors)—scan those layers before UI polish.",
+      "If competitors push instant approval narratives, verify screening integrations and edge cases in code.",
+      "Lease signing and document packets are high-risk deltas; prioritize e-sign and template paths."
+    ],
+    "differentiate_focus": [
+      "Differentiate on configurability for diverse portfolios vs one-size flows.",
+      "Emphasize fraud, identity, and compliance depth where speed-first vendors cut corners.",
+      "Tie applications to move-in and ledger—not a PDF graveyard."
+    ],
+    "fallback_no_hits": "Point repo_root at the Entrata app that owns apply flows and add screening/workflow tokens to repo_terms."
+  },
+  "resident-verify": {
+    "display_name": "Resident Verify",
+    "repo_terms": [
+      "resident",
+      "verify",
+      "verification",
+      "income",
+      "identity",
+      "document"
+    ],
+    "match_focus": [
+      "Income and identity verification are integration-heavy—match competitor claims to your vendor hooks and fallbacks.",
+      "Document upload + manual review paths often matter as much as auto-decisioning.",
+      "If they advertise faster approvals, check throttling, re-verification, and exception queues."
+    ],
+    "differentiate_focus": [
+      "Sell trust, audit trails, and PM-configurable policies—not just faster green lights.",
+      "Contrast fair-housing-safe workflows vs black-box AI vendors.",
+      "Highlight how verification feeds applications and move-in, end to end."
+    ],
+    "fallback_no_hits": "Use Applications/ResidentVerifyPortal in inventory; add document/income provider symbols to repo_terms."
+  },
+  "docx": {
+    "display_name": "DocX",
+    "repo_terms": [
+      "document",
+      "signature",
+      "lease",
+      "pdf",
+      "template",
+      "e-sign",
+      "esign"
+    ],
+    "match_focus": [
+      "Doc parity is templates, merge fields, and signature ceremonies—verify those before comparing AI blurbs.",
+      "Multi-party signing and versioning are common gaps vs slide-deck competitors.",
+      "If they mention bulk sends or packets, check batch generation and error handling in your stack."
+    ],
+    "differentiate_focus": [
+      "Anchor on lease lifecycle + Entrata context (units, parties) vs generic e-sign tools.",
+      "Emphasize legal-grade controls, retention, and replay for enterprise legal teams.",
+      "Position integrated doc + ledger + portal instead of exporting PDFs forever."
+    ],
+    "fallback_no_hits": "docx often maps to composer root—set repo_root to the real package if possible, then enrich repo_terms."
+  },
+  "ils-portal": {
+    "display_name": "ILS Portal",
+    "repo_terms": [
+      "ils",
+      "listing",
+      "syndication",
+      "feed",
+      "vacancy",
+      "unit",
+      "availability"
+    ],
+    "match_focus": [
+      "Feeds, field mapping, and syndication errors are the operational core—compare there when they claim new ILS reach.",
+      "Availability and pricing sync beats pretty listing pages for most operators.",
+      "If they push AI copy for listings, check where content is generated vs stored in your feed pipeline."
+    ],
+    "differentiate_focus": [
+      "Differentiate on feed health, retries, and operator tooling—not headline AI fluff.",
+      "Stress Vacancy + PMS truth as source vs thin aggregators.",
+      "Show reporting when syndication breaks (per partner, per property)."
+    ],
+    "fallback_no_hits": "Confirm Applications/Vacancy (or your ILS app path) and add feed partner names you support to repo_terms."
+  },
+  "marketing-strategy-hub": {
+    "display_name": "Marketing Strategy Hub",
+    "repo_terms": [
+      "marketing",
+      "campaign",
+      "email",
+      "audience",
+      "segment",
+      "automation"
+    ],
+    "match_focus": [
+      "Campaign automation parity is segments, triggers, and attribution—validate against their launch story.",
+      "Email deliverability and preference centers matter more than template counts.",
+      "If they tout AI content, map to where copy is authored and approved in your app."
+    ],
+    "differentiate_focus": [
+      "Sell closed-loop marketing + leasing data on one stack vs generic ESPs.",
+      "Emphasize governance, brand controls, and multi-property rollouts.",
+      "Contrast measurable tour and lease outcomes, not vanity sends."
+    ],
+    "fallback_no_hits": "Use Applications/Marketing in inventory; add campaign/segment class names to repo_terms."
+  },
+  "reputation-advisor": {
+    "display_name": "Reputation Advisor",
+    "repo_terms": [
+      "reputation",
+      "review",
+      "survey",
+      "rating",
+      "feedback",
+      "nps"
+    ],
+    "match_focus": [
+      "Review solicitation and survey timing drive outcomes—compare workflows, not just dashboard screenshots.",
+      "If they add AI responses, check moderation, brand voice, and escalation in your codepaths.",
+      "NPS/CSAT parity is often about distribution channels (email/SMS/in-app), not the chart widget."
+    ],
+    "differentiate_focus": [
+      "Tie reputation to leasing and renewals—prove ROI vs standalone review bots.",
+      "Highlight compliance and authenticity (no astroturfing) for enterprise risk teams.",
+      "Contrast portfolio rollups and benchmarking inside Entrata vs siloed tools."
+    ],
+    "fallback_no_hits": "Reputation often shares Marketing app—verify repo_root and add review/survey module tokens."
+  },
+  "leasing-ai": {
+    "display_name": "Leasing AI / Leasing Website",
+    "repo_terms": [
+      "leasing",
+      "eli",
+      "chatbot",
+      "virtual",
+      "assistant",
+      "conversation",
+      "nlp"
+    ],
+    "match_focus": [
+      "Leasing AI parity is intents, handoff to humans, and PMS facts—not chat window chrome.",
+      "If they claim new channels (voice/SMS), trace connectors and fallback behavior in your assistant stack.",
+      "Ground claims in tour scheduling and application CTAs your bot can actually execute."
+    ],
+    "differentiate_focus": [
+      "Differentiate on grounded answers from Entrata data vs generic LLM wrappers.",
+      "Emphasize guardrails, logging, and brand-safe prompts for regulated operators.",
+      "Show assistant + agent + portal as one system, not a separate bot SKU."
+    ],
+    "fallback_no_hits": "Point inventory at Applications/EntrataLeasingWebsite (or actual ELI package) and add intent/route names to repo_terms."
+  },
+  "eli-plus": {
+    "display_name": "ELI+",
+    "repo_terms": [
+      "eli",
+      "leasing",
+      "assistant",
+      "conversational",
+      "chatbot",
+      "voice"
+    ],
+    "match_focus": [
+      "ELI+ moves usually hit voice, SMS, or richer handoff—verify those modalities in code before roadmap.",
+      "Enterprise ELI asks about RBAC, languages, and property groups; match narrative to implementation.",
+      "If competitors bundle CRM + AI, check where your assistant stops and CRM begins."
+    ],
+    "differentiate_focus": [
+      "Position ELI+ as the native leasing brain on Entrata data, not a pasted-in copilot.",
+      "Stress voice quality, telephony integration, and compliance recording where relevant.",
+      "Contrast total cost and admin burden vs best-of-breed AI stacks."
+    ],
+    "fallback_no_hits": "ELI+ may live under Applications/Entrata—confirm repo_root and add voice/telephony tokens if you use them."
+  }
+}

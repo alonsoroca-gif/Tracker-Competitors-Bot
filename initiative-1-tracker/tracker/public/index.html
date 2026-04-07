@@ -232,6 +232,37 @@
       border: 1px solid var(--border);
       border-radius: 6px;
     }
+    .presentation-model {
+      font-size: 0.8125rem;
+      color: var(--text-secondary);
+      margin-bottom: 1.25rem;
+      padding: 0.75rem 1rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      max-width: 52rem;
+      line-height: 1.5;
+    }
+    .presentation-model strong { color: var(--text); }
+    .presentation-model ol {
+      margin: 0.5rem 0 0 1.1rem;
+      padding: 0;
+    }
+    .presentation-model li { margin-bottom: 0.35rem; }
+    .presentation-model .pm-doc {
+      margin-top: 0.5rem;
+      font-size: 0.75rem;
+      color: var(--muted);
+    }
+    .card-subheader {
+      margin: -0.5rem 1.25rem 0.75rem;
+      padding: 0 0 0.75rem;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.8125rem;
+      color: var(--text-secondary);
+      font-weight: 400;
+      line-height: 1.4;
+    }
     .collect-status-line {
       font-size: 0.75rem;
       color: var(--muted);
@@ -431,6 +462,14 @@
     .priority-badge.high { background: rgba(239, 68, 68, 0.2); color: #f87171; }
     .priority-badge.medium { background: rgba(245, 158, 11, 0.2); color: #fbbf24; }
     .priority-badge.low { background: rgba(34, 197, 94, 0.2); color: #4ade80; }
+    .corro-confirmed { font-weight: 600; color: var(--accent, #60a5fa); }
+    .corro-watch { color: var(--text-secondary, #94a3b8); }
+    .move-stack { line-height: 1.45; }
+    .move-stack .move-insight { font-weight: 600; display: block; margin-bottom: 0.35rem; }
+    .move-stack .move-why { font-size: 0.88em; color: var(--text-secondary); display: block; margin-bottom: 0.25rem; }
+    .move-stack .move-threat { font-size: 0.82em; color: var(--text-secondary); display: block; margin-bottom: 0.35rem; }
+    .move-stack .move-factual { font-size: 0.82em; color: var(--text-secondary); display: block; border-top: 1px solid var(--border); padding-top: 0.35rem; margin-top: 0.15rem; }
+    .move-stack .move-factual .mf-label { color: var(--text-secondary); margin-right: 0.25rem; }
 
     .changes-list {
       list-style: none;
@@ -448,6 +487,57 @@
     }
     .changes-list li:last-child { margin-bottom: 0; }
     .changes-list .change-item { line-height: 1.6; }
+    .changes-list .work-items {
+      margin: 0.75rem 0 0 1rem;
+      padding: 0;
+      list-style: disc;
+      color: var(--text-secondary);
+      font-size: 0.8125rem;
+    }
+    .changes-list .work-items li { margin-bottom: 0.5rem; }
+    .changes-list .wi-kind {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--muted);
+    }
+    .changes-list .wi-meta { display: block; margin-top: 0.25rem; color: var(--muted); font-size: 0.75rem; }
+    .changes-list .repo-touchpoints {
+      margin: 0.85rem 0 0 0;
+      padding: 0.65rem 0.75rem;
+      background: rgba(0, 0, 0, 0.2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 0.8125rem;
+    }
+    .changes-list .repo-touchpoints-title {
+      font-weight: 600;
+      color: var(--text-secondary);
+      margin-bottom: 0.35rem;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+    .changes-list .repo-touchpoints ul {
+      margin: 0;
+      padding-left: 1.1rem;
+      color: var(--text-secondary);
+    }
+    .changes-list .repo-touchpoints li { margin-bottom: 0.45rem; }
+    .changes-list .repo-touchpoints code {
+      font-size: 0.78rem;
+      background: var(--surface);
+      padding: 0.1rem 0.35rem;
+      border-radius: 4px;
+      color: #a5b4fc;
+    }
+    .changes-list .repo-touchpoints .snippet {
+      display: block;
+      margin-top: 0.2rem;
+      font-size: 0.72rem;
+      color: var(--muted);
+      font-family: ui-monospace, monospace;
+    }
     .changes-list .change-item br { display: block; content: ''; margin-bottom: 0.25rem; }
     .empty { color: var(--muted); font-style: italic; padding: 1.25rem; }
     .error { color: var(--priority-high); padding: 1rem 1.25rem; }
@@ -458,6 +548,28 @@
       font-size: 0.75rem;
       color: var(--muted);
       text-align: center;
+    }
+    .dev-strip {
+      margin: 0 1.5rem 1rem;
+      padding: 0.5rem 0.75rem;
+      font-size: 0.75rem;
+      line-height: 1.45;
+      color: var(--text-secondary);
+      background: rgba(245, 158, 11, 0.08);
+      border: 1px solid rgba(245, 158, 11, 0.25);
+      border-radius: 6px;
+    }
+    .dev-strip code {
+      font-size: 0.7rem;
+      background: var(--surface-elevated);
+      padding: 0.1rem 0.35rem;
+      border-radius: 3px;
+    }
+    .fetch-meta {
+      display: block;
+      margin-top: 0.35rem;
+      font-size: 0.75rem;
+      color: var(--muted);
     }
   </style>
 </head>
@@ -482,6 +594,10 @@
     </div>
   </header>
 
+  <div class="dev-strip" role="note">
+    <strong>Local dev:</strong> Edits to <code>lib/gapReport.js</code>, <code>lib/collect.js</code>, <code>lib/reportApi.js</code>, etc. load only after you <strong>restart</strong> the terminal running <code>npm run serve</code>, then reload this tab. Each API call uses a fresh URL (cache-bust) so JSON is not stuck in the browser. Pure UI edits to <code>public/index.html</code>: hard-refresh (⌘⇧R) or reopen the tab.
+  </div>
+
   <main class="main">
     <div class="summary-bar" id="summaryBar">
       <div>
@@ -489,6 +605,7 @@
         <span class="period" id="summaryPeriod">—</span>
         <span class="gap-count" id="summaryGaps">—</span>
         <div class="collect-status-line" id="collectStatusLine" aria-live="polite"></div>
+        <span class="fetch-meta" id="lastFetchMeta" aria-live="polite"></span>
       </div>
     </div>
 
@@ -538,19 +655,34 @@
         <option value="features_page">features_page</option>
         <option value="careers">careers</option>
         <option value="youtube">youtube</option>
+        <option value="youtube_comments">youtube_comments</option>
+        <option value="youtube_search">youtube_search</option>
+        <option value="g2_reviews">g2_reviews</option>
       </select>
+    </div>
+
+    <div class="presentation-model" role="region" aria-label="How competitor intel is structured">
+      <strong>How this report is structured</strong>
+      <ol>
+        <li><strong>Competitive move (table)</strong> — One factual line per signal: who + concrete move, with metrics when we have them. Not a page title.</li>
+        <li><strong>Evidence (Details)</strong> — Headline, full excerpt, and public link for proof.</li>
+        <li><strong>Our response (right panel)</strong> — What we do this week: recommendation, work items, and (when configured) codebase touchpoints.</li>
+      </ol>
+      <p class="pm-doc">Spec: <code>initiative-1-tracker/docs/COMPETITIVE-INTEL-PRESENTATION.md</code></p>
     </div>
 
     <div class="content-grid">
       <section class="card gaps-card" aria-labelledby="gapsHeading">
-        <h2 class="card-header" id="gapsHeading">Gaps</h2>
+        <h2 class="card-header" id="gapsHeading">Competitive gaps</h2>
+        <p class="card-subheader" id="gapsSubheader">Each row is a <strong>summary competitive move</strong> (L1). Use <strong>Source</strong> and <strong>Details</strong> for where it came from and full text.</p>
         <div class="card-body">
           <div id="dataSourcesSummary" class="data-sources-summary" style="display:none;"></div>
           <div id="gapsContent"></div>
         </div>
       </section>
       <section class="card changes-card" aria-labelledby="changesHeading">
-        <h2 class="card-header" id="changesHeading">What to change this week</h2>
+        <h2 class="card-header" id="changesHeading">Our response this week</h2>
+        <p class="card-subheader" id="changesSubheader">Top priority gaps (L3): recommended action, timeline, and structured follow-ups.</p>
         <div class="card-body">
           <ul class="changes-list" id="changesContent"></ul>
         </div>
@@ -558,7 +690,7 @@
     </div>
   </main>
 
-  <footer class="app-footer">Tracker Competitors Bot · v1</footer>
+  <footer class="app-footer">Tracker Competitors Bot · v3 · dev cache-bust</footer>
 
   <script>
     function setStatus(msg, isError) {
@@ -567,9 +699,19 @@
       el.className = 'header-status' + (isError ? ' error' : '');
     }
 
+    /** Unique query string on every request — browsers often ignore fetch cache mode for same-origin GET. */
+    function withCacheBust(url) {
+      var u = String(url || '');
+      var sep = u.indexOf('?') === -1 ? '?' : '&';
+      return u + sep + '_cb=' + Date.now() + '&_r=' + Math.random().toString(36).slice(2, 9);
+    }
+
     /** Fetch URL and parse JSON; if server returns HTML, show a clear error instead of parse error. */
     async function fetchJson(url, options) {
-      var res = await fetch(url, options);
+      var opts = options ? Object.assign({}, options) : {};
+      opts.cache = opts.cache || 'no-store';
+      var busted = withCacheBust(url);
+      var res = await fetch(busted, opts);
       var text = await res.text();
       var ct = (res.headers.get('Content-Type') || '').toLowerCase();
       if (ct.indexOf('application/json') === -1 && text.trim().toLowerCase().indexOf('<!doctype') === 0) {
@@ -584,13 +726,21 @@
     }
 
     var lastReportPayload = null;
+    var lastServerProcessStarted = null;
     var currentSourceFilter = '';
 
     function buildDataSourcesSummary(gaps) {
       var counts = {};
       (gaps || []).forEach(function(g) {
-        var s = (g.source && String(g.source).trim()) ? g.source.trim() : 'unknown';
-        counts[s] = (counts[s] || 0) + 1;
+        if (g.corroboration_sources && g.corroboration_sources.length) {
+          g.corroboration_sources.forEach(function(elt) {
+            var s = (elt.source && String(elt.source).trim()) ? elt.source.trim() : 'unknown';
+            counts[s] = (counts[s] || 0) + 1;
+          });
+        } else {
+          var s = (g.source && String(g.source).trim()) ? g.source.trim() : 'unknown';
+          counts[s] = (counts[s] || 0) + 1;
+        }
       });
       var parts = Object.keys(counts).sort().map(function(k) {
         return counts[k] + ' ' + k;
@@ -616,7 +766,12 @@
 
       var filtered = allGaps;
       if (currentSourceFilter) {
-        filtered = allGaps.filter(function(g) { return (g.source || '') === currentSourceFilter; });
+        filtered = allGaps.filter(function(g) {
+          if (g.corroboration_sources && g.corroboration_sources.length) {
+            return g.corroboration_sources.some(function(elt) { return (elt.source || '') === currentSourceFilter; });
+          }
+          return (g.source || '') === currentSourceFilter;
+        });
       }
       summaryGaps.innerHTML = '<strong>' + filtered.length + '</strong> gap' + (filtered.length === 1 ? '' : 's') + ' shown' + (currentSourceFilter ? ' (filtered)' : ' in period');
 
@@ -633,22 +788,64 @@
           var ourRaw = g.our_gap || 'Starting';
           var stateClass = 'state-' + ourRaw.replace(/\s/g, '');
           var ourDisplay = '<span class="' + stateClass + '">' + escapeHtml(ourRaw) + '</span>';
-          var src = (g.source && g.source !== 'unknown') ? g.source : '';
+          var src = '';
+          if (g.source_summary && String(g.source_summary).trim()) src = String(g.source_summary).trim();
+          else if (g.source && g.source !== 'unknown') src = g.source;
           var srcDisplay = src ? escapeHtml(src) : '<span title="Re-run Refresh data to see source">—</span>';
+          var pillar = '—';
+          if (g.intel_pillars && g.intel_pillars.length) pillar = 'P' + g.intel_pillars.join('+P');
+          else if (typeof g.intel_pillar === 'number') pillar = 'P' + g.intel_pillar;
+          var pillarTitle = g.intel_pillar_label ? escapeHtml(g.intel_pillar_label) : '';
+          var pillarDisplay;
+          if (pillar !== '—') {
+            pillarDisplay = '<span title="' + pillarTitle + '">' + escapeHtml(pillar) + '</span>';
+          } else if (g.intel_pillar_label && String(g.intel_pillar_label).trim() && g.intel_pillar_label !== 'Unclassified') {
+            pillarDisplay = '<span title="' + pillarTitle + '">' + escapeHtml(String(g.intel_pillar_label).slice(0, 28)) + (String(g.intel_pillar_label).length > 28 ? '…' : '') + '</span>';
+          } else {
+            pillarDisplay = '—';
+          }
+          var corro = (g.corroboration === 'confirmed') ? 'Confirmed' : 'Watch';
+          var corroClass = (g.corroboration === 'confirmed') ? 'corro-confirmed' : 'corro-watch';
+          var corroDisplay = '<span class="' + corroClass + '" title="Multi-pillar = independent source types agree on this theme">' + escapeHtml(corro) + '</span>';
+          if (g.cluster_signal_count > 1) {
+            corroDisplay += ' <span class="wi-meta">(' + g.cluster_signal_count + ' signals)</span>';
+          }
           var detailId = 'detail-' + g.gap_id;
           var fullSignal = g.competitor_signal || move;
+          var interp = g.interpretation || null;
+          var moveCell;
+          if (interp && interp.headline) {
+            moveCell =
+              '<div class="move-stack">' +
+              '<span class="move-insight">' + escapeHtml(interp.headline) + '</span>' +
+              (interp.strategic_why ? '<span class="move-why">' + escapeHtml(interp.strategic_why) + '</span>' : '') +
+              (interp.threat_tag ? '<span class="move-threat"><strong>Threat tag:</strong> ' + escapeHtml(interp.threat_tag) + '</span>' : '') +
+              '<span class="move-factual"><span class="mf-label">Captured:</span>' + escapeHtml(move) + '</span>' +
+              '</div>';
+          } else {
+            moveCell = escapeHtml(move);
+          }
           var headlineRow = g.headline ? '<br><span class="detail-label">Headline:</span>' + escapeHtml(g.headline) : '';
           var urlRow = '';
           if (g.source_url && /^https?:\/\//i.test(String(g.source_url))) {
             var u = String(g.source_url);
             urlRow = '<br><span class="detail-label">Public page:</span><a href="' + escapeHtml(u) + '" target="_blank" rel="noopener noreferrer">' + escapeHtml(u.length > 96 ? u.slice(0, 96) + '…' : u) + '</a>';
           }
+          var interpDetail = '';
+          if (interp && interp.headline) {
+            interpDetail =
+              '<br><span class="detail-label">Strategic read:</span>' +
+              escapeHtml(interp.headline) +
+              (interp.strategic_why ? '<br><span class="detail-label">Why:</span>' + escapeHtml(interp.strategic_why) : '') +
+              (interp.threat_tag ? '<br><span class="detail-label">Threat tag:</span>' + escapeHtml(interp.threat_tag) : '') +
+              '<br><span class="detail-label">Captured line:</span>' + escapeHtml(move);
+          }
           rows.push(
-            '<tr><td>' + escapeHtml(g.gap_id) + '</td><td><span class="priority-badge ' + escapeHtml(g.priority) + '">' + escapeHtml(g.priority) + '</span></td><td>' + escapeHtml(g.dimension) + '</td><td class="cell-wrap">' + escapeHtml(move) + '</td><td class="cell-wrap">' + ourDisplay + '</td><td class="cell-wrap">' + srcDisplay + '</td><td><button type="button" class="btn-details" data-detail="' + escapeHtml(detailId) + '" aria-expanded="false">Details</button></td></tr>' +
-            '<tr class="gap-details-row" id="' + detailId + '" style="display:none"><td colspan="7"><span class="detail-label">Full signal:</span>' + escapeHtml(fullSignal) + headlineRow + '<br><span class="detail-label">Our state:</span>' + escapeHtml(ourRaw) + '<br><span class="detail-label">Source:</span>' + escapeHtml(src || '—') + urlRow + '<br><span class="detail-label">Detected:</span>' + escapeHtml(g.detected_at || '—') + '</td></tr>'
+            '<tr><td>' + escapeHtml(g.gap_id) + '</td><td><span class="priority-badge ' + escapeHtml(g.priority) + '">' + escapeHtml(g.priority) + '</span></td><td>' + escapeHtml(g.dimension) + '</td><td class="cell-wrap">' + pillarDisplay + '</td><td class="cell-wrap">' + corroDisplay + '</td><td class="cell-wrap">' + moveCell + '</td><td class="cell-wrap">' + ourDisplay + '</td><td class="cell-wrap">' + srcDisplay + '</td><td><button type="button" class="btn-details" data-detail="' + escapeHtml(detailId) + '" aria-expanded="false">Details</button></td></tr>' +
+            '<tr class="gap-details-row" id="' + detailId + '" style="display:none"><td colspan="9"><span class="detail-label">Corroboration:</span>' + escapeHtml(corro) + '<br><span class="detail-label">Intel pillar:</span>' + escapeHtml(g.intel_pillar_label || pillar) + interpDetail + '<br><span class="detail-label">Full signal:</span>' + escapeHtml(fullSignal) + headlineRow + '<br><span class="detail-label">Our state:</span>' + escapeHtml(ourRaw) + '<br><span class="detail-label">Source:</span>' + escapeHtml(src || '—') + urlRow + '<br><span class="detail-label">Detected:</span>' + escapeHtml(g.detected_at || '—') + '</td></tr>'
           );
         });
-        gapsContent.innerHTML = '<table class="gaps-table"><thead><tr><th>ID</th><th>Priority</th><th>Dimension</th><th>What competitor is doing</th><th>Our state</th><th>Source</th><th></th></tr></thead><tbody>' + rows.join('') + '</tbody></table><p class="gaps-legend">Each row is a short insight: <strong>Competitor · action · source</strong>. Open <strong>Details</strong> for headline, evidence, and full text. Gaps: High → Medium → Low. Our state: Starting · In process · Delivered.</p>';
+        gapsContent.innerHTML = '<table class="gaps-table"><thead><tr><th>ID</th><th>Priority</th><th>Dimension</th><th>Pillar</th><th>Corroboration</th><th>Competitive move</th><th>Our state</th><th>Source</th><th></th></tr></thead><tbody>' + rows.join('') + '</tbody></table><p class="gaps-legend"><strong>Pillar</strong>: P1 owned · P2 behavioral · P3 third party (inferred from source if missing on disk). <strong>Corroboration</strong>: Confirmed = 2+ pillars on the same theme. <strong>Competitive move</strong>: top = rule-based strategic read; <strong>Captured</strong> = factual scrape line. <strong>Details</strong> = evidence (L2).</p>';
         gapsContent.querySelectorAll('.btn-details').forEach(function(btn) {
           btn.addEventListener('click', function() {
             var id = this.getAttribute('data-detail');
@@ -666,8 +863,29 @@
         changesContent.innerHTML = '<li class="empty">Nothing to change.</li>';
       } else {
         changesContent.innerHTML = changes.map(function(c) {
-          var text = (c.formatted || '').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
-          return '<li class="change-item">' + text + '</li>';
+          var text = (c.formatted || '')
+            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+            .replace(/`([^`]+)`/g, '<code>$1</code>')
+            .replace(/\n/g, '<br>');
+          var wi = '';
+          if (c.structured && c.structured.work_items && c.structured.work_items.length) {
+            wi = '<ul class="work-items">' + c.structured.work_items.map(function(w) {
+              var meta = w.inventory_snapshot || w.use_inventory || w.competitor_move_hint || '';
+              var metaHtml = meta ? '<span class="wi-meta">' + escapeHtml(String(meta).slice(0, 280)) + (String(meta).length > 280 ? '…' : '') + '</span>' : '';
+              return '<li><span class="wi-kind">' + escapeHtml(w.kind) + '</span> ' + escapeHtml(w.title) + metaHtml + '</li>';
+            }).join('') + '</ul>';
+          }
+          var rt = '';
+          if (c.structured && c.structured.repo_touchpoints && c.structured.repo_touchpoints.length) {
+            rt = '<div class="repo-touchpoints"><div class="repo-touchpoints-title">Core repo touchpoints</div><ul>' +
+              c.structured.repo_touchpoints.slice(0, 6).map(function(h) {
+                var sn = (h.snippets && h.snippets[0]) ? String(h.snippets[0].text) : '';
+                var snHtml = sn ? '<span class="snippet">' + escapeHtml(sn.length > 200 ? sn.slice(0, 200) + '…' : sn) + '</span>' : '';
+                var label = h.app_label ? ' <span class="wi-meta">' + escapeHtml(h.app_label) + '</span>' : '';
+                return '<li><code>' + escapeHtml(h.relativePath) + '</code>' + label + snHtml + '</li>';
+              }).join('') + '</ul></div>';
+          }
+          return '<li class="change-item">' + text + wi + rt + '</li>';
         }).join('');
       }
     }
@@ -676,16 +894,22 @@
       var el = document.getElementById('collectStatusLine');
       try {
         var s = await fetchJson('/api/collect-status');
+        var parts = [];
         if (s.last_collected_at) {
           var d = new Date(s.last_collected_at);
-          var parts = ['Last collect: ' + d.toLocaleString()];
+          parts.push('Last collect: ' + d.toLocaleString());
           if (s.signals_stored != null) parts.push(s.signals_stored + ' new');
           if (s.retention_days != null) parts.push('last ' + s.retention_days + 'd kept');
           if (s.signals_kept != null) parts.push(s.signals_kept + ' in file');
-          el.textContent = parts.join(' · ');
         } else {
-          el.textContent = 'No collect yet — use Refresh data.';
+          parts.push('No collect yet — use Refresh data.');
         }
+        if (s.signals_encrypted_at_rest) parts.push('signals.json encrypted at rest');
+        var li = s.last_run_intel;
+        if (li && li.pillars_touched_this_run && li.pillars_touched_this_run.length) {
+          parts.push('last run pillars P' + li.pillars_touched_this_run.join(', P'));
+        }
+        el.textContent = parts.join(' · ');
       } catch (_) {
         el.textContent = '';
       }
@@ -710,6 +934,7 @@
           summaryProduct.textContent = '—';
           summaryPeriod.textContent = '—';
           document.getElementById('summaryGaps').innerHTML = '—';
+          document.getElementById('lastFetchMeta').textContent = '';
           gapsContent.innerHTML = '<p class="error">' + escapeHtml(data.error) + '</p>';
           changesContent.innerHTML = '';
           lastReportPayload = null;
@@ -722,12 +947,28 @@
         summaryProduct.textContent = product.name;
         summaryPeriod.textContent = periodStart + ' – ' + periodEnd;
 
+        var fetchMeta = document.getElementById('lastFetchMeta');
+        var proc = data.viewer && data.viewer.process_started_at;
+        var gen = report && report.generated_at;
+        var parts = ['Browser fetch: ' + new Date().toLocaleTimeString()];
+        if (gen) parts.push('report built ' + new Date(gen).toLocaleTimeString());
+        if (proc) {
+          parts.push('Node process since ' + new Date(proc).toLocaleString());
+          if (lastServerProcessStarted && lastServerProcessStarted !== proc) {
+            setStatus('New server process — gap formatting uses latest lib/*.js', false);
+            setTimeout(function() { setStatus(''); }, 5000);
+          }
+          lastServerProcessStarted = proc;
+        }
+        fetchMeta.textContent = parts.join(' · ');
+
         renderGapsTable(report, changes);
         loadCollectStatus();
       } catch (err) {
         summaryProduct.textContent = '—';
         summaryPeriod.textContent = '—';
         document.getElementById('summaryGaps').innerHTML = '—';
+        document.getElementById('lastFetchMeta').textContent = '';
         gapsContent.innerHTML = '<p class="error">' + escapeHtml(err.message) + '</p>';
         changesContent.innerHTML = '';
         lastReportPayload = null;
@@ -758,6 +999,9 @@
         if (data.signalsStored) msg += ' +' + data.signalsStored + ' new.';
         if (data.signalsRemovedByRetention) msg += ' Removed ' + data.signalsRemovedByRetention + ' older.';
         if (!data.signalsStored && !data.signalsRemovedByRetention) msg += ' No new items; data matches selected period.';
+        if (data.last_run_intel && data.last_run_intel.pillars_touched_this_run && data.last_run_intel.pillars_touched_this_run.length) {
+          msg += ' Pillars this run: P' + data.last_run_intel.pillars_touched_this_run.join(', P') + '.';
+        }
         setStatus(msg);
         setTimeout(function() { setStatus(''); }, 4000);
       } catch (err) {

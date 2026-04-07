@@ -3,14 +3,15 @@ const fs = require('fs');
 const express = require('express');
 const { getReportData } = require('./lib/reportApi');
 const { loadConfig } = require('./lib/loadConfig');
-const { collect } = require('./lib/collect');
-const { writeSignals, pruneSignalsToRetentionDays } = require('./lib/storage');
+const { runFullCollect } = require('./lib/runCollectAll');
+const { writeCollectMeta, COLLECT_META_FILE } = require('./lib/collectMeta');
+const { buildWeeklyCoverageReport } = require('./lib/weeklyIntelFlow');
+const { isSignalsEncryptionEnabled } = require('./lib/signalsAtRest');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 const PUBLIC = path.join(__dirname, 'public');
 const DATA_DIR = path.join(__dirname, 'data');
-const COLLECT_META_FILE = path.join(DATA_DIR, 'collect-meta.json');
 const PROJECT_FOCUS_PATH = path.join(__dirname, 'config', 'project-focus.json');
 
 function loadProjectFocus() {
@@ -22,7 +23,26 @@ function loadProjectFocus() {
   }
 }
 
-app.use(express.static(PUBLIC));
+/** Local UI: never let the browser reuse stale index.html/JS/CSS while iterating. */
+app.use(
+  express.static(PUBLIC, {
+    etag: false,
+    lastModified: false,
+    setHeaders(res) {
+      res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
+      res.setHeader('Pragma', 'no-cache');
+    },
+  })
+);
+
+const SERVER_STARTED_AT = new Date().toISOString();
+
+app.use('/api', (req, res, next) => {
+  res.set('Cache-Control', 'no-store, no-cache, must-revalidate');
+  res.set('Pragma', 'no-cache');
+  res.set('X-Tracker-Server-Started', SERVER_STARTED_AT);
+  next();
+});
 
 app.get('/api/config', (req, res) => {
   try {
@@ -50,11 +70,20 @@ app.get('/api/report', (req, res) => {
   res.json(data);
 });
 
+/** Which intel pillars have configured sources per competitor (no network). */
+app.get('/api/weekly-coverage', (req, res) => {
+  try {
+    res.json(buildWeeklyCoverageReport());
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 /** Last collect run (written after POST /api/collect). */
 app.get('/api/collect-status', (req, res) => {
   try {
     if (!fs.existsSync(COLLECT_META_FILE)) {
-      return res.json({ last_collected_at: null, signals_stored: null });
+      return res.json({ last_collected_at: null, signals_stored: null, last_run_intel: null });
     }
     const meta = JSON.parse(fs.readFileSync(COLLECT_META_FILE, 'utf8'));
     res.json({
@@ -62,6 +91,8 @@ app.get('/api/collect-status', (req, res) => {
       signals_stored: meta.signals_stored != null ? meta.signals_stored : null,
       retention_days: meta.retention_days != null ? meta.retention_days : null,
       signals_kept: meta.signals_kept != null ? meta.signals_kept : null,
+      signals_encrypted_at_rest: isSignalsEncryptionEnabled(),
+      last_run_intel: meta.last_run_intel || null,
     });
   } catch (e) {
     res.status(500).json({ error: e.message });
@@ -79,44 +110,24 @@ app.post('/api/collect', (req, res) => {
   const retentionDays = Math.min(90, Math.max(1, parseInt(req.query.days, 10) || 7));
 
   (async () => {
-    const config = loadConfig();
-    let newSignals = 0;
-    for (const product of config.products) {
-      for (const competitor of config.competitors) {
-        const signals = await collect(competitor.id, product.id, retentionDays);
-        if (signals.length > 0) {
-          const { added } = writeSignals(signals, false);
-          newSignals += added;
-        }
-      }
-    }
-    const pruned = pruneSignalsToRetentionDays(retentionDays);
+    const { newCount, pruned, intelMeta } = await runFullCollect(retentionDays);
     try {
-      if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
-      fs.writeFileSync(
-        COLLECT_META_FILE,
-        JSON.stringify(
-          {
-            last_collected_at: new Date().toISOString(),
-            signals_stored: newSignals,
-            retention_days: retentionDays,
-            signals_kept: pruned.kept,
-            signals_removed_retention: pruned.removed,
-          },
-          null,
-          2
-        ),
-        'utf8'
-      );
+      writeCollectMeta({
+        newCount,
+        pruned,
+        retentionDays,
+        intelMeta,
+      });
     } catch (e) {
       console.error('collect-meta write failed:', e.message);
     }
     return {
       ok: true,
-      signalsStored: newSignals,
+      signalsStored: newCount,
       retentionDays,
       signalsKept: pruned.kept,
       signalsRemovedByRetention: pruned.removed,
+      last_run_intel: intelMeta,
     };
   })()
     .then((data) => res.json(data))

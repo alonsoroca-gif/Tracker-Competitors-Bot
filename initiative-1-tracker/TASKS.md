@@ -6,7 +6,9 @@ Small, testable tasks. Check off when done. Refs: [gap-report-schema](gap-report
 
 ## Priority: Before Thursday (main tasks for automation bot)
 
-**Focus:** Better sources + better "What competitor is doing" (facts, metrics, PM/manager useful); Sprint 2 (filter by source); Sprint 3 (fewer collect failures). Do these first. One task per run; check off when done. If a task is already implemented (e.g. RSS description or fact-like extraction), verify in code and check off, then take the next unchecked task.
+**Short mirror for PRs/handoffs:** `docs/PR-TASKS-TODAY-TOMORROW.md` — keep it in sync when you change checkboxes here.
+
+**Focus:** Better sources + better "What competitor is doing" (facts, metrics, PM/manager useful); Sprint 2 (filter by source); Sprint 3 (fewer collect failures). **P1–P3 below are complete**; use *Backup* sections (AS / BM) or `docs/WHAT-COMPETITOR-DOING-NEXT.md` for next work. One task per run when executing the bot; check off when done.
 
 ### P1 — Better sources and "What competitor is doing" (fact-rich, tailored)
 

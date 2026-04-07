@@ -26,6 +26,10 @@ npm run serve
 
 Then open **http://localhost:3000** (use **Refresh data** / **Reload report** in the page). **Stop the server:** focus the terminal and press **Ctrl+C**.
 
+The report’s main value is the **strategic interpretation** on each gap (not raw scrapes alone) — see [initiative-1-tracker/docs/STRATEGIC-INTERPRETATION.md](initiative-1-tracker/docs/STRATEGIC-INTERPRETATION.md). After pulling code changes, **restart** `npm run serve` so Node loads the latest `lib/*.js`.
+
+**Entrata apps in Cursor:** use a multi-root workspace so this repo and your internal Entrata code are open together — see [initiative-1-tracker/docs/ENTRATA-CODE-IN-CURSOR.md](initiative-1-tracker/docs/ENTRATA-CODE-IN-CURSOR.md) and copy `entrata-plus-tracker.code-workspace.example`.
+
 **Port already in use (`EADDRINUSE`):** something else is using 3000. Either quit that app or run on another port:
 
 ```bash

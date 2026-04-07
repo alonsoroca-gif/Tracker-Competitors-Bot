@@ -13,6 +13,8 @@ Thumbs.db
 # IDE
 .idea/
 .vscode/
+# Local multi-root workspace (paths are machine-specific; use .code-workspace.example as template)
+entrata-plus-tracker.code-workspace
 *.swp
 *.swo
 

@@ -3,6 +3,9 @@ const { buildGapReport } = require('./gapReport');
 const { buildResponseSchema } = require('./responseSchema');
 const { getWhatToChange } = require('./whatToChange');
 
+/** Set once per Node process so the UI can tell if you’re still on an old server. */
+const PROCESS_STARTED_AT = new Date().toISOString();
+
 function getPeriodDays(days = 7) {
   const end = new Date();
   const start = new Date();
@@ -23,7 +26,7 @@ function getReportData(days = 7) {
     if (!product) return { error: 'No product in config' };
     const { periodStart, periodEnd } = getPeriodDays(days);
     const report = buildGapReport(product.id, periodStart, periodEnd);
-    const responses = buildResponseSchema(report);
+    const responses = buildResponseSchema(report, product.id);
     const changes = getWhatToChange(report, responses);
     return {
       product: { id: product.id, name: product.name },
@@ -31,6 +34,9 @@ function getReportData(days = 7) {
       periodEnd,
       report,
       changes,
+      viewer: {
+        process_started_at: PROCESS_STARTED_AT,
+      },
     };
   } catch (err) {
     return { error: err.message };

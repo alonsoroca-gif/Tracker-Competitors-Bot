@@ -1,0 +1,12 @@
+{
+  "_comment": "Intel fence MVP: limits + redaction for repo-derived excerpts in API/UI. Extend when adding LLM — keep llm_enrichment_enabled false until security approves.",
+  "version": 1,
+  "llm_enrichment_enabled": false,
+  "max_chars_per_repo_snippet": 160,
+  "max_repo_snippets_per_hit": 4,
+  "max_touchpoints_in_response": 10,
+  "max_repo_scan_files": 120,
+  "max_repo_scan_file_bytes": 120000,
+  "max_gap_text_blob_chars": 900,
+  "redact_secrets": true
+}

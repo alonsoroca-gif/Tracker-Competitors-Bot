@@ -1,0 +1,9 @@
+{
+  "_comment": "Keep mode off until security approves. MVP builds payloads only; no model HTTP yet.",
+  "version": 1,
+  "mode": "off",
+  "max_bundle_json_chars": 12000,
+  "max_touchpoints_in_bundle": 5,
+  "max_excerpt_lines_per_touchpoint": 2,
+  "max_grounding_terms_in_bundle": 14
+}
