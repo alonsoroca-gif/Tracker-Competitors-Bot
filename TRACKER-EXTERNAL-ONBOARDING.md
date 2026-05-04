@@ -1,8 +1,21 @@
 # Tracker Competitors Bot — complete onboarding (one file)
 
-**Use this as the single handoff document.** It combines what used to be spread across several guides: **how the bot works**, **Git clone**, **manager vs runner steps**, **CI / Slack**, **Cursor interpretation**, and **optional Entrata multi-root**.  
+## Is the drop implemented?
 
-**Default assumption in this guide:** you **do not** already have the tracker repository on your computer. **Managers** (read and interpret drops) and **runners** (run `npm` / CI) both get the code the same way first: **`git clone`** in **Part 3**. Do not assume a particular path (for example another person’s **Desktop** folder)—**your** project directory only exists after **you** clone into a location **you** choose.
+**Yes.** In this repository you get:
+
+- **`npm run drop`** → runs **`initiative-1-tracker/tracker/scripts/publish-drop.js`**: collects public signals, then writes **`tracker-drops/<run-id>/signals.json`**, **`SUMMARY.md`**, **`manifest.json`** when there are **new** signals this run (or when **`TRACKER_DROP_FORCE=1`**).
+- **GitHub Actions** workflow **`.github/workflows/tracker-drop.yml`** can run the same publish path on a schedule or manually.
+
+If **`npm run`** does not list **`drop`**, you are on an **old branch** or wrong folder — see **Part 5.0** and the **branch** row in the sponsor table below.
+
+---
+
+**Use this as the single handoff document:** how the bot works, **one Git clone**, manager vs runner, CI / Slack, Cursor, and **optional** Entrata (second repo — skip at first).
+
+**Default assumption in this guide:** you **do not** already have the tracker repository on your computer.
+
+**Repositories:** you **only clone one repo** to use the tracker: **this** project (**Tracker Competitors Bot**). A **second** clone (Entrata monolith) appears only in **Part 6** if your sponsor asks you to wire app inventory — **not** required to read drops or run **`npm run drop`**. **Managers** (read and interpret drops) and **runners** (run `npm` / CI) both get the code the same way first: **`git clone`** in **Part 3**. Do not assume a particular path (for example another person’s **Desktop** folder)—**your** project directory only exists after **you** clone into a location **you** choose.
 
 After you clone, this file also lives at the **repo root** — you can **`@TRACKER-EXTERNAL-ONBOARDING.md`** in Cursor from the open folder.
 
@@ -12,7 +25,7 @@ After you clone, this file also lives at the **repo root** — you can **`@TRACK
 
 **This markdown is not the codebase.** Most people start with **only** `TRACKER-EXTERNAL-ONBOARDING.md` (email, Slack, download, or a small folder that contains nothing else). That includes **managers**: you do **not** need a pre-created “Tracker Competitors Bot” folder (or any tracker folder) on your machine until **you** run **`git clone`**. A copy of this guide sitting in **Downloads** or on the **Desktop** is still **not** the repo.
 
-Until you **clone** with the **HTTPS or SSH URL** from the [Sponsor](#sponsor-clone-url) table, you **do not** have:
+Until you **clone** with the **HTTPS or SSH URL** from the [Sponsor](#sponsor-one-clone-url--branch) table, you **do not** have:
 
 - `initiative-1-tracker/` — no **`npm run demo`**, **`npm run drop`**, or config on disk yet  
 - `tracker-drops/` — no **`SUMMARY.md`** or **`signals.json`** to open yet (those paths exist **inside** the clone after it exists and after drops are produced)
@@ -21,18 +34,18 @@ Until you **clone** with the **HTTPS or SSH URL** from the [Sponsor](#sponsor-cl
 
 ---
 
-## Sponsor: clone URL
+## Sponsor: one clone URL + branch
 
-Use the table below when sharing this guide. **Clone URLs** match the GitHub remote for **this** repository (`git remote get-url origin`).
+**Fill this table before sending.** New users clone **only this repository** (not Entrata unless Part 6).
 
-| Field | Value |
-|-------|--------|
-| **HTTPS clone URL** | `https://github.com/alonsoroca-gif/Tracker-Competitors-Bot.git` |
-| **SSH clone URL** (optional) | `git@github.com:alonsoroca-gif/Tracker-Competitors-Bot.git` |
-| **Branch where drops land** | `main` (default branch; use another branch only if your team’s CI or policy says so) |
-| **Who to ask for access** | *(fill in — e.g. sponsor name or IT ticket for repo access)* |
+| Field | Sponsor fills in |
+|-------|------------------|
+| **HTTPS clone URL** | `https://github.com/<ORG>/<REPO>.git` |
+| **SSH clone URL** (only if your org uses SSH) | `git@github.com:<ORG>/<REPO>.git` |
+| **Branch to `checkout` after clone** | Name the branch that has **`npm run drop`** and **`scripts/publish-drop.js`** (e.g. **`agent/P1.1`**, or **`main`** after merge). Users run **`git checkout <this-branch>`** — **do not** assume `main` unless you confirm it has the drop scripts. |
+| **Who to ask for access** | Name / IT ticket |
 
-If your org uses a **fork** or a **different remote**, replace the two URL rows with that remote before sending.
+Forks: replace URLs with the fork’s clone URL; branch row still applies.
 
 ### How this file usually arrives (sponsors read this)
 
@@ -60,7 +73,7 @@ Many people find it easier to **read the guide first**, then get the code. That 
 
 ### Manager on a laptop with no tracker folder yet
 
-1. Get the **clone URL** and **branch** from the [Sponsor](#sponsor-clone-url) table.  
+1. Get the **clone URL** and **branch** from the [Sponsor](#sponsor-one-clone-url--branch) table.  
 2. Follow **Part 3** in Terminal (`git clone` → `cd` into the folder **Git just created**).  
 3. In Cursor: **File → Open Folder…** → that **same clone** (not the folder that only had this `.md`).  
 4. Follow **Part 4** — **`git pull`**, then **`tracker-drops/…`**. You do **not** need Node for this path if you only read drops and use Chat.  
@@ -155,29 +168,19 @@ flowchart TB
 
 You should **not** already have the repository unless you cloned it yourself before. **Do not** look for a folder on someone else’s **Desktop** or a shared path—**`git clone`** creates **your** copy wherever **you** run it. After clone, the new directory name is usually the **repo name** (examples below use `Tracker-Competitors-Bot`; your org’s name may differ). Use **`pwd`** (macOS/Linux) or check the path shown after `cd` so you know where to point **File → Open Folder…** in Cursor.
 
-### 3.1 Terminal
+### 3.1 Terminal — clone **this** repo only
 
-Pick a parent folder for code—**you** choose it (examples use `~/Projects`; `~/Desktop` is fine if that is your habit):
+Pick a parent folder (`~/Projects`, `~/Desktop`, etc.):
 
 ```bash
 cd ~/Projects
-git clone <PASTE-HTTPS-OR-SSH-URL-FROM-SPONSOR-TABLE>
-cd <REPO-FOLDER-NAME>
+git clone <PASTE-HTTPS-URL-FROM-SPONSOR-TABLE>
+cd <REPO-FOLDER-NAME>    # folder Git created; name matches repo (e.g. Tracker-Competitors-Bot)
+git checkout <BRANCH-FROM-SPONSOR-TABLE>
+git pull origin <BRANCH-FROM-SPONSOR-TABLE>
 ```
 
-Examples:
-
-```bash
-git clone https://github.com/alonsoroca-gif/Tracker-Competitors-Bot.git
-cd Tracker-Competitors-Bot
-```
-
-SSH (if your org uses it):
-
-```bash
-git clone git@github.com:alonsoroca-gif/Tracker-Competitors-Bot.git
-cd Tracker-Competitors-Bot
-```
+Use the **SSH** URL from the sponsor table instead of HTTPS only if they gave you one.
 
 ### 3.2 Open in Cursor
 
@@ -201,7 +204,7 @@ git fetch origin
 git pull origin <BRANCH>
 ```
 
-Use the **branch** from the sponsor table (often `main`).
+Use the **same branch** from the sponsor table (the one you **`git checkout`** in Part 3).
 
 ### 4.2 Find the latest drop
 
@@ -246,7 +249,7 @@ npm run
 
 If you see **`Missing script: "drop"`**, you are in the **wrong directory** or on a **Git branch** whose `package.json` does not define **`drop`** yet (see Part 7 — *not* the same as “no new signals this week”).
 
-- **`npm run drop`** needs **`initiative-1-tracker/tracker/scripts/publish-drop.js`** and the **`drop`** / **`demo`** entries in **`package.json`**. If they are missing after **`git pull`**, use the stakeholder branch **`agent/P1.1`** (or **`main`** once merged) — older branches may not ship these scripts yet.
+- **`npm run drop`** needs **`scripts/publish-drop.js`** and **`drop`** in **`package.json`**. If missing, you are on the wrong **branch** — **`git checkout`** the branch your sponsor put in the table (not necessarily `main`).
 
 ### 5.1 One-time setup
 
@@ -309,11 +312,13 @@ git push origin <BRANCH>
 
 ---
 
-## Part 6 — Optional: Entrata app code + tracker in one Cursor window
+## Part 6 — Optional: second repository (Entrata) — **skip until your sponsor asks**
+
+This is **not** part of “clone the tracker.” **Only** add this after you are comfortable with Parts 3–5.
 
 Use this when you want Chat to relate drops to **your shipped apps** (no copying proprietary source into this repo).
 
-1. Clone Entrata (or monolith) per **internal** process — keep it in its normal Git home.  
+1. **Separately** clone Entrata (or monolith) per **internal** process — keep it in its normal Git home.  
 2. **File → Add Folder to Workspace…** (or **Open Workspace from File…**).  
 3. Add **two roots:** this **Tracker** repo + **Entrata** parent folder (the tree that contains `Applications/`, etc.).  
 4. Copy **`entrata-plus-tracker.code-workspace.example`** → **`entrata-plus-tracker.code-workspace`**, edit paths, open the workspace in Cursor.  
