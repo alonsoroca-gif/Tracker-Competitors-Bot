@@ -1,0 +1,68 @@
+# Collect → relevance gate → tracker-drops/ commit (+ optional Slack).
+# See initiative-1-tracker/docs/TRACKER-DROP-CI.md and TRACKER-FLOW-END-TO-END.md §7.
+
+name: Tracker drop
+
+on:
+  workflow_dispatch:
+  schedule:
+    # Every 15 minutes UTC — “as soon as we know” via polling (see TRACKER-DROP-CI.md).
+    # If your org limits scheduled workflows on private repos, relax this cron there.
+    - cron: '*/15 * * * *'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: tracker-drop
+  cancel-in-progress: true
+
+jobs:
+  collect-and-drop:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install tracker dependencies
+        working-directory: initiative-1-tracker/tracker
+        run: npm install
+
+      - name: Run collect + publish drop
+        working-directory: initiative-1-tracker/tracker
+        run: node scripts/publish-drop.js --days 7
+
+      - name: Commit and push if tracker-drops changed
+        id: gitpush
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add tracker-drops
+          if git diff --staged --quiet; then
+            echo "No changes under tracker-drops (skipped commit)."
+            echo "pushed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          git commit -m "tracker drop: $(date -u +'%Y-%m-%dT%H%MZ')"
+          git push
+          echo "pushed=true" >> "$GITHUB_OUTPUT"
+
+      - name: Slack — drop summary (optional)
+        if: steps.gitpush.outputs.pushed == 'true'
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: |
+          if [ -z "$SLACK_WEBHOOK_URL" ]; then
+            echo "SLACK_WEBHOOK_URL not set; skip Slack."
+            exit 0
+          fi
+          export DROP_COMMIT_URL="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/commit/$(git rev-parse HEAD)"
+          node initiative-1-tracker/tracker/scripts/slack-drop-notify.js
