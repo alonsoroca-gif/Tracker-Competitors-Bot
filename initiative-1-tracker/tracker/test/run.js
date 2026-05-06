@@ -333,12 +333,22 @@ assert(
   eliseUrls.g2_reviews_url.includes('eliseai'),
   'eliseai g2_reviews_url backfilled (Phase B-2 verification round)'
 );
+// Post-demo cleanup — broken URLs cleared after first live drop validation
+assert(
+  eliseUrls.pricing_url === '',
+  'eliseai pricing_url cleared (was 404 in live drop)'
+);
+const funnelUrlsPostDemo = getSourceUrls('funnel-leasing');
+assert(
+  funnelUrlsPostDemo.pricing_url === '',
+  'funnel-leasing pricing_url cleared (was 404 in live drop)'
+);
 
 // Phase B-2 — Anyone Home config has new HTML lanes
 const anyoneHomeUrls = getSourceUrls('anyone-home');
 assert(
-  anyoneHomeUrls.blog === 'https://www.anyonehome.com/feed/',
-  'anyone-home blog points to WordPress feed'
+  anyoneHomeUrls.blog === '',
+  'anyone-home blog cleared (Cloudflare 403 on /feed/ — see FOLLOWUPS-TOMORROW)'
 );
 assert(
   anyoneHomeUrls.features_url.includes('/solutions/'),
@@ -510,5 +520,85 @@ const pbLine = pickPlaybookLine({
 });
 assert(pbLine && /Multi-pillar|internal L2|timebox discovery/i.test(pbLine), 'playbook matches a gap rule');
 
-console.log('Tests:', ok, 'ok', fail, 'fail');
-process.exit(fail ? 1 : 0);
+// Post-demo architecture fix — runFullCollect should call collect() ONCE per
+// competitor and fan signals out across products (was N×products before, which
+// triggered Cloudflare rate-limits and silently zeroed RSS feeds).
+(async () => {
+  // Reload runCollectAll fresh after stubbing collect + storage to keep the
+  // test hermetic (no network, no signals.json mutation).
+  const collectModulePath = require.resolve('../lib/collect');
+  const storageModulePath = require.resolve('../lib/storage');
+  const runAllPath = require.resolve('../lib/runCollectAll');
+
+  const originalCollect = require('../lib/collect');
+  const originalStorage = require('../lib/storage');
+
+  let collectCalls = 0;
+  const collectInvocations = [];
+  require.cache[collectModulePath].exports = {
+    ...originalCollect,
+    collect: async (competitorId, productId /*, days, session */) => {
+      collectCalls += 1;
+      collectInvocations.push({ competitorId, productId });
+      return [
+        {
+          date: '2026-05-06',
+          source: 'features_page',
+          competitor_id: competitorId,
+          product_id: productId,
+          type: 'features',
+          snippet: `mock signal for ${competitorId}`,
+        },
+      ];
+    },
+  };
+  require.cache[storageModulePath].exports = {
+    ...originalStorage,
+    writeSignals: () => ({ added: 0 }),
+    pruneSignalsToRetentionDays: () => ({ kept: 0, removed: 0 }),
+  };
+
+  delete require.cache[runAllPath];
+  const { runFullCollect: runFCFresh } = require('../lib/runCollectAll');
+  const result = await runFCFresh(7, { verbose: false });
+
+  // Expectation: 1 collect call per competitor — not per (competitor × product).
+  const cfg = loadConfig();
+  const competitorCount = cfg.competitors.length;
+  const productCount = cfg.products.length;
+
+  assert(
+    collectCalls === competitorCount,
+    `runFullCollect calls collect() once per competitor (got ${collectCalls}, expected ${competitorCount})`
+  );
+  assert(
+    productCount > 1 && collectCalls < productCount * competitorCount,
+    `runFullCollect skips the old N×products fan-in (got ${collectCalls}, old behavior would be ${productCount * competitorCount})`
+  );
+  assert(
+    Array.isArray(result.batchSignals) &&
+      result.batchSignals.length === competitorCount * productCount,
+    `signals fan out to every product (got ${result.batchSignals.length}, expected ${competitorCount * productCount})`
+  );
+  // Each competitor should have signals with every product_id present.
+  for (const comp of cfg.competitors) {
+    const productIdsForComp = new Set(
+      result.batchSignals.filter((s) => s.competitor_id === comp.id).map((s) => s.product_id)
+    );
+    assert(
+      productIdsForComp.size === productCount,
+      `competitor ${comp.id} has signals tagged for all ${productCount} products (got ${productIdsForComp.size})`
+    );
+  }
+
+  // Restore module cache so later requires (if any) see real modules.
+  require.cache[collectModulePath].exports = originalCollect;
+  require.cache[storageModulePath].exports = originalStorage;
+  delete require.cache[runAllPath];
+
+  console.log('Tests:', ok, 'ok', fail, 'fail');
+  process.exit(fail ? 1 : 0);
+})().catch((e) => {
+  console.error('runFullCollect test failed:', e);
+  process.exit(1);
+});

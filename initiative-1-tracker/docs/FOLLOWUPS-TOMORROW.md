@@ -1,11 +1,32 @@
-# Followups — tomorrow's session
+# Followups — next session
 
-Generated 2026-05-06, end of source-verification + Phase 2 + Phase B-2 push.
-Pick up here next session.
+Updated 2026-05-06 after the live demo run and the post-demo bugfix push.
 
 ---
 
-## 1. Demo clone hygiene (`~/Desktop/Tracker DEMO/Tracker-Competitors-Bot`)
+## Resolved in the post-demo bugfix commit
+
+Done immediately after the demo, while looking at drops `2026-05-06T21-46-51Z`
+and `2026-05-06T22-41-51Z`:
+
+- **runCollectAll fan-out bug fixed** — `runCollectAll.js` was calling
+  `collect()` once per `(competitor × product)` pair, hammering each public
+  URL ~11 times per run. Cloudflare/WAF responded by zeroing out RSS feeds
+  intermittently (e.g. drop T21 captured 33 jonah-digital signals; drop T22,
+  one hour later, captured 0). Now `collect()` runs once per competitor and
+  the resulting signals are fanned out across all products in-process.
+  10 new test assertions cover the new behavior.
+- **Broken URLs cleared in `products.json`**:
+  - `eliseai.pricing_url` (`/pricing/`) — 404, cleared.
+  - `funnel-leasing.pricing_url` (`/pricing/`) — 404, cleared.
+  - `anyone-home.blog` (`www.anyonehome.com/feed/`) — Cloudflare 403 on every
+    UA we tried; cleared. Both `/blog/feed/` and `anyonehome.com/feed/`
+    variants also 403. Anyone Home's blog is effectively unreachable to bots
+    until/unless we add a Cloudflare-bypass strategy. Tracked below.
+
+---
+
+## 1. Demo clone hygiene  (`~/Desktop/Tracker DEMO/Tracker-Competitors-Bot`)
 
 After today's sync, a few things were intentionally left in place to keep the demo
 clean. Decide what to do with each.
@@ -36,30 +57,48 @@ These are not in the working repo — decide which belong:
 
 ---
 
-## 2. Validate Phase 2 + Phase B-2 in production
+## 2. Validate the fan-out fix in production
 
-Today's live demo drop is the **first run** that exercises every new lane. After
-the demo, review the new `tracker-drops/<timestamp>/SUMMARY.md` and check for:
+The next live drop should show every previously-zeroed lane producing real
+signal. Specifically, watch:
 
-- **Zero-signal lanes** — any of these returning empty means a real bug, not a
-  stale URL:
-  - `funnel-leasing` insights / media / podcast (RSS)
-  - `funnel-leasing` reviews_url (featuredcustomers HTML)
-  - `funnel-leasing` second G2 URL (fenix-ai)
-  - `anyone-home` case_studies × 2
-  - `anyone-home` changelog (anyonehome-updates.com)
-  - `jonah-digital` articles_url (`/articles/`)
-  - `jonah-digital` case_studies_url (homepage 8 blockquotes)
-  - `jonah-digital` features_url (`/add-ons/`)
-- **Cloudflare 403 on G2** — known fragile; if both Funnel and EliseAI G2
-  pulls return zero, look at `g2Scrape` and consider a rotating UA / 24h cache.
-- **HTTP 200 but zero signals** — likely the case-study or article scraper
-  selectors don't match a specific site's markup. Tune `collectCaseStudySignals`
-  / `collectArticleIndexSignals` in `lib/collect.js`.
+- **Funnel Leasing RSS** — blog/insights/media should now produce signals
+  (verified to have items in last 7 days on 2026-05-06). press/podcast may
+  still be zero because their newest items are 8 / 34 days old (correct
+  behavior, not a bug).
+- **Anyone Home `case_studies` × 2 URLs** — was already working in T21 drop;
+  should remain stable.
+- **Jonah Digital** — articles_url, case_studies_url, features_url should
+  all produce signals now that the URL won't get hit 11 times in 2 seconds.
+- **G2 array (Funnel)** — both `funnel-leasing` and `fenix-ai` reviews
+  URLs should produce signals (was returning ~11 instead of ~22 — likely
+  because one of the two was Cloudflare-blocked from the rapid retries).
+
+If any of these still come back zero after the next drop, the issue is
+inside the per-lane scraper, not the orchestrator.
 
 ---
 
-## 3. Phase B-3 — parked items (from `DATA-SOURCES-BRAINSTORM.md`)
+## 3. Pages that returned 0 even though the URL is healthy
+
+These produced 0 signals in drop T21 even with the orchestrator working
+fine for that drop. They are HTTP 200 with real visible content. The
+zero is likely a per-lane scraper issue (selectors not matching the
+site's markup, or content being JS-rendered).
+
+| URL | Status | Suspected cause |
+|-----|--------|-----------------|
+| `https://www.eliseai.com/datalog` (eliseai docs) | 200, 129 KB, "Latest news from EliseAI" | Likely SPA/Webflow rendering — `extractPageSignals` may not find headings/snippets in the static HTML. |
+| `https://developer.funnelleasing.com/` (funnel docs) | 200, 48 KB, empty `<title>` | Definitely client-side rendered API portal. Static HTML is shell only. |
+| `https://leasehawk.com/careers/` | 200, 30 KB, "Careers \| LeaseHawk" | Worth re-running with fan-out fix; if still zero, scraper selector issue. |
+
+Action: dump the HTML for each, see what `extractPageSignals` actually
+extracts, decide whether to (a) tune selectors, (b) clear the URL, or
+(c) build a SPA-aware scraper for these (overkill for now).
+
+---
+
+## 4. Phase B-3 — parked items (from `DATA-SOURCES-BRAINSTORM.md`)
 
 Pull these forward when there's bandwidth:
 
@@ -79,19 +118,19 @@ Pull these forward when there's bandwidth:
 
 ---
 
-## 4. Per-competitor follow-ups
+## 5. Per-competitor follow-ups
 
 | Competitor | Item |
 |------------|------|
-| **eliseai** | `blog` is empty (no working RSS found). Re-check periodically — they may publish one. |
-| **leasehawk** | Brand deprecating into Funnel/Fenix; revisit in 3–6 months and likely retire the entry once content fully migrates. |
-| **funnel-leasing** | The two-G2-URL design is the first real-world array case. Confirm both pages produce distinct, attributable snippets in the next live drop (no dedup loss). |
-| **anyone-home** | Verify `anyonehome-updates.com/feed/` (changelog) is still publishing — newer status pages sometimes drop their RSS. |
-| **jonah-digital** | The 8 testimonials on the homepage are all `<blockquote>` siblings. If they ever switch to a JS carousel, the scraper will silently zero out. Add an alert on "case_studies signal count drops to 0 from prior run". |
+| **eliseai** | `blog` empty + `pricing_url` cleared (404) + `docs_url` (datalog) returns zero. Datalog is the most interesting — investigate why scraper finds no content despite real article list visible. |
+| **leasehawk** | Brand deprecating; revisit in 3–6 months. `careers_url` returned zero in T21 drop — re-check after fan-out fix lands. |
+| **funnel-leasing** | `pricing_url` cleared (404) + `developer.funnelleasing.com` is a SPA with empty static HTML. Both expected zero. RSS lanes (blog/insights/media) should now work post-fix. |
+| **anyone-home** | `blog` cleared (Cloudflare 403). Need a Cloudflare-bypass strategy if we want their blog: try `cloudscraper`-equivalent in Node, or curl with browser-impersonating headers (`curl-impersonate`). Changelog feed (`anyonehome-updates.com`) is on a different host and seems CF-friendlier. |
+| **jonah-digital** | Drop T21 captured 33 signals across articles/case_studies/features. Drop T22 captured 0 — confirms the fan-out fix is essential. The 8 testimonials on the homepage are all `<blockquote>` siblings; if they ever switch to a JS carousel, the scraper will silently zero out — consider an alert on "case_studies signal count drops to 0 from prior run". |
 
 ---
 
-## 5. Repo branch hygiene
+## 6. Repo branch hygiene
 
 - `main` and `agent/P1.1` both at `6620178` after today's fast-forward.
 - Tomorrow: continue on `agent/P1.1` or open a PR to make the merge explicit
