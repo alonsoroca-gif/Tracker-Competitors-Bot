@@ -130,7 +130,38 @@ Pull these forward when there's bandwidth:
 
 ---
 
-## 6. Repo branch hygiene
+## 6. Cloudflare-blocked sources — what to do about Anyone Home blog
+
+`anyonehome.com/feed/` (and `www.anyonehome.com/feed/`, `/blog/feed/`) all
+return Cloudflare 403 to every UA we tried. Cleared from `products.json`
+in the post-demo bugfix. Question for tomorrow: do we want to recover this
+content, and if so, how?
+
+Ranked options (effort vs reliability):
+
+| # | Approach | Effort | Reliability | Notes |
+|---|----------|--------|-------------|-------|
+| 1 | Wayback Machine / archive.today | Tiny | Historical only | Anyone Home is established enough that snapshots exist. Free. Not real-time. |
+| 2 | Headless browser (Playwright) | Medium | High | Renders like Chrome. Bulletproof against CF *and* solves the SPA problem (eliseai datalog, funnel developer). One investment, multiple unlocks. |
+| 3 | TLS-fingerprint impersonation (`curl-impersonate`, `tls-client`, `cycletls`) | Small–med | Mid | Mimics Chrome's TLS handshake, defeats basic CF challenges. Doesn't help with JS-rendered pages. |
+| 4 | Paid scraping API (ScrapingBee, ZenRows, Browserless) | Tiny | High | ~$50–200/mo. CF + JS + proxy rotation in one call. |
+| 5 | Google SERP API | Small | Mid | `site:anyonehome.com/blog` finds new posts. We still need to fetch the page, so partial value (title+snippet only). |
+| 6 | Direct outreach to Anyone Home | Low effort, slow timeline | Long-tail | Email asking for press/RSS access. |
+| 7 | Skip blog, lean on what works | Zero | — | We already have changelog RSS + 2 case_studies pages. Blog is incremental, not critical. |
+
+**Recommended starting point**: combine #7 + #1 (cheap, no infra), then
+when we tackle SPA scraping for eliseai datalog and funnel developer
+portal in §3, evaluate #2 (Playwright) since the same investment solves
+both classes of problem.
+
+If we go with Playwright, drop a `lib/headlessFetch.js` that takes a URL
+and returns rendered HTML. Wire it as an optional fallback in
+`fetchText()` (in `lib/collect.js`) controlled by an env flag like
+`TRACKER_USE_HEADLESS=1` so the lightweight fetch stays the default.
+
+---
+
+## 7. Repo branch hygiene
 
 - `main` and `agent/P1.1` both at `6620178` after today's fast-forward.
 - Tomorrow: continue on `agent/P1.1` or open a PR to make the merge explicit
