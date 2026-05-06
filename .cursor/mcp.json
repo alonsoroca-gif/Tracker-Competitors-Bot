@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "tracker-interpreter": {
+      "command": "node",
+      "args": ["./initiative-1-tracker/tracker/mcp/server.mjs"],
+      "cwd": "."
+    }
+  }
+}

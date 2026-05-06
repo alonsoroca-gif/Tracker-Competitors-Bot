@@ -1,6 +1,9 @@
 # Agent loop: get next task → (implement via OpenAI OR prepare for Cursor) → open PR.
 # No API key? Workflow prepares branch + AGENT-NEXT-TASK.md and opens draft PR; you implement in Cursor.
 # With OPENAI_API_KEY? Workflow implements via API, runs tests, then opens PR.
+#
+# This workflow is NOT the Tracker product — it only advances TASKS.md-style work.
+# See: docs/GITHUB-AUTOMATION-RUNBOOK.md and initiative-1-tracker/docs/MANAGER-BRIEF-TRACKER-AND-AUTOMATION.md
 
 name: Run agent (next task)
 
@@ -14,6 +17,10 @@ jobs:
   run-agent:
     name: Get task → implement or prepare → PR
     runs-on: ubuntu-latest
+    # One agent run at a time; do not cancel in-progress (avoid half-opened PRs).
+    concurrency:
+      group: agent-next-task-${{ github.repository }}
+      cancel-in-progress: false
     permissions:
       contents: write
       pull-requests: write

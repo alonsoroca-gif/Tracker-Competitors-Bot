@@ -1,13 +1,14 @@
 {
   "sources": {
     "eliseai": {
-      "blog": "https://eliseai.com/blog/feed/",
+      "blog": "",
       "press": "",
       "changelog": "",
+      "docs_url": "https://www.eliseai.com/datalog",
       "pricing_url": "https://eliseai.com/pricing/",
       "features_url": "https://eliseai.com/",
       "careers_url": "https://eliseai.com/careers/",
-      "g2_reviews_url": "",
+      "g2_reviews_url": "https://www.g2.com/products/eliseai/reviews",
       "youtube_comment_video_ids": [],
       "youtube_discovery_queries": [
         "EliseAI review multifamily",
@@ -17,9 +18,18 @@
       "youtube_discovery_max_queries": 2
     },
     "funnel-leasing": {
-      "blog": "",
-      "press": "",
+      "blog": "https://funnelleasing.com/category/llm/feed/",
+      "press": "https://funnelleasing.com/category/press/feed/",
       "changelog": "",
+      "insights_url": "https://funnelleasing.com/category/insights/feed/",
+      "media_url": "https://funnelleasing.com/category/media/feed/",
+      "podcast_url": "https://funnelleasing.com/category/podcast/feed/",
+      "reviews_url": "https://www.featuredcustomers.com/vendor/funnel-leasing",
+      "g2_reviews_url": [
+        "https://www.g2.com/products/funnel-leasing/reviews",
+        "https://www.g2.com/products/fenix-ai/reviews"
+      ],
+      "docs_url": "https://developer.funnelleasing.com/",
       "youtube_rss": "",
       "pricing_url": "https://funnelleasing.com/pricing/",
       "features_url": "https://funnelleasing.com/",
@@ -29,26 +39,35 @@
       "blog": "",
       "press": "",
       "changelog": "",
+      "docs_url": "",
       "youtube_rss": "",
       "pricing_url": "https://leasehawk.com/",
       "features_url": "https://leasehawk.com/",
       "careers_url": "https://leasehawk.com/careers/"
     },
     "anyone-home": {
-      "blog": "",
+      "blog": "https://www.anyonehome.com/feed/",
       "press": "",
-      "changelog": "",
+      "changelog": "https://anyonehome-updates.com/feed/",
+      "docs_url": "",
       "pricing_url": "https://anyonehome.com/",
-      "features_url": "https://anyonehome.com/",
-      "careers_url": "https://anyonehome.com/careers/"
+      "features_url": "https://anyonehome.com/solutions/",
+      "careers_url": "",
+      "case_studies_url": [
+        "https://anyonehome.com/customer-stories/",
+        "https://anyonehome.com/why-anyone-home/"
+      ]
     },
     "jonah-digital": {
       "blog": "",
       "press": "",
       "changelog": "",
+      "docs_url": "",
       "pricing_url": "https://jonahdigital.com/",
-      "features_url": "https://jonahdigital.com/",
-      "careers_url": "https://jonahdigital.com/careers/"
+      "features_url": "https://jonahdigital.com/add-ons/",
+      "careers_url": "",
+      "articles_url": "https://jonahdigital.com/articles/",
+      "case_studies_url": "https://jonahdigital.com/"
     }
   },
   "products": [

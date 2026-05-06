@@ -2,7 +2,9 @@
 
 **Purpose:** One-page view of what’s in place, how it works, what’s next, and how the automation runs when [Alonso] is not in the office.
 
-**Main focus:** **Tracker Bot** (Initiative 1) — competitor signals → gap report → “What to change” for Entrata’s Lead-to-Lease (L2L) products.
+**Main focus:** **Tracker Bot** (Initiative 1) — competitor signals → evidence in **Git** (`tracker-drops/`) → managers **pull** and interpret in **Cursor** → **prototype response** (Product OS). The **default demo does not use** a localhost browser UI.
+
+**Demo walkthrough:** [initiative-1-tracker/docs/TRACKER-DEMO.md](../initiative-1-tracker/docs/TRACKER-DEMO.md).
 
 ---
 
@@ -15,8 +17,8 @@
 | **Collect** | Fetches competitor data from public sources: blog/press/changelog RSS, pricing/features/careers pages. Writes signals to `data/signals.json`. |
 | **Gap report** | Turns signals into “gaps”: what the competitor is doing, our state (Starting / In process / Delivered), and source. Sorted by priority (High → Medium → Low). |
 | **What to change** | For each gap: recommendation text (competitor move + our gap + suggested action). |
-| **Report UI** | Single page at http://localhost:3000: summary, period filter (7/14/30 days), project focus, products/competitors, gaps table with “What competitor is doing”, “Our state”, “Source”, expandable details, and “What to change” cards. |
-| **API** | `GET /api/config`, `GET /api/report?days=N`, `POST /api/collect`. “Refresh data” in the UI runs collect; “Reload report” refetches the report. |
+| **Git drops** | When there is new signal content, a run writes **`tracker-drops/<run-id>/`** (`SUMMARY.md`, `signals.json`, manifest). CI can commit/push; managers **pull** and read in Cursor. |
+| **Report UI (optional dev)** | Legacy single-page app on port 3000 for engineering debug only — **not** the manager demo path. |
 
 ### Config (all in `initiative-1-tracker/tracker/config/`)
 
@@ -45,10 +47,12 @@
        ↓
 [What to change] gaps → recommendations (competitor move + our gap + action)
        ↓
-[Report UI] Show gaps + recommendations; filter by 7/14/30 days
+[Git drop] Commit `tracker-drops/` when relevant → push → manager pull
+       ↓
+[Cursor + prototype] Read SUMMARY / signals; interpret; build response artifact
 ```
 
-**To run it:** From `initiative-1-tracker/tracker`: `npm run serve` → open http://localhost:3000 → use “Refresh data” then “Reload report”.
+**To run the product path:** `npm run collect` / `npm run drop` (or GitHub Actions) → commit **`tracker-drops/`** → **`git pull`** in Cursor → follow [TRACKER-DEMO.md](../initiative-1-tracker/docs/TRACKER-DEMO.md).
 
 ---
 

@@ -2,7 +2,7 @@ const { getSignals } = require('./storage');
 const { getOurState } = require('./ourState');
 const { loadConfig } = require('./loadConfig');
 const { intelPillarFromSourceType } = require('./intelPillar');
-const { buildGapInterpretation } = require('./gapInterpretation');
+const { buildGapInterpretation, parseCompetitorMoveLine, refineActionForHeadline } = require('./gapInterpretation');
 
 const DIMENSIONS = ['features', 'pricing', 'messaging', 'support', 'positioning'];
 
@@ -92,6 +92,12 @@ const TYPE_ACTION_FALLBACK = {
   job: 'Surfaced careers or hiring signals',
   review_g2: 'User review voices on G2',
   review_youtube: 'YouTube comment / community voices',
+  insights: 'Published editorial article or thought leadership',
+  media: 'Surfaced third-party media coverage',
+  podcast: 'Released or referenced podcast episode',
+  review_other: 'User review voices from external aggregator',
+  case_study: 'Customer voice on capabilities (case studies)',
+  article: 'Published article (HTML index)',
 };
 
 function competitorNameMap() {
@@ -131,6 +137,12 @@ function sourceHumanLabel(signal) {
     youtube_search: 'YouTube (search)',
     g2_reviews: 'G2 reviews',
     docs: 'Documentation',
+    insights: 'Editorial articles',
+    media: 'Media coverage',
+    podcast: 'Podcast',
+    reviews_other: 'External reviews',
+    case_studies: 'Case studies',
+    articles_index: 'Articles index',
   };
   if (labels[src]) return labels[src];
   if (signal.source) return String(signal.source).replace(/_/g, ' ');
@@ -311,7 +323,7 @@ function buildDetailBodyFromSignal(s) {
 
 /**
  * Map signal type to dimension and our-state key.
- * Types: blog, press, news, changelog, pricing, features, job.
+ * Types: blog, press, news, changelog, pricing, features, job, insights, media, podcast, review_other.
  */
 function inferDimension(signal) {
   const t = (signal.type || '').toLowerCase();
@@ -322,7 +334,12 @@ function inferDimension(signal) {
   if (t === 'press' || t === 'news') return { dimension: 'positioning', ourKey: 'positioning' };
   if (t === 'youtube' || t === 'video') return { dimension: 'positioning', ourKey: 'positioning' };
   if (t === 'review_youtube') return { dimension: 'positioning', ourKey: 'positioning' };
-  if (t === 'review_g2') return { dimension: 'features', ourKey: 'features' };
+  if (t === 'review_g2' || t === 'review_other') return { dimension: 'features', ourKey: 'features' };
+  if (t === 'media') return { dimension: 'positioning', ourKey: 'positioning' };
+  if (t === 'podcast') return { dimension: 'positioning', ourKey: 'positioning' };
+  if (t === 'insights') return { dimension: 'features', ourKey: 'features' };
+  if (t === 'case_study') return { dimension: 'features', ourKey: 'features' };
+  if (t === 'article') return { dimension: 'features', ourKey: 'features' };
   if (t === 'changelog' || t === 'features') return { dimension: 'features', ourKey: 'features' };
   if (t === 'blog') return { dimension: 'features', ourKey: 'features' };
   return { dimension: 'features', ourKey: 'features' };
@@ -518,6 +535,54 @@ function mergeClusterDetailBodies(members) {
   return blocks.join('\n\n—\n\n').slice(0, 12000);
 }
 
+/** Dedupe "Features page, Features page" → "Features page (×2)" for manager-facing display. */
+function formatSourceSummaryLabels(corroborationRows) {
+  if (!Array.isArray(corroborationRows) || !corroborationRows.length) return null;
+  const counts = new Map();
+  for (const row of corroborationRows) {
+    const l =
+      (row.label && String(row.label).trim()) || (row.source && String(row.source).trim()) || 'Web';
+    counts.set(l, (counts.get(l) || 0) + 1);
+  }
+  return [...counts.entries()].map(([l, n]) => (n > 1 ? `${l} (×${n})` : l)).join(' · ');
+}
+
+function buildEvidenceSections(members) {
+  if (!Array.isArray(members)) return [];
+  return members.map((s) => ({
+    label: sourceHumanLabel(s),
+    url: s.source_url && String(s.source_url).trim() ? String(s.source_url).trim() : null,
+    excerpt: clip(buildDetailBodyFromSignal(s), 2000),
+  }));
+}
+
+function buildEvidenceFingerprint(members) {
+  return (members || [])
+    .map(
+      (s) =>
+        `${s.competitor_id || ''}|${s.source || ''}|${String(s.source_url || '').slice(0, 140)}|${String(s.headline || '').slice(0, 50)}`
+    )
+    .sort()
+    .join('||');
+}
+
+function pickThemeHint(members, rep, competitorMove) {
+  const m = metricOrFactExcerpt(rep);
+  if (m && m.length >= 12) return clip(m, 100);
+  const h = rep.headline && String(rep.headline).trim();
+  if (h && !/^2 signals merged/i.test(h) && !/signals merged/i.test(h)) return clip(h, 100);
+  const ent = rep.entities && typeof rep.entities === 'object' && !Array.isArray(rep.entities) ? rep.entities : {};
+  if (Array.isArray(ent.keywords) && ent.keywords[0]) return clip(String(ent.keywords[0]), 80);
+  if (Array.isArray(ent.features) && ent.features[0]) return clip(String(ent.features[0]), 80);
+  const { action } = parseCompetitorMoveLine(competitorMove);
+  if (action) {
+    const r = refineActionForHeadline(action);
+    if (r && r.length > 5) return clip(r, 100);
+    return clip(action, 100);
+  }
+  return '';
+}
+
 function intelPillarSummaryLine(pillars, corroboration) {
   if (!pillars.length) return 'Unclassified';
   const p = pillars.map((n) => `P${n}`).join('+');
@@ -601,8 +666,10 @@ function buildGapReport(productId, periodStart, periodEnd) {
       const intel_pillar_key = repMd.intel_pillar_key || repInferred.pillar_key || null;
       const intel_pillar_label = intelPillarSummaryLine(intel_pillars, corroboration);
 
-      const source_summary =
-        corroboration_sources.length > 1
+      const _srcCompact = formatSourceSummaryLabels(corroboration_sources);
+      const source_summary = _srcCompact
+        ? clip(_srcCompact, 140)
+        : corroboration_sources.length > 1
           ? clip(
               corroboration_sources
                 .map((x) => x.label)
@@ -614,6 +681,10 @@ function buildGapReport(productId, periodStart, periodEnd) {
           : primarySrc
             ? primarySrc.label
             : null;
+
+      const themeHint = pickThemeHint(members, rep, competitor_move);
+      const evidence_fingerprint = buildEvidenceFingerprint(members);
+      const evidence_sections = buildEvidenceSections(members);
 
       const interpretation = buildGapInterpretation({
         factual_competitor_move: competitor_move,
@@ -628,6 +699,8 @@ function buildGapReport(productId, periodStart, periodEnd) {
             ? { ...rep.entities }
             : {},
         source_labels: corroboration_sources.map((s) => s.label).filter(Boolean),
+        theme_hint: themeHint,
+        evidence_fingerprint: evidence_fingerprint,
       });
 
       const gapId = `gap-${String(gapIndex).padStart(3, '0')}`;
@@ -635,6 +708,7 @@ function buildGapReport(productId, periodStart, periodEnd) {
       gaps.push({
         gap_id: gapId,
         product_id: productId,
+        competitor_id: rep.competitor_id != null && String(rep.competitor_id).trim() ? String(rep.competitor_id).trim() : null,
         dimension,
         our_key: ourKey,
         title: interpretation.headline.slice(0, 80),
@@ -656,6 +730,7 @@ function buildGapReport(productId, periodStart, periodEnd) {
         cluster_signal_count: members.length,
         corroboration_sources,
         source_summary,
+        evidence_sections,
         priority,
         detected_at: members.map((m) => m.date).sort().slice(-1)[0] || rep.date,
       });

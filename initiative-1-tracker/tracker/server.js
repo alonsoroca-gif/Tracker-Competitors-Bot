@@ -70,6 +70,31 @@ app.get('/api/report', (req, res) => {
   res.json(data);
 });
 
+/** Phase A: one gap’s Cursor package (same shape as `gap.cursor_interpretation` on /api/report). */
+app.get('/api/gap/:gapId/interpreter-payload', (req, res) => {
+  const days = Math.min(90, Math.max(1, parseInt(req.query.days, 10) || 7));
+  const gapId = decodeURIComponent(String(req.params.gapId || '').trim());
+  if (!gapId) {
+    return res.status(400).json({ error: 'missing_gap_id' });
+  }
+  const data = getReportData(days);
+  if (data.error) {
+    return res.status(500).json({ error: data.error });
+  }
+  const gaps = (data.report && data.report.gaps) || [];
+  const gap = gaps.find((g) => g.gap_id === gapId);
+  if (!gap || !gap.cursor_interpretation) {
+    return res.status(404).json({ error: 'gap_not_found', gap_id: gapId });
+  }
+  res.json({
+    gap_id: gapId,
+    periodStart: data.periodStart,
+    periodEnd: data.periodEnd,
+    product: data.product,
+    ...gap.cursor_interpretation,
+  });
+});
+
 /** Which intel pillars have configured sources per competitor (no network). */
 app.get('/api/weekly-coverage', (req, res) => {
   try {

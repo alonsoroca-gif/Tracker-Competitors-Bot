@@ -2,7 +2,9 @@
 
 Competitor signals → gap report → response schema → Slack. Part of Tracker Competitors Bot (Initiative 1).
 
-**Core product rule:** the bot’s job is not to dump scrapes — it is to deliver **`interpretation`** on every gap (strategic headline, why, threat tag) on top of the factual **Captured** line. See **[STRATEGIC-INTERPRETATION.md](../docs/STRATEGIC-INTERPRETATION.md)**.
+**Org product rule:** the value is **evidence in Git** (`tracker-drops/`) + **interpretation in Cursor** + **prototype response** in Product OS — not a manager-facing localhost dashboard. See **[TRACKER-FLOW-END-TO-END.md](../docs/TRACKER-FLOW-END-TO-END.md)** and **[../docs/TRACKER-DEMO.md](../docs/TRACKER-DEMO.md)**.
+
+**This repo’s Express UI (`npm run serve`, port 3000)** is **optional** for engineering/debug only; the default demo path is **Git + Cursor**.
 
 **How intel is shown (summary vs evidence vs response):** [COMPETITIVE-INTEL-PRESENTATION.md](../docs/COMPETITIVE-INTEL-PRESENTATION.md). **Fence + optional encrypted `signals.json`:** [INTEL-FENCE-MVP.md](../docs/INTEL-FENCE-MVP.md) and `TRACKER_SIGNALS_ENCRYPTION_KEY` in `.env.example`.
 
@@ -12,12 +14,11 @@ Competitor signals → gap report → response schema → Slack. Part of Tracker
 2. `npm install` — includes **`rss-parser`** (feeds) and **`cheerio`** (HTML structure).
 3. **Smoke:** `npm start` → prints `Tracker`.
 4. **Collect:** `npm run collect` → collects signals for products/competitors, merges into `data/signals.json`, **prunes** to the retention window (default 7 days), and writes **`data/collect-meta.json`** (last run + intel pillar counts). Use `node index.js collect --days 14` for a 14-day window.
-5. **Weekly checklist (CLI):** `node index.js weekly` → same as collect, then prints which **intel pillars** were touched and which source URLs are still missing per competitor. See [WEEKLY-INTEL-FLOW.md](../docs/WEEKLY-INTEL-FLOW.md).
-6. **Demo:** `node index.js demo` → seeds demo signals (first-version-demo) and runs a sample gap report + "what to change."
-7. **Report:** `node index.js report` → builds gap report from stored signals, prints weekly report and top 3 "what to change."
-8. **Report UI (local):** `npm run serve` → open **http://localhost:3000**. **Refresh data** runs full collect via `POST /api/collect?days=N` (same **N** as the selected period: 7 / 14 / 30), then merges + prunes `data/signals.json`. **Reload report** refetches the report only (instant). **`GET /api/weekly-coverage`** returns configured-vs-missing sources by intel pillar (no network).
-   - **Server code** (`lib/gapReport.js`, `lib/collect.js`, `lib/reportApi.js`, `server.js`, …): **stop and restart** `npm run serve` after edits, then reload the tab. The UI cache-busts API URLs, but the report is built inside Node — an old process keeps old code.
-   - **UI only** (`public/index.html`): hard-refresh (⌘⇧R) or reopen the tab; static assets are served with `no-store` while developing.
+5. **Git drop (local):** `npm run drop -- --days 7` → runs collect, then writes **`../../tracker-drops/<run-id>/`** (repo root) with `signals.json`, `SUMMARY.md`, `manifest.json` **only if there were new signals** (relevance gate). See **[../docs/TRACKER-DROP-CI.md](../docs/TRACKER-DROP-CI.md)** and **[../docs/TRACKER-FLOW-END-TO-END.md](../docs/TRACKER-FLOW-END-TO-END.md)**.
+6. **Weekly checklist (CLI):** `node index.js weekly` → same as collect, then prints which **intel pillars** were touched and which source URLs are still missing per competitor. See [WEEKLY-INTEL-FLOW.md](../docs/WEEKLY-INTEL-FLOW.md).
+7. **Demo (Git path):** follow **[../docs/TRACKER-DEMO.md](../docs/TRACKER-DEMO.md)** — collect/drop → commit → pull in Cursor → prototype; **no localhost report UI**.
+8. **CLI demo / report:** `npm run demo` seeds sample signals; `node index.js report` prints a weekly-style report to the terminal. Strategic copy rules: **[STRATEGIC-INTERPRETATION.md](../docs/STRATEGIC-INTERPRETATION.md)**.
+9. **Legacy report UI (optional):** `npm run serve` → **http://localhost:3000** — for **debugging** the old HTML table only, not the manager story.
 
 ## Config
 

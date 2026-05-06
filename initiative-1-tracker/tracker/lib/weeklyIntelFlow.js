@@ -12,13 +12,25 @@ const { summarizePillarsFromSignals } = require('./intelPillar');
  */
 function pillarCoverageFromUrls(urls) {
   const ytKey = String(process.env.YOUTUBE_DATA_API_KEY || '').trim();
+  const hasCaseStudies = !!(
+    urls.case_studies_url ||
+    (Array.isArray(urls.case_studies_urls) && urls.case_studies_urls.length > 0)
+  );
+  const hasArticles = !!(
+    urls.articles_url ||
+    (Array.isArray(urls.articles_urls) && urls.articles_urls.length > 0)
+  );
   const p1 = !!(
     urls.blog ||
     urls.press ||
     urls.changelog ||
     urls.youtube_rss ||
     urls.features_url ||
-    urls.docs_url
+    urls.docs_url ||
+    urls.insights_url ||
+    urls.podcast_url ||
+    hasCaseStudies ||
+    hasArticles
   );
   const p2 = !!(urls.pricing_url || urls.careers_url);
   const hasYtComments = Array.isArray(urls.youtube_comment_video_ids) && urls.youtube_comment_video_ids.length > 0;
@@ -26,19 +38,25 @@ function pillarCoverageFromUrls(urls) {
     Array.isArray(urls.youtube_discovery_queries) &&
     urls.youtube_discovery_queries.length > 0 &&
     !!ytKey;
-  const p3 = !!(urls.g2_reviews_url || hasYtComments || hasYtDiscovery);
+  const hasG2 = !!(
+    urls.g2_reviews_url ||
+    (Array.isArray(urls.g2_reviews_urls) && urls.g2_reviews_urls.length > 0)
+  );
+  const p3 = !!(hasG2 || urls.media_url || urls.reviews_url || hasYtComments || hasYtDiscovery);
   const p4_configured = false;
 
   const missing_hints = [];
   if (!p1) {
-    missing_hints.push('Pillar 1 (owned): set blog, press, changelog, youtube_rss, features_url, or docs_url');
+    missing_hints.push(
+      'Pillar 1 (owned): set blog, press, changelog, youtube_rss, features_url, docs_url, insights_url, podcast_url, case_studies_url, or articles_url'
+    );
   }
   if (!p2) {
     missing_hints.push('Pillar 2 (behavioral): set pricing_url and/or careers_url');
   }
   if (!p3) {
     missing_hints.push(
-      'Pillar 3 (third party): set g2_reviews_url and/or youtube_comment_video_ids and/or youtube_discovery_queries (+ YOUTUBE_DATA_API_KEY)'
+      'Pillar 3 (third party): set g2_reviews_url, media_url, reviews_url, and/or youtube_comment_video_ids and/or youtube_discovery_queries (+ YOUTUBE_DATA_API_KEY)'
     );
   }
   missing_hints.push(

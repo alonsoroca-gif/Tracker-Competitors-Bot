@@ -4,6 +4,8 @@
 
 **Planning source of truth:** The detailed checklist with acceptance criteria lives in **`initiative-1-tracker/TASKS.md`** (Priority + Backup sections). **This file mirrors the Priority sprint checkboxes** so PRs/handoffs stay short—when you add or complete scope, update **both** files together.
 
+**Doc-only pending items** (manager/legal gates, not in `TASKS.md`): see **`initiative-1-tracker/docs/COMPETITIVE-KEYWORDS-PLAN.md`** and **`initiative-1-tracker/docs/README.md`** (index).
+
 Copy the checklist below into your PR description or HANDOFF so the agent (or you) knows what to work on.
 
 ---

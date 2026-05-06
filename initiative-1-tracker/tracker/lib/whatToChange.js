@@ -28,9 +28,12 @@ function getWhatToChange(gapReport, responseSchema) {
     const gap = gapById(gapReport, r.gap_id);
     const repo = gap ? getRepoInsightsForGap(gap, inventory, productId) : { touchpoints: [], grounding_terms: [] };
     const repoTouchpoints = applyFenceToTouchpoints(repo.touchpoints);
-    const recommendation = gap
+    let recommendation = gap
       ? buildRepoAwareRecommendation(r, gap, repoTouchpoints, productId)
       : r.recommendation;
+    if (r.playbook_line) {
+      recommendation = `${recommendation} **Playbook:** ${r.playbook_line}`;
+    }
 
     const minimalBundle = buildMinimalModelBundle(
       gap || null,
@@ -77,6 +80,7 @@ function getWhatToChange(gapReport, responseSchema) {
       action: r.competitor_action,
       our_gap: r.our_gap,
       recommendation,
+      playbook_line: r.playbook_line || null,
       response_type: r.response_type,
       why: r.rationale,
       priority: r.priority,

@@ -438,6 +438,49 @@
       font-family: inherit;
     }
     .gaps-table .btn-details:hover { color: var(--text); }
+    .gaps-table .btn-copy-cursor {
+      margin-left: 0.5rem;
+      padding: 0.25rem 0.5rem;
+      font-size: 0.75rem;
+      background: rgba(228, 33, 39, 0.15);
+      border: 1px solid rgba(228, 33, 39, 0.45);
+      border-radius: 4px;
+      color: #fca5a5;
+      cursor: pointer;
+      font-family: inherit;
+    }
+    .gaps-table .btn-copy-cursor:hover { color: #fecaca; border-color: rgba(228, 33, 39, 0.65); }
+    .gaps-table .cursor-copy-status { margin-left: 0.5rem; font-size: 0.75rem; color: var(--priority-low); }
+    .gaps-table .cursor-instructions {
+      margin: 0.5rem 0 0.35rem;
+      font-size: 0.78rem;
+      color: var(--text-secondary);
+      line-height: 1.45;
+    }
+    .gaps-table .cursor-payload-preview {
+      margin: 0.25rem 0 0;
+      padding: 0.5rem 0.65rem;
+      max-height: 11rem;
+      overflow: auto;
+      font-size: 0.7rem;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--muted);
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    .changes-list .playbook-line {
+      margin-top: 0.65rem;
+      padding: 0.5rem 0.65rem;
+      background: rgba(96, 165, 250, 0.08);
+      border-left: 3px solid rgba(96, 165, 250, 0.55);
+      border-radius: 0 4px 4px 0;
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+      line-height: 1.45;
+    }
+    .changes-list .playbook-line .pl-label { color: var(--muted); font-weight: 600; margin-right: 0.35rem; }
     .gaps-table tr.gap-details-row td {
       padding: 0.75rem 1.25rem;
       background: var(--surface-elevated);
@@ -470,6 +513,50 @@
     .move-stack .move-threat { font-size: 0.82em; color: var(--text-secondary); display: block; margin-bottom: 0.35rem; }
     .move-stack .move-factual { font-size: 0.82em; color: var(--text-secondary); display: block; border-top: 1px solid var(--border); padding-top: 0.35rem; margin-top: 0.15rem; }
     .move-stack .move-factual .mf-label { color: var(--text-secondary); margin-right: 0.25rem; }
+    .move-takeaway {
+      display: block;
+      font-size: 0.8rem;
+      color: #a1a1aa;
+      margin-top: 0.3rem;
+      line-height: 1.4;
+      max-width: 44em;
+    }
+    .gap-detail-wrap { padding: 0.15rem 0 0.5rem; max-width: 100%; }
+    .gap-detail-card { display: flex; flex-direction: column; gap: 0.9rem; }
+    .gap-detail-card .gdc-h {
+      font-size: 0.68rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--muted);
+      margin: 0 0 0.5rem 0;
+      font-weight: 600;
+    }
+    .gap-detail-card .gdc-section {
+      background: #121215;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 0.75rem 1rem;
+    }
+    .gap-detail-card .gdc-lead { font-size: 0.9rem; font-weight: 500; color: var(--text); margin: 0 0 0.4rem; line-height: 1.45; }
+    .gap-detail-card .gdc-body { margin: 0; font-size: 0.8125rem; color: var(--text-secondary); line-height: 1.5; }
+    .gap-detail-card .gdc-threat { margin: 0.5rem 0 0; font-size: 0.8125rem; color: var(--text-secondary); }
+    .gap-detail-card .gdc-captured { margin: 0.65rem 0 0; font-size: 0.75rem; color: var(--muted); padding-top: 0.45rem; border-top: 1px solid var(--border); line-height: 1.45; }
+    .gap-detail-card .gdc-sub { color: var(--muted); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.04em; margin-right: 0.35rem; }
+    .gap-detail-card .gdc-dl { margin: 0; display: grid; grid-template-columns: 7.5rem 1fr; gap: 0.3rem 0.65rem; font-size: 0.8125rem; align-items: start; }
+    @media (max-width: 560px) {
+      .gap-detail-card .gdc-dl { grid-template-columns: 1fr; }
+    }
+    .gap-detail-card .gdc-dl dt { color: var(--muted); margin: 0; }
+    .gap-detail-card .gdc-dl dd { margin: 0; word-break: break-word; }
+    .gap-detail-card .gdc-evidence-list { list-style: none; margin: 0; padding: 0; }
+    .gap-detail-card .gdc-ev-item { margin-bottom: 0.7rem; padding-bottom: 0.7rem; border-bottom: 1px solid var(--border); }
+    .gap-detail-card .gdc-ev-item:last-child { border: none; margin: 0; padding: 0; }
+    .gap-detail-card .gdc-ev-head { font-size: 0.8125rem; margin-bottom: 0.3rem; }
+    .gap-detail-card .gdc-ev-link { color: #93c5fd; margin-left: 0.35rem; }
+    .gap-detail-card .gdc-ev-excerpt { font-size: 0.75rem; color: #a1a1aa; line-height: 1.45; max-height: 7.5rem; overflow: auto; }
+    .gdc-raw-details { font-size: 0.78rem; }
+    .gdc-raw-details summary { cursor: pointer; color: var(--muted); }
+    .gdc-raw-pre { max-height: 14rem; overflow: auto; font-size: 0.68rem; color: var(--muted); white-space: pre-wrap; word-break: break-word; margin: 0.4rem 0 0; padding: 0.5rem; background: var(--bg); border-radius: 4px; border: 1px solid var(--border); }
 
     .changes-list {
       list-style: none;
@@ -666,7 +753,8 @@
       <ol>
         <li><strong>Competitive move (table)</strong> — One factual line per signal: who + concrete move, with metrics when we have them. Not a page title.</li>
         <li><strong>Evidence (Details)</strong> — Headline, full excerpt, and public link for proof.</li>
-        <li><strong>Our response (right panel)</strong> — What we do this week: recommendation, work items, and (when configured) codebase touchpoints.</li>
+        <li><strong>Our response (right panel)</strong> — What we do this week: recommendation, rule-based playbook line, work items, and (when configured) codebase touchpoints.</li>
+        <li><strong>Cursor (Details)</strong> — <strong>Copy for Cursor</strong> pastes the internal JSON payload + prompts (Phase A; no server LLM).</li>
       </ol>
       <p class="pm-doc">Spec: <code>initiative-1-tracker/docs/COMPETITIVE-INTEL-PRESENTATION.md</code></p>
     </div>
@@ -728,6 +816,34 @@
     var lastReportPayload = null;
     var lastServerProcessStarted = null;
     var currentSourceFilter = '';
+
+    function hostFromUrl(u) {
+      try { return new URL(String(u)).hostname; } catch (e) { return String(u || '').slice(0, 48); }
+    }
+
+    function copyGapForCursor(gapId) {
+      var data = lastReportPayload;
+      var st = document.getElementById('cursor-status-' + gapId);
+      if (!data || !data.report || !data.report.gaps) {
+        if (st) st.textContent = 'Load report first.';
+        return;
+      }
+      var g = data.report.gaps.find(function(x) { return x.gap_id === gapId; });
+      var block = g && g.cursor_interpretation && g.cursor_interpretation.copy_block;
+      if (!block) {
+        if (st) st.textContent = 'No package for this gap.';
+        return;
+      }
+      function done(ok) {
+        if (st) st.textContent = ok ? 'Copied.' : 'Copy failed.';
+        if (st) setTimeout(function() { st.textContent = ''; }, 2500);
+      }
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(block).then(function() { done(true); }).catch(function() { done(false); });
+      } else {
+        done(false);
+      }
+    }
 
     function buildDataSourcesSummary(gaps) {
       var counts = {};
@@ -813,39 +929,83 @@
           var detailId = 'detail-' + g.gap_id;
           var fullSignal = g.competitor_signal || move;
           var interp = g.interpretation || null;
+          var takeaway = interp && interp.manager_takeaway;
           var moveCell;
           if (interp && interp.headline) {
             moveCell =
               '<div class="move-stack">' +
               '<span class="move-insight">' + escapeHtml(interp.headline) + '</span>' +
-              (interp.strategic_why ? '<span class="move-why">' + escapeHtml(interp.strategic_why) + '</span>' : '') +
-              (interp.threat_tag ? '<span class="move-threat"><strong>Threat tag:</strong> ' + escapeHtml(interp.threat_tag) + '</span>' : '') +
-              '<span class="move-factual"><span class="mf-label">Captured:</span>' + escapeHtml(move) + '</span>' +
+              (takeaway ? '<span class="move-takeaway">' + escapeHtml(takeaway) + '</span>' : '') +
               '</div>';
           } else {
             moveCell = escapeHtml(move);
           }
-          var headlineRow = g.headline ? '<br><span class="detail-label">Headline:</span>' + escapeHtml(g.headline) : '';
-          var urlRow = '';
+          var primaryDd = '';
           if (g.source_url && /^https?:\/\//i.test(String(g.source_url))) {
             var u = String(g.source_url);
-            urlRow = '<br><span class="detail-label">Public page:</span><a href="' + escapeHtml(u) + '" target="_blank" rel="noopener noreferrer">' + escapeHtml(u.length > 96 ? u.slice(0, 96) + '…' : u) + '</a>';
+            primaryDd = '<dt>Primary page</dt><dd><a href="' + escapeHtml(u) + '" target="_blank" rel="noopener noreferrer">' + escapeHtml(hostFromUrl(u)) + '</a></dd>';
           }
-          var interpDetail = '';
-          if (interp && interp.headline) {
-            interpDetail =
-              '<br><span class="detail-label">Strategic read:</span>' +
-              escapeHtml(interp.headline) +
-              (interp.strategic_why ? '<br><span class="detail-label">Why:</span>' + escapeHtml(interp.strategic_why) : '') +
-              (interp.threat_tag ? '<br><span class="detail-label">Threat tag:</span>' + escapeHtml(interp.threat_tag) : '') +
-              '<br><span class="detail-label">Captured line:</span>' + escapeHtml(move);
+          var mergeRow = (g.headline && String(g.headline).trim())
+            ? '<dt>Cluster</dt><dd>' + escapeHtml(String(g.headline).trim()) + '</dd>'
+            : '';
+          var evList;
+          if (g.evidence_sections && g.evidence_sections.length) {
+            evList = '<ul class="gdc-evidence-list">' + g.evidence_sections.map(function(s) {
+              var uu = s.url;
+              var lk = (uu && /^https?:\/\//i.test(String(uu)))
+                ? ' <a class="gdc-ev-link" href="' + escapeHtml(String(uu)) + '" target="_blank" rel="noopener noreferrer">' + escapeHtml(hostFromUrl(uu)) + '</a>'
+                : '';
+              return '<li class="gdc-ev-item"><div class="gdc-ev-head"><span class="gdc-ev-label">' + escapeHtml(s.label || 'Source') + '</span>' + lk + '</div>' +
+                '<div class="gdc-ev-excerpt">' + escapeHtml(s.excerpt || '').replace(/\n/g, '<br>') + '</div></li>';
+            }).join('') + '</ul>';
+          } else {
+            evList = '<p class="gdc-body" style="margin:0">No per-source excerpts. Expand raw capture below.</p>';
           }
+          var ci = g.cursor_interpretation;
+          var cursorBlock = '';
+          if (ci && ci.payload) {
+            var instr = escapeHtml(ci.instructions_markdown || '').replace(/\n/g, '<br>');
+            var preview = JSON.stringify(ci.payload, null, 2);
+            if (preview.length > 1200) preview = preview.slice(0, 1200) + '\n…';
+            cursorBlock =
+              '<div class="gdc-section gdc-cursor"><h3 class="gdc-h">Cursor (Phase A)</h3>' +
+              '<button type="button" class="btn-copy-cursor" data-gap-id="' + escapeHtml(g.gap_id) + '">Copy for Cursor</button>' +
+              '<span class="cursor-copy-status" id="cursor-status-' + escapeHtml(g.gap_id) + '"></span>' +
+              '<div class="cursor-instructions" style="margin-top:0.4rem">' + instr + '</div>' +
+              '<pre class="cursor-payload-preview">' + escapeHtml(preview) + '</pre></div>';
+          }
+          var whatBlock;
+          if (interp) {
+            whatBlock =
+              '<section class="gdc-section gdc-what"><h3 class="gdc-h">What to do with this</h3>' +
+              (takeaway ? '<p class="gdc-lead">' + escapeHtml(takeaway) + '</p>' : '') +
+              (interp.strategic_why ? '<p class="gdc-body">' + escapeHtml(interp.strategic_why) + '</p>' : '') +
+              (interp.threat_tag ? '<p class="gdc-threat"><span class="gdc-sub">Signal strength</span> ' + escapeHtml(interp.threat_tag) + '</p>' : '') +
+              '<p class="gdc-captured"><span class="gdc-sub">Scraped one-liner</span> ' + escapeHtml(move) + '</p></section>';
+          } else {
+            whatBlock =
+              '<section class="gdc-section gdc-what"><h3 class="gdc-h">What to do with this</h3>' +
+              '<p class="gdc-body" style="margin:0 0 0.5rem 0">Interpretation is thin for this row—use <strong>Sources &amp; proof</strong> and raw capture below.</p>' +
+              '<p class="gdc-captured" style="border:none;padding:0"><span class="gdc-sub">Scraped one-liner</span> ' + escapeHtml(move) + '</p></section>';
+          }
+          var detailsInner = '<div class="gap-detail-wrap"><div class="gap-detail-card">' + whatBlock +
+            '<section class="gdc-section gdc-snapshot"><h3 class="gdc-h">Snapshot</h3>' +
+            '<dl class="gdc-dl">' +
+            '<dt>Corroboration</dt><dd>' + escapeHtml(corro) + '</dd>' +
+            '<dt>Intel pillar</dt><dd>' + escapeHtml(g.intel_pillar_label || pillar) + '</dd>' +
+            '<dt>Our state</dt><dd>' + escapeHtml(ourRaw) + '</dd>' +
+            '<dt>Sources</dt><dd>' + escapeHtml(src || '—') + '</dd>' + primaryDd + mergeRow +
+            '<dt>Detected</dt><dd>' + escapeHtml(g.detected_at || '—') + '</dd>' +
+            '</dl></section>' +
+            '<section class="gdc-section"><h3 class="gdc-h">Sources &amp; proof</h3>' + evList + '</section>' +
+            '<details class="gdc-raw-details"><summary>Full raw capture (analysts)</summary><pre class="gdc-raw-pre">' + escapeHtml(fullSignal) + '</pre></details>' +
+            cursorBlock + '</div></div>';
           rows.push(
             '<tr><td>' + escapeHtml(g.gap_id) + '</td><td><span class="priority-badge ' + escapeHtml(g.priority) + '">' + escapeHtml(g.priority) + '</span></td><td>' + escapeHtml(g.dimension) + '</td><td class="cell-wrap">' + pillarDisplay + '</td><td class="cell-wrap">' + corroDisplay + '</td><td class="cell-wrap">' + moveCell + '</td><td class="cell-wrap">' + ourDisplay + '</td><td class="cell-wrap">' + srcDisplay + '</td><td><button type="button" class="btn-details" data-detail="' + escapeHtml(detailId) + '" aria-expanded="false">Details</button></td></tr>' +
-            '<tr class="gap-details-row" id="' + detailId + '" style="display:none"><td colspan="9"><span class="detail-label">Corroboration:</span>' + escapeHtml(corro) + '<br><span class="detail-label">Intel pillar:</span>' + escapeHtml(g.intel_pillar_label || pillar) + interpDetail + '<br><span class="detail-label">Full signal:</span>' + escapeHtml(fullSignal) + headlineRow + '<br><span class="detail-label">Our state:</span>' + escapeHtml(ourRaw) + '<br><span class="detail-label">Source:</span>' + escapeHtml(src || '—') + urlRow + '<br><span class="detail-label">Detected:</span>' + escapeHtml(g.detected_at || '—') + '</td></tr>'
+            '<tr class="gap-details-row" id="' + detailId + '" style="display:none"><td colspan="9">' + detailsInner + '</td></tr>'
           );
         });
-        gapsContent.innerHTML = '<table class="gaps-table"><thead><tr><th>ID</th><th>Priority</th><th>Dimension</th><th>Pillar</th><th>Corroboration</th><th>Competitive move</th><th>Our state</th><th>Source</th><th></th></tr></thead><tbody>' + rows.join('') + '</tbody></table><p class="gaps-legend"><strong>Pillar</strong>: P1 owned · P2 behavioral · P3 third party (inferred from source if missing on disk). <strong>Corroboration</strong>: Confirmed = 2+ pillars on the same theme. <strong>Competitive move</strong>: top = rule-based strategic read; <strong>Captured</strong> = factual scrape line. <strong>Details</strong> = evidence (L2).</p>';
+        gapsContent.innerHTML = '<table class="gaps-table"><thead><tr><th>ID</th><th>Priority</th><th>Dimension</th><th>Pillar</th><th>Corroboration</th><th>Competitive move</th><th>Our state</th><th>Source</th><th></th></tr></thead><tbody>' + rows.join('') + '</tbody></table><p class="gaps-legend"><strong>Competitive move</strong> — headline + one-line action. <strong>Details</strong> — snapshot, per-source proof, raw capture. <strong>Pillar</strong>: P1–P3. <strong>Corroboration</strong>: confirmed = 2+ pillars on one theme.</p>';
         gapsContent.querySelectorAll('.btn-details').forEach(function(btn) {
           btn.addEventListener('click', function() {
             var id = this.getAttribute('data-detail');
@@ -855,6 +1015,12 @@
             row.style.display = open ? 'none' : 'table-row';
             this.setAttribute('aria-expanded', open ? 'false' : 'true');
             this.textContent = open ? 'Details' : 'Hide';
+          });
+        });
+        gapsContent.querySelectorAll('.btn-copy-cursor').forEach(function(btn) {
+          btn.addEventListener('click', function() {
+            var gid = this.getAttribute('data-gap-id');
+            if (gid) copyGapForCursor(gid);
           });
         });
       }
@@ -885,7 +1051,11 @@
                 return '<li><code>' + escapeHtml(h.relativePath) + '</code>' + label + snHtml + '</li>';
               }).join('') + '</ul></div>';
           }
-          return '<li class="change-item">' + text + wi + rt + '</li>';
+          var pl = '';
+          if (c.playbook_line && String(c.playbook_line).trim()) {
+            pl = '<div class="playbook-line"><span class="pl-label">Playbook</span>' + escapeHtml(String(c.playbook_line).trim()) + '</div>';
+          }
+          return '<li class="change-item">' + text + pl + wi + rt + '</li>';
         }).join('');
       }
     }

@@ -2,6 +2,8 @@
 
 The **Run agent (next task)** workflow picks the next task from `initiative-1-tracker/TASKS.md` and either **prepares it for Cursor** (default, no API key) or **implements it via OpenAI** (optional).
 
+**This is not the Tracker competitor product** — it is **engineering automation** for the task list. For a manager-friendly split (purpose, gaps, doc-only pending items), read **`initiative-1-tracker/docs/MANAGER-BRIEF-TRACKER-AND-AUTOMATION.md`**. To tune schedules and concurrency, read **`docs/GITHUB-AUTOMATION-RUNBOOK.md`**.
+
 ---
 
 ## What runs

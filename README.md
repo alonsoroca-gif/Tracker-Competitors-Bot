@@ -8,36 +8,22 @@ Tracker Competitors Bot — start developing here.
 
 ---
 
-## Run Tracker UI locally (Competitor report)
+## Tracker product path (default): Git + Cursor + prototype
 
-From the **repo root**:
+**Flow:** collect → **`tracker-drops/`** on a **Git branch** → managers **pull** → interpret in **Cursor** → build a **prototype response** in Product OS (not a localhost browser UI).
 
-```bash
-./scripts/serve-tracker.sh
-```
+- **Architecture & diagrams:** [initiative-1-tracker/docs/TRACKER-FLOW-END-TO-END.md](initiative-1-tracker/docs/TRACKER-FLOW-END-TO-END.md)  
+- **CI & drops:** [initiative-1-tracker/docs/TRACKER-DROP-CI.md](initiative-1-tracker/docs/TRACKER-DROP-CI.md)  
+- **Demo (no port 3000):** [initiative-1-tracker/docs/TRACKER-DEMO.md](initiative-1-tracker/docs/TRACKER-DEMO.md)  
+- **Docs index:** [initiative-1-tracker/docs/README.md](initiative-1-tracker/docs/README.md)
 
-Or manually:
+**Share with a colleague:** [TRACKER-EXTERNAL-ONBOARDING.md](TRACKER-EXTERNAL-ONBOARDING.md) — **single file:** sponsor fill-in table, **open this first** then **clone** (Part 0–3), manager/runner, CI/Slack, Entrata pointer, troubleshooting, links to deeper docs inside the clone.
 
-```bash
-cd initiative-1-tracker/tracker
-npm install
-npm run serve
-```
+**Entrata code + tracker in one Cursor window:** [initiative-1-tracker/docs/ENTRATA-CODE-IN-CURSOR.md](initiative-1-tracker/docs/ENTRATA-CODE-IN-CURSOR.md) and `entrata-plus-tracker.code-workspace.example`.
 
-Then open **http://localhost:3000** (use **Refresh data** / **Reload report** in the page). **Stop the server:** focus the terminal and press **Ctrl+C**.
+### Optional: legacy local report UI (engineering debug only)
 
-The report’s main value is the **strategic interpretation** on each gap (not raw scrapes alone) — see [initiative-1-tracker/docs/STRATEGIC-INTERPRETATION.md](initiative-1-tracker/docs/STRATEGIC-INTERPRETATION.md). After pulling code changes, **restart** `npm run serve` so Node loads the latest `lib/*.js`.
-
-**Entrata apps in Cursor:** use a multi-root workspace so this repo and your internal Entrata code are open together — see [initiative-1-tracker/docs/ENTRATA-CODE-IN-CURSOR.md](initiative-1-tracker/docs/ENTRATA-CODE-IN-CURSOR.md) and copy `entrata-plus-tracker.code-workspace.example`.
-
-**Port already in use (`EADDRINUSE`):** something else is using 3000. Either quit that app or run on another port:
-
-```bash
-cd initiative-1-tracker/tracker
-PORT=3001 npm run serve
-```
-
-Then open **http://localhost:3001**.
+The Express app on **port 3000** is **not** part of the manager demo. Use only if you are debugging the old HTML report: `./scripts/serve-tracker.sh` or `cd initiative-1-tracker/tracker && npm run serve`. See [initiative-1-tracker/docs/STRATEGIC-INTERPRETATION.md](initiative-1-tracker/docs/STRATEGIC-INTERPRETATION.md) for in-app interpretation behavior.
 
 ---
 
@@ -50,6 +36,8 @@ A **scheduled workflow** picks the next unchecked task from `initiative-1-tracke
 **Optional (with API key):** Add secret **`OPENAI_API_KEY`** in **Settings → Secrets and variables → Actions**. The workflow will then implement the task via the API, run tests, and open a normal PR. No Cursor step needed.
 
 The workflow runs on schedule (9am and 3pm UTC) and via **Actions → Run agent (next task) → Run workflow**.
+
+**Manager brief (Tracker vs repo automation):** [initiative-1-tracker/docs/MANAGER-BRIEF-TRACKER-AND-AUTOMATION.md](initiative-1-tracker/docs/MANAGER-BRIEF-TRACKER-AND-AUTOMATION.md) · **Tune GitHub Actions:** [docs/GITHUB-AUTOMATION-RUNBOOK.md](docs/GITHUB-AUTOMATION-RUNBOOK.md)
 
 ---
 

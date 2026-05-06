@@ -52,6 +52,30 @@ So: **yes, you can get machine-readable text from videos**, but the path is **ca
 
 ---
 
+## Radar → triage → transcribe (staged product model)
+
+**One line for stakeholders:** the **YouTube Data API key** pays for **discovery and ranking** (metadata: what’s new, who posted, how big); **transcript/ASR budget** pays for **clarity on a small, chosen set of high-signal videos**—not for every hit.
+
+| Stage | What you use | What you get |
+|--------|----------------|--------------|
+| **1. Radar (breadth, cheap)** | YouTube Data API (`search.list` + `videos.list`) and/or **`youtube_rss`** (official channel Atom; **no key** for RSS) | For each candidate: **title, description, link, date**, **channel**, and optionally **views, duration**—enough to answer *what was posted* and *by whom*, and to **sort or filter** before any heavy work. |
+| **2. Triage (pick winners)** | Rules on metadata first (e.g. launch / review / pricing language in title+description; competitor-owned vs. third party; recency, views, max length caps); optional **human** shortlist (“must dig”) | A **short list** of videos worth full spoken analysis: *new feature*, *credible long-form review*, *high-visibility third-party take*, etc. |
+| **3. Transcribe (depth, bounded)** | **Only** for that short list: **captions** when policy/API allows, else **ASR** on org-approved **audio** path | **Full spoken text** for summarization / competitive tags / gaps—**not** for the whole YouTube firehose. |
+
+**Why this shapes cost:** unlimited ASR on every discovered video is expensive; **transcribe after triage** caps minutes processed and ties cost to **decisions you already made**.
+
+### ASR cost and what your company may already have
+
+“ASR will cost us” often means **new, unconstrained** cloud or GPU spend. In practice, **transcription may already be covered** by an existing org stack—worth checking **before** assuming new budget:
+
+- **Cloud speech** already under contract: e.g. **Azure Speech** / **AWS Transcribe** / **Google Cloud Speech-to-Text** (or speech endpoints bundled with the same GCP project you use for YouTube APIs).
+- **Productivity or media suites:** **Microsoft 365**, **Google Workspace**, or **enterprise meeting** tools (Zoom, Meet, etc.) with **turnkey transcription** (usually for *your* calls—less often for arbitrary YouTube URLs, but the same org may have a **policy** for “upload this MP3 for internal analysis”).
+- **Internal ML / data platforms:** a team-run **Whisper** or other ASR service you’re allowed to call from internal jobs.
+
+**Action:** ask IT / data / platform owners: *Is there an approved way to get speech-to-text for a short list of public URLs (or for audio we export under policy)?* Plug the tracker’s **triage output** (video id + link + why selected) into **that** pipeline first; add net-new ASR only if nothing fits.
+
+---
+
 ## Track B — Gold examples (third-party)
 
 These are the kind of pieces we want on the radar: **precise, practitioner-led, product-in-context** (not random mentions).

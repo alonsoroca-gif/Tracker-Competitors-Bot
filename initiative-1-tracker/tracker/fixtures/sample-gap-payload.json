@@ -1,0 +1,42 @@
+{
+  "schema_version": "1.0",
+  "gap_id": "gap-001",
+  "product_id": "prospect-portal",
+  "product_name": "Prospect Portal",
+  "dimension": "features",
+  "competitor_id": "example-crm",
+  "competitor_name": "Example CRM",
+  "priority": "medium",
+  "cluster_signal_count": 2,
+  "corroboration": "watch",
+  "intel_pillar_label": "Tour / scheduling",
+  "corroboration_source_labels": ["Blog"],
+  "competitor_move": "Blog post highlights self-serve tour booking.",
+  "competitor_signal": "We are excited to announce smarter tour scheduling for prospects…",
+  "our_gap": "Starting",
+  "signals": [
+    {
+      "source": "blog",
+      "type": "feature",
+      "date": "2026-03-28",
+      "headline": "Smarter tour scheduling",
+      "snippet": "Prospects can pick time slots without calling the office.",
+      "evidence_snippet": "self-serve tour booking",
+      "source_url": "https://example.com/blog/tours"
+    },
+    {
+      "source": "product",
+      "type": "marketing",
+      "date": "2026-03-20",
+      "headline": "Tour experience",
+      "snippet": "Reduce no-shows with automated reminders.",
+      "source_url": "https://example.com/product/tours"
+    }
+  ],
+  "existing_rule_based": {
+    "headline": "Competitor messaging on self-serve tours",
+    "manager_takeaway": "Do not increase build priority until a second source confirms the same story.",
+    "strategic_why": "Single blog + product page; corroboration watch.",
+    "threat_tag": "Watch — thin time-stamped evidence"
+  }
+}

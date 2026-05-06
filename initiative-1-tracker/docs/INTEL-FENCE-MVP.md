@@ -40,7 +40,7 @@
 ## Next steps (when adding a real bot)
 
 1. Keep **`llm_enrichment_enabled`** false in prod until legal/security sign off.  
-2. **`minimal_model_bundle`** + gateway status are implemented — see [LLM-GATEWAY-MVP.md](./LLM-GATEWAY-MVP.md). Wire **one** outbound POST only after approval.  
+2. **`minimal_model_bundle`** + gateway status in the local API (legacy path) — the org-facing **LLM gateway** spec is **superseded**; see [TRACKER-FLOW-END-TO-END.md](./TRACKER-FLOW-END-TO-END.md) and [_archive/LLM-GATEWAY-MVP.md](./_archive/LLM-GATEWAY-MVP.md) for history. Wire **one** outbound POST only after approval.  
 3. Log **category** of data sent (never log raw secrets).
 
 See also: [COMPETITIVE-INTEL-PRESENTATION.md](./COMPETITIVE-INTEL-PRESENTATION.md) (L1/L2/L3).

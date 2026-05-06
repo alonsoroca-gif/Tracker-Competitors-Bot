@@ -1,5 +1,9 @@
 # Initiative 1 — Tracker: context
 
+**Org delivery model (current):** evidence is **committed to a dedicated Entrata branch**; **interpretation** happens in **Cursor** (and optional **Slack** when a drop lands). See [docs/TRACKER-FLOW-END-TO-END.md](docs/TRACKER-FLOW-END-TO-END.md) and [docs/README.md](docs/README.md).
+
+---
+
 ## How to run the Tracker
 
 - **Repo path:** `initiative-1-tracker/tracker/`

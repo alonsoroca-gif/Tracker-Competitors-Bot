@@ -4,6 +4,7 @@
  */
 
 const { getProductVoice, pickVariantByGapId } = require('./productContext');
+const { pickPlaybookLine } = require('./responsePlaybook');
 
 function clip(s, max) {
   const t = String(s || '').trim();
@@ -54,6 +55,8 @@ function buildResponseSchema(gapReport, productId) {
         ? `**${voice.display_name}** (${dim}): align roadmap to this move — ${moveShort}`
         : `**${voice.display_name}** (${dim}): sharpen positioning vs — ${moveShort}`;
 
+    const playbook_line = pickPlaybookLine(gap);
+
     const rationale = `**${voice.display_name}** · ${dim} · us: ${our_gap}. Stance: ${response_type}. Signal: ${moveShort}`;
 
     responses.push({
@@ -62,6 +65,7 @@ function buildResponseSchema(gapReport, productId) {
       competitor_action,
       our_gap,
       recommendation,
+      playbook_line: playbook_line || null,
       response_type,
       rationale,
       actions: [recommendation],

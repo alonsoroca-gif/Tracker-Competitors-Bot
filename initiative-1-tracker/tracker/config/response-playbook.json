@@ -1,0 +1,36 @@
+{
+  "schema_version": "1.0",
+  "default_line": "Anchor decisions on L2 URLs and excerpts in Details; if corroboration is watch, avoid roadmap promises until a second pillar agrees.",
+  "rules": [
+    {
+      "id": "confirmed-features",
+      "when": { "corroboration": "confirmed", "dimension": "features" },
+      "line": "Multi-pillar feature pressure: write a short internal L2 memo (what shipped vs claimed) before you commit roadmap dates."
+    },
+    {
+      "id": "watch-pricing",
+      "when": { "corroboration": "watch", "dimension": "pricing" },
+      "line": "Pricing and tiers on public pages drift—capture a dated screenshot for L2 and treat hero numbers as directional, not contract truth."
+    },
+    {
+      "id": "high-not-started",
+      "when": { "priority": "high", "our_gap": "Starting" },
+      "line": "High priority while we are still Starting: name an owner and timebox discovery to one week; do not leave this in watch-only limbo."
+    },
+    {
+      "id": "messaging-watch",
+      "when": { "dimension": "messaging", "corroboration": "watch" },
+      "line": "Messaging-only with watch corroboration: refresh PMM talking points only after one product or changelog signal backs the story."
+    },
+    {
+      "id": "positioning-confirmed",
+      "when": { "dimension": "positioning", "corroboration": "confirmed" },
+      "line": "Confirmed positioning shift: update the competitive battlecard and align sales enablement within this sprint."
+    },
+    {
+      "id": "support-match",
+      "when": { "dimension": "support", "corroboration": "watch" },
+      "line": "Support or success narrative: verify against implementation (docs, status pages, community) before we match tone in-app."
+    }
+  ]
+}

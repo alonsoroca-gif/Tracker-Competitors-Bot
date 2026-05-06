@@ -206,12 +206,12 @@ End demo with: **“That’s Tracker in one pass.”** `[PAUSE 2s]` then sit or 
 ### B8. Assets Claude should request or assume
 
 - **Logo:** Entrata (user to provide vector/PNG).  
-- **Screenshots:** User to paste latest from `http://localhost:3000` after Refresh + Reload—or Claude generates **wireframe** placeholders labeled “UI: Gaps table”.  
+- **Screenshots / artifacts:** Prefer **`tracker-drops/.../SUMMARY.md`** (and excerpts from `signals.json`) for the Git-first story—or legacy **localhost report** captures if still using that for visuals—or Claude **wireframe** placeholders labeled “Evidence: Git drop”.  
 - **Duration:** Assume **15–20 minutes** presentation + 10 Q&A unless user specifies otherwise.
 
 ### B9. Entrata branding — format, color, and logo (match the company)
 
-**Why:** Stakeholders should feel this is **our** product story, not a generic template. The **Tracker report UI** already uses Entrata-aligned tokens (`tracker/public/index.html`); the deck should **harmonize** with that when you show screenshots.
+**Why:** Stakeholders should feel this is **our** product story, not a generic template. If you show the **legacy report UI**, it uses Entrata-aligned tokens (`tracker/public/index.html`); otherwise harmonize slides with **prototype** / memo output from Cursor + Product OS.
 
 **Official reference:** [Entrata brand guidelines](https://www.entrata.com/company/brand-guidelines) — for non-standard or external use, contact **marketing@entrata.com** with a visual mock-up (per Entrata’s page).
 

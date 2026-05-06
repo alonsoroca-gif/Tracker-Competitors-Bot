@@ -1,0 +1,9 @@
+{
+  "run_id": "2026-05-04T19-09-35Z",
+  "created_at": "2026-05-04T19:09:35.834Z",
+  "new_signals_added": 0,
+  "retention_days": 1,
+  "signals_kept_after_prune": 121,
+  "signals_removed_retention": 0,
+  "source": "tracker-publish-drop.js"
+}

@@ -1,10 +1,14 @@
 /**
  * Strategic interpretation — core product output of the tracker.
  *
- * Scrapes answer "what did we see?" This module answers "how should we read it?" without an LLM:
- * headline + epistemic why + threat tag. Headlines prefer metrics and structured entities over
- * marketing shells. Tune copy in this file when strategy language changes.
+ * Primary path: Anthropic (Claude) for headline, manager_takeaway, strategic_why, and threat
+ * (mapped to the existing `threat_tag` display field). If ANTHROPIC_API_KEY is unset, this file
+ * falls back to the legacy rule-based implementation so local runs and tests stay green.
+ * API failures return a clearly labeled placeholder object (UI never breaks).
  */
+
+const { execFileSync } = require('child_process');
+const { buildSignalDataForAnthropic } = require('./interpreterPayload');
 
 function clip(str, max) {
   const t = String(str || '').replace(/\s+/g, ' ').trim();
@@ -169,23 +173,46 @@ function dimStoryNoun(dimension) {
   return m[dimension] || 'thread';
 }
 
+/** Stable 0..n-1 from string so adjacent gaps do not get identical copy. */
+function stringHash(s) {
+  const t = String(s || '');
+  let h = 0;
+  for (let i = 0; i < t.length; i++) h = (Math.imul(31, h) + t.charCodeAt(i)) | 0;
+  return Math.abs(h);
+}
+
 /**
- * Multi-signal gaps: vary copy using who + source labels + dimension (not one boilerplate paragraph).
+ * Multi-signal gaps: vary copy by theme + evidence fingerprint (not the same paragraph on every gap).
  */
-function buildMultiSurfaceWhy(who, dimension, clusterSignalCount, sourceLabels) {
+function buildMultiSurfaceWhy(who, dimension, clusterSignalCount, sourceLabels, themeHint, evidenceFingerprint) {
   const story = dimStoryNoun(dimension);
   const uniq = [...new Set((sourceLabels || []).map((s) => String(s).trim()).filter(Boolean))];
   const n = Math.max(2, clusterSignalCount);
+  const theme = themeHint && String(themeHint).trim() ? clip(String(themeHint).trim(), 72) : '';
+  const fp = evidenceFingerprint || `${who}|${uniq.join(',')}|${n}`;
+  const h = stringHash(fp) % 3;
 
   if (uniq.length >= 2) {
     const a = uniq.slice(0, -1).join(', ');
     const b = uniq[uniq.length - 1];
-    return `${who} repeated a similar ${story} across ${a} and ${b}. That aligns what they want the market to hear—not proof of intent. Check hiring, reviews, or pricing next.`;
+    if (h === 0) {
+      return `${who} is telling a consistent ${story} on ${a} and ${b}${theme ? ` (thread: “${theme}”)` : ''}. That is coordinated messaging, not independent proof.`;
+    }
+    if (h === 1) {
+      return `The same ${story} appears on ${a} and ${b}${theme ? ` around “${theme}”` : ''}—useful for narrative tracking, not as a stand‑in for what shipped.`;
+    }
+    return `${who} aligned ${a} and ${b} on this ${story}${theme ? ` (“${theme}”)` : ''}. Next: check if pricing, reviews, or jobs tell the same story.`;
   }
   if (uniq.length === 1) {
-    return `${who} hit the same ${story} ${n} times via ${uniq[0]}. Reads as one coordinated push on that surface; validate with a second pillar (jobs, G2, pricing) before you treat it as strategy.`;
+    if (h === 0) {
+      return `${who} repeated a similar ${story} ${n} times via ${uniq[0]}${theme ? ` (“${theme}”)` : ''}. One surface echoing itself—treat as content sync, not a second source.`;
+    }
+    if (h === 1) {
+      return `${n} similar captures on ${uniq[0]}${theme ? ` about “${theme}”` : ''}: likely a crawl or copy refresh, not proof of a new build. Compare week over week before reacting.`;
+    }
+    return `${who} hit the same ${story} on ${uniq[0]}${theme ? ` with “${theme}” visible in both scrapes` : ''}. Validate on a different pillar (pricing, G2, careers) before you match in product.`;
   }
-  return `${who} showed the same ${story} in ${n} places this week. Treat it as one public narrative until behavioral or third-party signals back it up.`;
+  return `${who} showed the same ${story} in ${n} places this week. Treat as one public narrative until a non‑owned source backs it.`;
 }
 
 function buildStrategicWhy(
@@ -194,22 +221,69 @@ function buildStrategicWhy(
   intel_pillars,
   clusterSignalCount,
   who,
-  sourceLabels
+  sourceLabels,
+  themeHint,
+  evidenceFingerprint
 ) {
   const onlyOwned = intel_pillars.length === 1 && intel_pillars[0] === 1;
   const whoSafe = String(who || 'They').trim() || 'They';
+  const th = themeHint && String(themeHint).trim() ? clip(String(themeHint).trim(), 72) : '';
+  const fp = evidenceFingerprint || `${whoSafe}|${(sourceLabels || []).join(',')}`;
 
   if (corroboration === 'confirmed') {
-    return `${whoSafe} shows the same move across different intel pillars (owned vs behavioral vs third party). That pattern usually means a real bet, not a one-off page edit.`;
+    return th
+      ? `${whoSafe} shows the same move across different intel pillars, centered on “${th}”. That is closer to a real bet than a single page tweak.`
+      : `${whoSafe} shows the same move across different intel pillars (owned vs behavioral vs third party). That pattern usually means a real bet, not a one-off page edit.`;
   }
   if (clusterSignalCount > 1 && corroboration !== 'confirmed') {
-    return buildMultiSurfaceWhy(whoSafe, dimension, clusterSignalCount, sourceLabels);
+    return buildMultiSurfaceWhy(whoSafe, dimension, clusterSignalCount, sourceLabels, th, fp);
   }
   if (onlyOwned || intel_pillars.length === 0) {
-    return `${whoSafe} is loudest on owned channels here. Before you react, look for jobs, pricing moves, or reviews that say the same thing.`;
+    const v = stringHash(fp) % 2;
+    if (v === 0) {
+      return th
+        ? `${whoSafe} is loudest on owned channels on “${th}”. Cross‑check with jobs, reviews, or pricing before you reprioritize.`
+        : `${whoSafe} is loudest on owned channels here. Before you react, look for jobs, pricing moves, or reviews that say the same thing.`;
+    }
+    return th
+      ? `Owned sites emphasize “${th}”—${whoSafe}’s public line, not yet a second pillar. Get one independent signal.`
+      : `${whoSafe} is loudest on owned channels here. Before you react, look for jobs, pricing moves, or reviews that say the same thing.`;
   }
   const dim = dimensionPlainEnglish(dimension);
-  return `${whoSafe} is pushing ${dim}. Compare that to your funnel gaps and what you already have in market.`;
+  return th
+    ? `${whoSafe} is pushing ${dim} on “${th}”. Map that to your funnel and delivery state, not to hero copy alone.`
+    : `${whoSafe} is pushing ${dim}. Compare that to your funnel gaps and what you already have in market.`;
+}
+
+/** One-line, exec-style action (not a repeat of strategic_why). */
+function buildManagerTakeaway(
+  dimension,
+  corroboration,
+  clusterSignalCount,
+  priority,
+  who,
+  themeHint
+) {
+  const th = themeHint && String(themeHint).trim() ? clip(String(themeHint).trim(), 56) : '';
+  if (corroboration === 'confirmed') {
+    return th
+      ? `Decide with PM and GTM how to respond to “${th}” this sprint—this one is worth a timed response.`
+      : `Decide with PM and GTM how to respond this sprint—corroboration makes this worth a timed response, not a ticket in the backlog.`;
+  }
+  if (clusterSignalCount > 1) {
+    return th
+      ? `Do not increase build priority for “${th}” until a non‑marketing source (pricing, reviews, jobs) says the same thing.`
+      : `Do not increase build priority until a non‑marketing source (pricing, reviews, jobs) confirms the same story.`;
+  }
+  if (dimension === 'features' || dimension === 'support') {
+    return th
+      ? `Use “${th}” in sales and competitive talk tracks only—no engineering bet until customers ask for it.`
+      : `Use for sales and competitive context only—no engineering bet until customers or a second source ask for it.`;
+  }
+  if (dimension === 'pricing' || dimension === 'messaging') {
+    return `Refresh battlecards and talk tracks; avoid repricing or roadmap promises on one scrape alone.`;
+  }
+  return `Log and monitor—no program-level reaction until a second, independent surface agrees.`;
 }
 
 function buildInterpretationHeadline(who, dimension, action, corroboration, metricExcerpt, entities) {
@@ -249,9 +323,162 @@ function buildInterpretationHeadline(who, dimension, action, corroboration, metr
  *   metric_excerpt?: string,
  *   entities?: object,
  *   source_labels?: string[],
+ *   theme_hint?: string,
+ *   evidence_fingerprint?: string,
  * }} input
  */
-function buildGapInterpretation(input) {
+const VALID_THREAT = new Set(['watch', 'respond', 'urgent']);
+
+/**
+ * @param {string} level
+ * @returns {string} value for the existing `interpretation.threat_tag` field in the UI
+ */
+function mapThreatLevelToThreatTag(level) {
+  const t = String(level || 'watch').trim().toLowerCase();
+  const k = VALID_THREAT.has(t) ? t : 'watch';
+  const c = k.charAt(0).toUpperCase() + k.slice(1);
+  return `${c} — (AI view: ${k})`;
+}
+
+/**
+ * @param {string} raw
+ * @returns {object}
+ */
+function parseLlmOutputJsonObject(raw) {
+  const t = String(raw || '').trim();
+  const m = t.match(/```(?:json)?\s*([\s\S]*?)\s*```/i);
+  const body = m ? m[1].trim() : t;
+  return JSON.parse(body);
+}
+
+/**
+ * Synchronous call to the Anthropic Messages API (so callers like buildGapReport stay sync).
+ * Requires `curl` on PATH and ANTHROPIC_API_KEY. Optional: ANTHROPIC_MODEL, ANTHROPIC_MAX_TOKENS.
+ */
+function callAnthropicMessagesApiSync(userMessage) {
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+  if (!apiKey) throw new Error('ANTHROPIC_API_KEY not set');
+
+  const model = process.env.ANTHROPIC_MODEL || 'claude-3-5-sonnet-20241022';
+  const maxTokens = Math.min(4096, Math.max(256, parseInt(process.env.ANTHROPIC_MAX_TOKENS, 10) || 800));
+
+  const requestBody = JSON.stringify({
+    model,
+    max_tokens: maxTokens,
+    messages: [{ role: 'user', content: userMessage }],
+  });
+
+  const out = execFileSync(
+    'curl',
+    [
+      '-sS',
+      '--max-time',
+      String(Math.min(180, Math.max(30, parseInt(process.env.ANTHROPIC_CURL_TIMEOUT_SEC, 10) || 120))),
+      '-H',
+      'Content-Type: application/json',
+      '-H',
+      'x-api-key: ' + apiKey,
+      '-H',
+      'anthropic-version: 2023-06-01',
+      'https://api.anthropic.com/v1/messages',
+      '-d',
+      '@-',
+    ],
+    {
+      maxBuffer: 4 * 1024 * 1024,
+      encoding: 'utf8',
+      input: requestBody,
+    }
+  );
+  const parsed = JSON.parse(out);
+  if (parsed.error) {
+    throw new Error(
+      (parsed.error.message && String(parsed.error.message)) || JSON.stringify(parsed.error)
+    );
+  }
+  const part = parsed.content && parsed.content[0];
+  const textOut = part && (part.text != null ? String(part.text) : '');
+  if (!textOut) {
+    throw new Error('No text content in Anthropic response');
+  }
+  return textOut;
+}
+
+/**
+ * @param {object} o
+ * @param {{ headline: string, manager_takeaway: string, strategic_why: string, threat_tag: string, factual_line: string}} base
+ */
+function buildGapInterpretationFromLlmObject(o, base) {
+  if (!o || typeof o !== 'object') throw new Error('LLM did not return an object');
+  const h = o.headline;
+  const m = o.manager_takeaway;
+  const s = o.strategic_why;
+  const tl = o.threat_level;
+  for (const name of ['headline', 'manager_takeaway', 'strategic_why', 'threat_level']) {
+    if (o[name] !== undefined && typeof o[name] !== 'string') {
+      throw new Error('LLM field ' + name + ' must be a string');
+    }
+  }
+  if (typeof h !== 'string' || !h.trim()) throw new Error('headline empty');
+  if (typeof m !== 'string' || !m.trim()) throw new Error('manager_takeaway empty');
+  if (typeof s !== 'string' || !s.trim()) throw new Error('strategic_why empty');
+  if (typeof tl !== 'string' || !tl.trim()) throw new Error('threat_level empty');
+  return {
+    headline: clip(h.trim(), MAX_HEADLINE_CHARS * 2),
+    manager_takeaway: clip(m.trim(), 500),
+    strategic_why: clip(s.trim(), 1000),
+    threat_tag: mapThreatLevelToThreatTag(tl),
+    factual_line: base.factual_line,
+  };
+}
+
+function buildGapInterpretationFromLlm(input) {
+  const factual = String(input.factual_competitor_move || '');
+  const signalData = buildSignalDataForAnthropic(input);
+  const signalJson = JSON.stringify(signalData, null, 2);
+  const userMessage = `You are a product manager analyzing a competitor signal.
+
+Raw signal: ${signalJson}
+
+Respond in JSON with exactly these four fields:
+- "headline": one sentence, what the competitor did, past tense, factual, no adjectives
+- "manager_takeaway": one sentence, what our PM should do or decide this week, starts with a verb
+- "strategic_why": one sentence, why this signal matters to our product specifically, not generically
+- "threat_level": one word only — "watch", "respond", or "urgent"
+
+Do not add any other fields. Do not explain your reasoning outside the JSON.`;
+
+  const text = callAnthropicMessagesApiSync(userMessage);
+  const obj = parseLlmOutputJsonObject(text);
+  return buildGapInterpretationFromLlmObject(obj, { factual_line: factual });
+}
+
+/**
+ * API failure, parse failure, or missing `curl` — still returns a valid interpretation shape
+ * (clearly marked so the UI and humans can tell it is not model output).
+ */
+function buildLlmErrorPlaceholder(input, errMsg) {
+  const factual = String(input.factual_competitor_move || '');
+  const corro = input.corroboration === 'confirmed' ? 'confirmed' : 'watch';
+  const th = buildThreatTag(
+    String(input.priority || 'medium'),
+    String(input.dimension || 'features'),
+    corro
+  );
+  return {
+    headline: clip(
+      '[LLM unavailable] ' + (factual ? factual.slice(0, 100) : 'No competitive move line in input.'),
+      MAX_HEADLINE_CHARS * 2
+    ),
+    manager_takeaway:
+      'Check Details for raw evidence; retry when ANTHROPIC_API_KEY and network are set. (placeholder: LLM call did not return usable JSON).',
+    strategic_why: clip('Placeholder only — ' + (errMsg || 'Anthropic call failed.'), 600),
+    threat_tag: th,
+    factual_line: factual,
+  };
+}
+
+function buildGapInterpretationRuleBased(input) {
   const factual = String(input.factual_competitor_move || '');
   const { who, action } = parseCompetitorMoveLine(factual);
   const dimension = String(input.dimension || 'features');
@@ -263,6 +490,8 @@ function buildGapInterpretation(input) {
   const entities =
     input.entities && typeof input.entities === 'object' && !Array.isArray(input.entities) ? input.entities : {};
   const source_labels = Array.isArray(input.source_labels) ? input.source_labels : [];
+  const theme_hint = String(input.theme_hint || '').trim();
+  const evidence_fingerprint = String(input.evidence_fingerprint || '');
 
   const headline = buildInterpretationHeadline(
     who,
@@ -278,16 +507,45 @@ function buildGapInterpretation(input) {
     intel_pillars,
     cluster_signal_count,
     who,
-    source_labels
+    source_labels,
+    theme_hint,
+    evidence_fingerprint
+  );
+  const manager_takeaway = buildManagerTakeaway(
+    dimension,
+    corroboration,
+    cluster_signal_count,
+    priority,
+    who,
+    theme_hint
   );
   const threat_tag = buildThreatTag(priority, dimension, corroboration);
 
   return {
     headline,
+    manager_takeaway,
     strategic_why,
     threat_tag,
     factual_line: factual,
   };
+}
+
+/**
+ * @param {Parameters<typeof buildGapInterpretationRuleBased>[0]} input
+ * @returns {ReturnType<typeof buildGapInterpretationRuleBased>}
+ */
+function buildGapInterpretation(input) {
+  if (process.env.ANTHROPIC_API_KEY) {
+    try {
+      return buildGapInterpretationFromLlm(input);
+    } catch (e) {
+      return buildLlmErrorPlaceholder(
+        input,
+        e && (e.message != null) ? String(e.message) : String(e)
+      );
+    }
+  }
+  return buildGapInterpretationRuleBased(input);
 }
 
 module.exports = {
@@ -297,4 +555,5 @@ module.exports = {
   refineActionForHeadline,
   buildEntitySummaryClause,
   isMetricWorthy,
+  stringHash,
 };

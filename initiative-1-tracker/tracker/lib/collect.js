@@ -191,6 +191,34 @@ function youtubeDiscoveryMaxQueries(base) {
   return Math.min(8, Math.max(1, Number.isFinite(n) ? n : 4));
 }
 
+/**
+ * Normalize a config value (string or string[]) plus an optional env override
+ * (comma/whitespace separated) into a deduped array of valid http(s) URLs.
+ * Used by g2_reviews_url, case_studies_url, articles_url.
+ */
+function normalizeUrlList(rawValue, envOverride) {
+  const fromEnv = (envOverride || '')
+    .split(/[\s,]+/)
+    .map((s) => s.trim())
+    .filter(Boolean);
+
+  const fromConfig = Array.isArray(rawValue)
+    ? rawValue.map((x) => String(x || '').trim()).filter(Boolean)
+    : typeof rawValue === 'string' && rawValue.trim()
+      ? [rawValue.trim()]
+      : [];
+
+  const merged = fromEnv.length ? fromEnv : fromConfig;
+  return [...new Set(merged.filter((u) => isValidPublicUrl(u)))];
+}
+
+/**
+ * Back-compat alias used by tests / external callers from Phase 2.
+ */
+function normalizeG2ReviewsUrls(rawValue, envOverride) {
+  return normalizeUrlList(rawValue, envOverride);
+}
+
 function getSourceUrls(competitorId) {
   const config = loadConfig();
   const base = (config.sources && config.sources[competitorId]) || {};
@@ -201,6 +229,10 @@ function getSourceUrls(competitorId) {
     press: process.env[`TRACKER_PRESS_URL_${suffix}`] || base.press || base.news || '',
     changelog: process.env[`TRACKER_CHANGELOG_URL_${suffix}`] || base.changelog || '',
     youtube_rss: process.env[`TRACKER_YOUTUBE_RSS_${suffix}`] || base.youtube_rss || base.youtube || '',
+    insights_url: process.env[`TRACKER_INSIGHTS_URL_${suffix}`] || base.insights_url || '',
+    media_url: process.env[`TRACKER_MEDIA_URL_${suffix}`] || base.media_url || '',
+    podcast_url: process.env[`TRACKER_PODCAST_URL_${suffix}`] || base.podcast_url || '',
+    reviews_url: process.env[`TRACKER_REVIEWS_URL_${suffix}`] || base.reviews_url || '',
     pricing_url: base.pricing_url || '',
     features_url: base.features_url || '',
     careers_url: base.careers_url || '',
@@ -210,10 +242,26 @@ function getSourceUrls(competitorId) {
   const baseUrls = Object.fromEntries(
     Object.entries(urls).map(([k, v]) => [k, isValidPublicUrl(v) ? v : ''])
   );
-  const g2 = isValidPublicUrl(base.g2_reviews_url || '') ? String(base.g2_reviews_url).trim() : '';
+  const g2List = normalizeUrlList(
+    base.g2_reviews_url,
+    process.env[`TRACKER_G2_REVIEWS_URL_${suffix}`] || ''
+  );
+  const caseStudiesList = normalizeUrlList(
+    base.case_studies_url,
+    process.env[`TRACKER_CASE_STUDIES_URL_${suffix}`] || ''
+  );
+  const articlesList = normalizeUrlList(
+    base.articles_url,
+    process.env[`TRACKER_ARTICLES_URL_${suffix}`] || ''
+  );
   return {
     ...baseUrls,
-    g2_reviews_url: g2,
+    g2_reviews_url: g2List[0] || '', // legacy string for back-compat consumers
+    g2_reviews_urls: g2List, // canonical array used by collect()
+    case_studies_url: caseStudiesList[0] || '',
+    case_studies_urls: caseStudiesList,
+    articles_url: articlesList[0] || '',
+    articles_urls: articlesList,
     youtube_comment_video_ids: parseYoutubeCommentVideoIds(base),
     youtube_discovery_queries: parseYoutubeDiscoveryQueries(base),
     youtube_discovery_max_results: youtubeDiscoveryMaxResults(base),
@@ -654,6 +702,9 @@ async function extractFeedSignals(feedUrl, sourceType, competitorId, productId, 
       press: 'press',
       changelog: 'changelog',
       youtube: 'youtube',
+      insights: 'insights',
+      media: 'media',
+      podcast: 'podcast',
     };
 
     signals.push(
@@ -894,6 +945,325 @@ async function collectYouTubeCommentSignals(competitorId, productId, videoIds) {
   return signals;
 }
 
+/**
+ * Generic non-G2 review aggregator extractor.
+ * Used for FeaturedCustomers, FitGap, Revyse, SlashDot, etc. Each site has a different DOM,
+ * so we cast a wide net: pull blockquotes, paragraph text, and itemprop=review markers.
+ * Returns one signal block per URL with the best excerpts found.
+ */
+async function collectGenericReviewSignals(competitorId, productId, reviewsUrl) {
+  if (!isValidPublicUrl(reviewsUrl)) return [];
+
+  let html;
+  try {
+    html = await fetchText(reviewsUrl, DEFAULT_TIMEOUT_MS);
+  } catch (_) {
+    return [];
+  }
+
+  const $ = loadHtml(html);
+  const meta = extractMeta($, reviewsUrl);
+
+  const REVIEW_SELECTORS = [
+    '[itemprop="reviewBody"]',
+    '[itemprop="description"]',
+    'blockquote',
+    '.testimonial, .review, .review-text, .review-body, .quote',
+    'div[class*="testimonial"], div[class*="review"], div[class*="quote"]',
+  ];
+
+  const excerpts = [];
+  for (const sel of REVIEW_SELECTORS) {
+    $(sel).each((_, el) => {
+      if (excerpts.length >= 12) return false;
+      const text = normalizeWhitespace($(el).text());
+      if (text.length >= 30 && text.length <= 1200) excerpts.push(text);
+      return undefined;
+    });
+    if (excerpts.length >= 4) break;
+  }
+
+  const uniqueExcerpts = unique(excerpts).slice(0, 8);
+
+  if (!uniqueExcerpts.length) {
+    return [
+      buildSignalBase({
+        competitorId,
+        productId,
+        source: 'reviews_other',
+        type: 'review_other',
+        event_type: 'content_update',
+        headline: meta.title || 'External reviews (no excerpts in static HTML)',
+        source_url: reviewsUrl,
+        date: todayISO(),
+        snippet: 'No review bodies found in static HTML. Site may hydrate via JavaScript.',
+        evidence_snippet: meta.description || '',
+        confidence: 0.3,
+        importance: 0.45,
+        entities: { review_quotes: [] },
+        metadata: { page_kind: 'reviews_other', parse_ok: false },
+      }),
+    ];
+  }
+
+  const combined = uniqueExcerpts.join('\n');
+  const { event_type, importance } = inferArticleEventType(meta.title || 'External reviews', combined);
+  const entities = { ...extractNamedEntities(combined), review_quotes: uniqueExcerpts.slice(0, 6) };
+
+  return [
+    buildSignalBase({
+      competitorId,
+      productId,
+      source: 'reviews_other',
+      type: 'review_other',
+      event_type,
+      headline: meta.title || 'External review excerpts',
+      source_url: reviewsUrl,
+      date: todayISO(),
+      snippet: `${uniqueExcerpts.length} excerpt(s) parsed. First: ${uniqueExcerpts[0].slice(0, 220)}`,
+      evidence_snippet: uniqueExcerpts.slice(0, 4).join('\n\n'),
+      confidence: scoreConfidence({
+        evidenceCount: uniqueExcerpts.length,
+        hasHeadings: false,
+        directPage: true,
+      }),
+      importance,
+      entities,
+      metadata: { page_kind: 'reviews_other', parse_ok: true },
+    }),
+  ];
+}
+
+/**
+ * HTML scraper for case-study / testimonial pages on the competitor's own domain.
+ * Targets pages like /customer-stories/, /why-<company>/, /case-studies/.
+ * Output: P1 owned, type 'case_study', dimension 'features'.
+ */
+async function collectCaseStudySignals(competitorId, productId, pageUrl) {
+  if (!isValidPublicUrl(pageUrl)) return [];
+
+  let html;
+  try {
+    html = await fetchText(pageUrl, DEFAULT_TIMEOUT_MS);
+  } catch (_) {
+    return [];
+  }
+
+  const $ = loadHtml(html);
+  const meta = extractMeta($, pageUrl);
+
+  const TESTIMONIAL_SELECTORS = [
+    '[itemprop="review"]',
+    '[itemprop="reviewBody"]',
+    'blockquote',
+    '.testimonial, .case-study, .customer-story, .quote',
+    'div[class*="testimonial"], div[class*="customer"], div[class*="quote"], div[class*="case-study"]',
+    'section[class*="testimonial"], section[class*="customer"], section[class*="story"]',
+  ];
+
+  const excerpts = [];
+  for (const sel of TESTIMONIAL_SELECTORS) {
+    $(sel).each((_, el) => {
+      if (excerpts.length >= 12) return false;
+      const text = normalizeWhitespace($(el).text());
+      if (text.length >= 40 && text.length <= 1400) excerpts.push(text);
+      return undefined;
+    });
+    if (excerpts.length >= 6) break;
+  }
+
+  const uniqueExcerpts = unique(excerpts).slice(0, 8);
+
+  // Capture customer / company identifiers from logos and headings near the quotes.
+  const companyLogos = unique(
+    $('img[alt]')
+      .map((_, el) => normalizeWhitespace($(el).attr('alt') || ''))
+      .get()
+      .filter((t) => t.length >= 2 && t.length <= 60)
+      .filter((t) => !/icon|logo only|menu|search|placeholder/i.test(t))
+  ).slice(0, 12);
+
+  if (!uniqueExcerpts.length) {
+    return [
+      buildSignalBase({
+        competitorId,
+        productId,
+        source: 'case_studies',
+        type: 'case_study',
+        event_type: 'content_update',
+        headline: meta.title || 'Case studies (no excerpts in static HTML)',
+        source_url: pageUrl,
+        date: todayISO(),
+        snippet: 'No testimonial bodies found in static HTML. Page may hydrate via JavaScript.',
+        evidence_snippet: meta.description || '',
+        confidence: 0.3,
+        importance: 0.5,
+        entities: { case_study_quotes: [], customer_logos: companyLogos },
+        metadata: { page_kind: 'case_studies', parse_ok: false },
+      }),
+    ];
+  }
+
+  const combined = uniqueExcerpts.join('\n');
+  const { event_type, importance } = inferArticleEventType(meta.title || 'Case studies', combined);
+  const entities = {
+    ...extractNamedEntities(combined),
+    case_study_quotes: uniqueExcerpts.slice(0, 6),
+    customer_logos: companyLogos,
+  };
+
+  return [
+    buildSignalBase({
+      competitorId,
+      productId,
+      source: 'case_studies',
+      type: 'case_study',
+      event_type,
+      headline: meta.title || 'Customer case studies',
+      source_url: pageUrl,
+      date: todayISO(),
+      snippet: `${uniqueExcerpts.length} testimonial(s) parsed. First: ${uniqueExcerpts[0].slice(0, 220)}`,
+      evidence_snippet: uniqueExcerpts.slice(0, 4).join('\n\n'),
+      confidence: scoreConfidence({
+        evidenceCount: uniqueExcerpts.length,
+        hasHeadings: meta.headings.length > 0,
+        directPage: true,
+      }),
+      importance: Math.max(importance || 0.6, 0.7),
+      entities,
+      metadata: { page_kind: 'case_studies', parse_ok: true },
+    }),
+  ];
+}
+
+/**
+ * HTML scraper for article-index pages (blog index, press hub, articles list).
+ * Used when a site has rich content but no RSS feed (Webflow, custom CMS).
+ * Output: P1 owned, type 'article', dimension 'features'.
+ */
+async function collectArticleIndexSignals(competitorId, productId, pageUrl) {
+  if (!isValidPublicUrl(pageUrl)) return [];
+
+  let html;
+  try {
+    html = await fetchText(pageUrl, DEFAULT_TIMEOUT_MS);
+  } catch (_) {
+    return [];
+  }
+
+  const $ = loadHtml(html);
+  const meta = extractMeta($, pageUrl);
+
+  // Article-card extraction: look for cards with title-link + (optional) date + (optional) summary.
+  const cards = [];
+  const cardSelectors = [
+    'article',
+    '.post-card, .blog-card, .news-card, .article-card',
+    'div[class*="article-card"], div[class*="post-card"], div[class*="blog-card"]',
+    'li[class*="post"], li[class*="article"]',
+  ];
+
+  let pageOrigin;
+  try {
+    pageOrigin = new URL(pageUrl).origin;
+  } catch (_) {
+    pageOrigin = '';
+  }
+
+  for (const sel of cardSelectors) {
+    $(sel).each((_, el) => {
+      if (cards.length >= 12) return false;
+      const $el = $(el);
+      const titleEl = $el.find('h2 a, h3 a, h4 a, a[class*="title"], a[class*="heading"]').first();
+      const title = normalizeWhitespace(titleEl.text() || $el.find('h2, h3, h4').first().text());
+      let href = titleEl.attr('href') || '';
+      if (href && !/^https?:/i.test(href) && pageOrigin) {
+        try {
+          href = new URL(href, pageOrigin).toString();
+        } catch (_) {
+          /* leave as-is */
+        }
+      }
+      const dateEl = $el.find('time').first();
+      const dateAttr = dateEl.attr('datetime') || normalizeWhitespace(dateEl.text() || '');
+      const summary = normalizeWhitespace($el.find('p').first().text());
+      if (title && title.length >= 8 && title.length <= 200) {
+        cards.push({ title, href, date: dateAttr, summary });
+      }
+      return undefined;
+    });
+    if (cards.length >= 6) break;
+  }
+
+  // Deduplicate by title (some sites repeat cards in featured + grid sections).
+  const seenTitles = new Set();
+  const uniqueCards = cards.filter((c) => {
+    const key = c.title.toLowerCase();
+    if (seenTitles.has(key)) return false;
+    seenTitles.add(key);
+    return true;
+  }).slice(0, 8);
+
+  if (!uniqueCards.length) {
+    return [
+      buildSignalBase({
+        competitorId,
+        productId,
+        source: 'articles_index',
+        type: 'article',
+        event_type: 'content_update',
+        headline: meta.title || 'Articles index (no cards in static HTML)',
+        source_url: pageUrl,
+        date: todayISO(),
+        snippet: 'No article cards found in static HTML. Page may hydrate via JavaScript.',
+        evidence_snippet: meta.description || '',
+        confidence: 0.3,
+        importance: 0.45,
+        entities: { article_titles: [] },
+        metadata: { page_kind: 'articles_index', parse_ok: false },
+      }),
+    ];
+  }
+
+  const titles = uniqueCards.map((c) => c.title);
+  const summaries = uniqueCards.map((c) => c.summary).filter(Boolean);
+  const combined = [...titles, ...summaries].join('\n');
+  const { event_type, importance } = inferArticleEventType(titles.join(' '), combined);
+  const entities = {
+    ...extractNamedEntities(combined),
+    article_titles: titles.slice(0, 6),
+    article_links: uniqueCards.map((c) => c.href).filter(Boolean).slice(0, 6),
+  };
+
+  const evidenceLines = uniqueCards.slice(0, 5).map((c) => {
+    const date = c.date ? `[${c.date}] ` : '';
+    return `${date}${c.title}${c.summary ? ` — ${c.summary.slice(0, 200)}` : ''}`;
+  });
+
+  return [
+    buildSignalBase({
+      competitorId,
+      productId,
+      source: 'articles_index',
+      type: 'article',
+      event_type,
+      headline: meta.title || 'Articles index',
+      source_url: pageUrl,
+      date: todayISO(),
+      snippet: `${uniqueCards.length} article(s) parsed. Latest: ${titles[0].slice(0, 220)}`,
+      evidence_snippet: evidenceLines.join('\n'),
+      confidence: scoreConfidence({
+        evidenceCount: uniqueCards.length,
+        hasHeadings: titles.length > 0,
+        directPage: true,
+      }),
+      importance: importance || 0.6,
+      entities,
+      metadata: { page_kind: 'articles_index', parse_ok: true },
+    }),
+  ];
+}
+
 async function collectG2ReviewSignals(competitorId, productId, g2Url) {
   if (!isValidPublicUrl(g2Url)) return [];
   try {
@@ -973,6 +1343,9 @@ async function collect(competitorId, productId, days = 7, session = null) {
     ['press', sourceUrls.press],
     ['changelog', sourceUrls.changelog],
     ['youtube', sourceUrls.youtube_rss],
+    ['insights', sourceUrls.insights_url],
+    ['media', sourceUrls.media_url],
+    ['podcast', sourceUrls.podcast_url],
   ];
 
   for (const [sourceType, url] of feedTasks) {
@@ -1039,9 +1412,33 @@ async function collect(competitorId, productId, days = 7, session = null) {
   }
   collected.push(...ytDiscoverySignals);
 
-  if (sourceUrls.g2_reviews_url) {
-    const g2Signals = await collectG2ReviewSignals(competitorId, productId, sourceUrls.g2_reviews_url);
+  const g2Urls = Array.isArray(sourceUrls.g2_reviews_urls) ? sourceUrls.g2_reviews_urls : [];
+  for (const g2Url of g2Urls) {
+    const g2Signals = await collectG2ReviewSignals(competitorId, productId, g2Url);
     collected.push(...g2Signals);
+  }
+
+  if (sourceUrls.reviews_url) {
+    const otherReviewSignals = await collectGenericReviewSignals(
+      competitorId,
+      productId,
+      sourceUrls.reviews_url
+    );
+    collected.push(...otherReviewSignals);
+  }
+
+  const caseStudyUrls = Array.isArray(sourceUrls.case_studies_urls)
+    ? sourceUrls.case_studies_urls
+    : [];
+  for (const url of caseStudyUrls) {
+    const signals = await collectCaseStudySignals(competitorId, productId, url);
+    collected.push(...signals);
+  }
+
+  const articlesUrls = Array.isArray(sourceUrls.articles_urls) ? sourceUrls.articles_urls : [];
+  for (const url of articlesUrls) {
+    const signals = await collectArticleIndexSignals(competitorId, productId, url);
+    collected.push(...signals);
   }
 
   return dedupeSignals(filterLastDays(collected, safeDays));

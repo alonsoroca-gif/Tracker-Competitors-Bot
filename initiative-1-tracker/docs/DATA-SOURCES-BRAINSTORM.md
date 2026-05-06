@@ -225,4 +225,29 @@ Only add URLs we’re allowed to request (public, no auth). The collect pipeline
 - [x] **3. Pricing/features pages** — `collectFromPage()` fetches HTML, strips tags, first 500 chars; `pricing_url`, `features_url`. Types `pricing` (→ messaging), `features` (→ features).
 - [x] **4. Careers** — `careers_url`; same page fetcher, `type: 'job'`, source `careers`. Mapped to positioning.
 
-*Last updated: analysis and first-resources selection (public sources only).*
+---
+
+## Phase 2 implementation checklist (May 2026)
+
+Triggered by Funnel Leasing verification — discovered 5 dedicated content streams beyond `blog`+`press` plus a sub-product G2 page (Fenix AI) the schema couldn't represent. See [`PHASE-2-LANE-EXPANSION.md`](./PHASE-2-LANE-EXPANSION.md) for full spec.
+
+- [x] **5. Insights / editorial articles RSS** — `sources[competitorId].insights_url`; `type: 'insights'`, `source: 'insights'`. Mapped to features dimension, P1 (owned).
+- [x] **6. Media coverage RSS** — `sources[competitorId].media_url`; `type: 'media'`, `source: 'media'`. Mapped to positioning dimension, P3 (third party).
+- [x] **7. Podcast RSS** — `sources[competitorId].podcast_url`; `type: 'podcast'`, `source: 'podcast'`. Mapped to positioning, P1. **Limitation:** captures titles + descriptions only; transcripts require ASR (Whisper / paid).
+- [x] **8. Generic review aggregators (non-G2)** — `sources[competitorId].reviews_url`; HTML excerpt extractor with broad cheerio selectors; `type: 'review_other'`, `source: 'reviews_other'`. Mapped to features, P3. Tested against FeaturedCustomers; should also work for FitGap, Revyse, SlashDot.
+- [x] **9. G2 reviews accepts array** — `g2_reviews_url` now accepts `string` or `string[]`. Lets us track main product + sub-product G2 pages (e.g. Funnel CRM + Fenix AI). Each URL fetched independently; signals deduped by URL.
+
+## Phase B-2 implementation checklist (May 2026)
+
+Triggered by Anyone Home verification — discovered substantive testimonial pages (`/customer-stories/`, `/why-anyone-home/`) that are HTML-only (no RSS). Same pattern applies to LeaseHawk's `/resources/media-center` and Funnel Leasing's case studies index. See [`PHASE-B2-HTML-LANES.md`](./PHASE-B2-HTML-LANES.md) for full spec.
+
+- [x] **10. Case studies / testimonial pages** — `sources[competitorId].case_studies_url` (string OR string[]); cheerio testimonial-block extractor; `type: 'case_study'`, `source: 'case_studies'`. Mapped to features dimension, P1 (owned). First applied to Anyone Home with `/customer-stories/` + `/why-anyone-home/`.
+- [x] **11. HTML article-index lane** — `sources[competitorId].articles_url` (string OR string[]); cheerio article-card extractor for sites without RSS (Webflow / custom-CMS competitors); `type: 'article'`, `source: 'articles_index'`. Mapped to features, P1.
+
+**Phase B-3 (parked, future):**
+- [ ] **`events_url` lane** — proactive detection of upcoming webinars / conferences (e.g. Anyone Home's May 21 Hybrid-Intelligence webinar). Currently we rely on the post-event blog / press recap. Documented as a "future signal" in [`TRACKER-DEMO.md`](./TRACKER-DEMO.md). Implementation deferred until a concrete need justifies the parsing work.
+- [ ] **Podcast transcript ingestion** (ASR pipeline) — Phase 2 podcast lane captures titles + descriptions only.
+- [ ] **X / LinkedIn social listening** — see [`SURFACE-INVENTORY.md`](./SURFACE-INVENTORY.md) "Proposed surfaces".
+- [ ] **Domain-aware pillar inference for `articles_url`** — currently assumes own-domain (P1). If we later need a third-party-articles lane (e.g. `/resources/media-center` linking out to BusinessWire / MultiHousingNews), revisit with per-signal pillar override.
+
+*Last updated: Phase B-2 HTML lane expansion (May 2026).*
