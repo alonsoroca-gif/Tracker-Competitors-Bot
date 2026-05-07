@@ -1,6 +1,37 @@
 # Followups — next session
 
-Updated 2026-05-06 after the live demo run and the post-demo bugfix push.
+Updated 2026-05-07 after reviewing the first batch of post-fix CI drops and
+shipping a User-Agent + URL-collision fix.
+
+---
+
+## Resolved 2026-05-07 (UA + collision fix)
+
+Triggered by reviewing CI drop `2026-05-07T15-14-32Z`: every previously-zero
+lane was *still zero*, with **identical per-lane counts** to the demo drop
+(198 signals across the same 15 (competitor, source) pairs). That confirmed
+the fan-out fix alone wasn't enough — the underlying requests were being
+silently challenged by Cloudflare/WAF on broken lanes regardless of how many
+times we hit them.
+
+- **Bot User-Agent rewritten** in `lib/collect.js` (RSS + HTML) and
+  `lib/g2Scrape.js`. Was a self-identifying string
+  (`Mozilla/5.0 (compatible; CompetitorTracker/1.0; +https://example.internal)`)
+  with a fake URL — exactly the shape Cloudflare bot management flags. Now
+  defaults to a real Chrome 120 desktop UA, overridable via
+  `TRACKER_USER_AGENT` env var so ops can rotate or add a contact email
+  without a code change.
+- **`jonah-digital.pricing_url` cleared.** It was pointing at the homepage
+  (`https://jonahdigital.com/`), which was already wired as
+  `case_studies_url`. Same URL hitting two extractors gave us a duplicate
+  fetch with zero useful pricing output. Now the homepage is owned by
+  `case_studies_url` only.
+
+If the next CI drop shows new signals on Funnel RSS lanes
+(blog/insights/media at minimum), the UA fix did its job. If they're still
+zero, the issue is GitHub Actions runner IPs being on a Cloudflare datacenter
+blocklist — at which point we move on to bucket B selectors and bucket C
+(Playwright) rather than UA games.
 
 ---
 
@@ -126,7 +157,7 @@ Pull these forward when there's bandwidth:
 | **leasehawk** | Brand deprecating; revisit in 3–6 months. `careers_url` returned zero in T21 drop — re-check after fan-out fix lands. |
 | **funnel-leasing** | `pricing_url` cleared (404) + `developer.funnelleasing.com` is a SPA with empty static HTML. Both expected zero. RSS lanes (blog/insights/media) should now work post-fix. |
 | **anyone-home** | `blog` cleared (Cloudflare 403). Need a Cloudflare-bypass strategy if we want their blog: try `cloudscraper`-equivalent in Node, or curl with browser-impersonating headers (`curl-impersonate`). Changelog feed (`anyonehome-updates.com`) is on a different host and seems CF-friendlier. |
-| **jonah-digital** | Drop T21 captured 33 signals across articles/case_studies/features. Drop T22 captured 0 — confirms the fan-out fix is essential. The 8 testimonials on the homepage are all `<blockquote>` siblings; if they ever switch to a JS carousel, the scraper will silently zero out — consider an alert on "case_studies signal count drops to 0 from prior run". |
+| **jonah-digital** | Drop T21 captured 33 signals across articles/case_studies/features. Drop T22 captured 0 — confirms the fan-out fix is essential. `pricing_url` cleared 2026-05-07 (was the homepage, collided with `case_studies_url`). The 8 testimonials on the homepage are all `<blockquote>` siblings; if they ever switch to a JS carousel, the scraper will silently zero out — consider an alert on "case_studies signal count drops to 0 from prior run". |
 
 ---
 

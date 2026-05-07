@@ -403,6 +403,13 @@ assert(
   Array.isArray(jonahUrls.case_studies_urls) && jonahUrls.case_studies_urls.includes('https://jonahdigital.com/'),
   'jonah-digital case_studies_urls array contains homepage'
 );
+// 2026-05-07 — pricing_url cleared because the homepage is already wired as
+// case_studies_url; running it through extractPageSignals just adds a duplicate
+// fetch that gets deduped or returns nothing useful.
+assert(
+  jonahUrls.pricing_url === '',
+  'jonah-digital pricing_url cleared (URL collision with case_studies_url)'
+);
 
 // Phase 2: inferDimension routes new types correctly
 const { buildGapReport: _bgr } = require('../lib/gapReport');

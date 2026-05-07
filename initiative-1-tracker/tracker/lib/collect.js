@@ -11,11 +11,21 @@ const { fetchYouTubeCommentThreads } = require('./youtubeComments');
 const { searchYouTubeVideos, listVideoDetails } = require('./youtubeDiscovery');
 const { fetchG2ReviewSnippets } = require('./g2Scrape');
 
+// Browser-like UA. The previous self-identifying "CompetitorTracker/1.0"
+// string was triggering Cloudflare/WAF challenges for some hosts (verified by
+// comparing demo drop and 2026-05-07 CI drops — both lost the same RSS lanes
+// while the same URLs returned 200 with content from a residential laptop).
+// `TRACKER_USER_AGENT` env var lets ops override at deploy time without a
+// code change (e.g. rotate UAs, add a contact email per RFC 9110 §15).
+const DEFAULT_USER_AGENT =
+  process.env.TRACKER_USER_AGENT ||
+  'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
+
 const parser = new Parser({
   timeout: 15000,
   headers: {
-    'user-agent':
-      'Mozilla/5.0 (compatible; CompetitorTracker/1.0; +https://example.internal)',
+    'user-agent': DEFAULT_USER_AGENT,
+    accept: 'application/rss+xml,application/atom+xml,application/xml;q=0.9,*/*;q=0.8',
   },
 });
 
@@ -278,8 +288,7 @@ async function fetchText(url, timeoutMs = DEFAULT_TIMEOUT_MS) {
       redirect: 'follow',
       signal: controller.signal,
       headers: {
-        'user-agent':
-          'Mozilla/5.0 (compatible; CompetitorTracker/1.0; +https://example.internal)',
+        'user-agent': DEFAULT_USER_AGENT,
         accept: 'text/html,application/xhtml+xml,application/xml,text/xml;q=0.9,*/*;q=0.8',
       },
     });
