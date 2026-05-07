@@ -1,6 +1,12 @@
 /**
  * Minimal test: smoke + loadConfig + collect filterLastDays.
  */
+
+// Belt-and-suspenders: keep the suite fast even if a future test path
+// accidentally hits a real fetch/parser.parseURL call. politeDelay() in
+// collect.js and g2Delay() in g2Scrape.js both honor this flag.
+process.env.TRACKER_POLITE_DELAY_DISABLED = '1';
+
 const path = require('path');
 const fs = require('fs');
 const os = require('os');

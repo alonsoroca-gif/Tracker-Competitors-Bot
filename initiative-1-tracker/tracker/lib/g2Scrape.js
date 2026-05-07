@@ -10,21 +10,47 @@ const DEFAULT_TIMEOUT_MS = 20000;
 const MAX_HTML = 400000;
 
 // Same browser-like UA as collect.js — see comment there. G2 in particular
-// serves Cloudflare and is known to challenge bot UAs aggressively.
+// serves Cloudflare and is known to challenge bot UAs aggressively, so we
+// also send a full Chrome-like header set and a slightly longer randomized
+// delay than other lanes.
 const DEFAULT_USER_AGENT =
   process.env.TRACKER_USER_AGENT ||
   'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
+
+const POLITE_DELAY_DISABLED = process.env.TRACKER_POLITE_DELAY_DISABLED === '1';
+const G2_DELAY_MIN_MS = Number(process.env.TRACKER_G2_DELAY_MIN_MS || 1500);
+const G2_DELAY_MAX_MS = Number(process.env.TRACKER_G2_DELAY_MAX_MS || 3500);
+
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function g2Delay() {
+  if (POLITE_DELAY_DISABLED) return;
+  const span = Math.max(0, G2_DELAY_MAX_MS - G2_DELAY_MIN_MS);
+  const ms = G2_DELAY_MIN_MS + Math.floor(Math.random() * (span + 1));
+  if (ms > 0) await sleep(ms);
+}
 
 async function fetchHtml(url) {
   const controller = new AbortController();
   const t = setTimeout(() => controller.abort(), DEFAULT_TIMEOUT_MS);
   try {
+    await g2Delay();
     const res = await fetch(url, {
       signal: controller.signal,
       redirect: 'follow',
       headers: {
         'user-agent': DEFAULT_USER_AGENT,
-        accept: 'text/html,application/xhtml+xml;q=0.9,*/*;q=0.8',
+        accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        'accept-language': 'en-US,en;q=0.9',
+        'accept-encoding': 'gzip, deflate, br',
+        // G2 specifically logs Referer; pretending we arrived from a search
+        // page is more plausible than a direct programmatic hit.
+        referer: 'https://www.google.com/',
+        dnt: '1',
+        connection: 'keep-alive',
+        'upgrade-insecure-requests': '1',
       },
     });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);

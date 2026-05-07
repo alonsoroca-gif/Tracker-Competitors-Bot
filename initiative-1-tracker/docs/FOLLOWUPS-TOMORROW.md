@@ -5,6 +5,40 @@ shipping a User-Agent + URL-collision fix.
 
 ---
 
+## Resolved 2026-05-07 (round 2 — full headers + polite delays)
+
+After shipping the UA fix and bucket-B cleanup, picked the cheapest
+remaining un-tried mitigation from a standard "scrape Cloudflare-fronted
+site" playbook: complete the realistic-header set (we'd only swapped UA),
+and add a small randomized delay between requests so consecutive fetches
+don't read as a burst.
+
+- **`browserHeaders()` helper in `lib/collect.js`** — every fetch now
+  sends `accept-language`, `accept-encoding`, `referer: google.com`,
+  `dnt`, `connection: keep-alive`, `upgrade-insecure-requests` in
+  addition to UA + accept. Cloudflare bot management correlates these;
+  before today we were missing all of them.
+- **`politeDelay()` between fetches** in `extractFeedSignals` and
+  `fetchText`. Random 800–1800 ms by default, env-tunable via
+  `TRACKER_POLITE_DELAY_MIN_MS` / `TRACKER_POLITE_DELAY_MAX_MS`. Disabled
+  in the test suite via `TRACKER_POLITE_DELAY_DISABLED=1` so all 115
+  tests still run in ~0.4s.
+- **Stricter G2 settings in `lib/g2Scrape.js`** — same full header set,
+  with `g2Delay()` of 1500–3500 ms and `Referer: google.com`. G2 is the
+  most aggressive Cloudflare deployment in the inventory.
+
+### Decision tree for the next CI drop after this lands
+
+If Funnel RSS / G2 / anyone-home changelog all start producing signals
+→ headers + delays were the issue. Done with this class of problem.
+
+If they're *still* zero → it's IP-based blocking (GitHub Actions runners
+are on Cloudflare's datacenter blocklist). Header tweaks can't solve
+that. The next move is bucket C (Playwright). At that point we know
+Playwright is justified — we don't make the investment speculatively.
+
+---
+
 ## Resolved 2026-05-07 (UA + collision fix + bucket-B audit)
 
 Triggered by reviewing CI drop `2026-05-07T15-14-32Z`: every previously-zero

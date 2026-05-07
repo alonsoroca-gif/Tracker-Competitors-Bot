@@ -21,18 +21,53 @@ const DEFAULT_USER_AGENT =
   process.env.TRACKER_USER_AGENT ||
   'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
 
+// Full Chrome-like header set. Cloudflare bot management correlates
+// multiple signals (UA + Accept-* + Referer + connection style); a real
+// browser sends all of these, an unconfigured `fetch` does not. Adding
+// these reduces the bot-fingerprint without any new dependency.
+function browserHeaders(extra = {}) {
+  return {
+    'user-agent': DEFAULT_USER_AGENT,
+    accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+    'accept-language': 'en-US,en;q=0.9',
+    'accept-encoding': 'gzip, deflate, br',
+    referer: 'https://www.google.com/',
+    dnt: '1',
+    connection: 'keep-alive',
+    'upgrade-insecure-requests': '1',
+    ...extra,
+  };
+}
+
 const parser = new Parser({
   timeout: 15000,
-  headers: {
-    'user-agent': DEFAULT_USER_AGENT,
+  headers: browserHeaders({
     accept: 'application/rss+xml,application/atom+xml,application/xml;q=0.9,*/*;q=0.8',
-  },
+  }),
 });
 
 const DEFAULT_TIMEOUT_MS = 15000;
 const MAX_HTML_CHARS = 200000;
 const MAX_SNIPPET = 600;
 const MAX_EVIDENCE = 1200;
+
+// Random inter-request delay so consecutive fetches don't look like a
+// burst. Disabled in tests via TRACKER_POLITE_DELAY_DISABLED=1 so the
+// suite stays fast. Range is env-tunable; sensible defaults below.
+const POLITE_DELAY_DISABLED = process.env.TRACKER_POLITE_DELAY_DISABLED === '1';
+const POLITE_DELAY_MIN_MS = Number(process.env.TRACKER_POLITE_DELAY_MIN_MS || 800);
+const POLITE_DELAY_MAX_MS = Number(process.env.TRACKER_POLITE_DELAY_MAX_MS || 1800);
+
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function politeDelay() {
+  if (POLITE_DELAY_DISABLED) return;
+  const span = Math.max(0, POLITE_DELAY_MAX_MS - POLITE_DELAY_MIN_MS);
+  const ms = POLITE_DELAY_MIN_MS + Math.floor(Math.random() * (span + 1));
+  if (ms > 0) await sleep(ms);
+}
 
 const JOB_TITLE_PATTERNS = [
   /engineer/i,
@@ -284,13 +319,13 @@ async function fetchText(url, timeoutMs = DEFAULT_TIMEOUT_MS) {
   const timer = setTimeout(() => controller.abort(), timeoutMs);
 
   try {
+    await politeDelay();
     const res = await fetch(url, {
       redirect: 'follow',
       signal: controller.signal,
-      headers: {
-        'user-agent': DEFAULT_USER_AGENT,
+      headers: browserHeaders({
         accept: 'text/html,application/xhtml+xml,application/xml,text/xml;q=0.9,*/*;q=0.8',
-      },
+      }),
     });
 
     if (!res.ok) {
@@ -677,6 +712,7 @@ async function extractFeedSignals(feedUrl, sourceType, competitorId, productId, 
 
   let feed;
   try {
+    await politeDelay();
     feed = await parser.parseURL(feedUrl);
   } catch (_) {
     return [];
