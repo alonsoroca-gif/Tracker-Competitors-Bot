@@ -6,9 +6,13 @@ name: Tracker drop
 on:
   workflow_dispatch:
   schedule:
-    # Every 15 minutes UTC — “as soon as we know” via polling (see TRACKER-DROP-CI.md).
-    # If your org limits scheduled workflows on private repos, relax this cron there.
-    - cron: '*/15 * * * *'
+    # 3× weekdays aligned to manager's day (MT). Times below are UTC; in MDT (Mar–Nov)
+    # they are 8:30am / 12:00pm / 5:00pm; in MST (Nov–Mar) they shift to 7:30am / 11:00am / 4:00pm.
+    # Trade-off chosen vs. */15: ~97% fewer runs (15/wk vs. 672/wk), still catches daily news
+    # within ~3 hours, aligned with weekly-cadence intel use case (see TRACKER-DROP-CI.md).
+    - cron: '30 14 * * 1-5'   # 8:30am MDT — manager morning view
+    - cron: '0 18 * * 1-5'    # 12:00pm MDT — midday catch
+    - cron: '0 23 * * 1-5'    # 5:00pm MDT — end-of-day catch
 
 permissions:
   contents: write

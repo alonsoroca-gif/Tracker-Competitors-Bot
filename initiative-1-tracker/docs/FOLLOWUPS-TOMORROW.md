@@ -1,6 +1,82 @@
 # Followups — next session
 
-Updated 2026-05-06 after the live demo run and the post-demo bugfix push.
+Updated 2026-05-07 after reviewing the first batch of post-fix CI drops and
+shipping a User-Agent + URL-collision fix.
+
+---
+
+## Resolved 2026-05-07 (UA + collision fix + bucket-B audit)
+
+Triggered by reviewing CI drop `2026-05-07T15-14-32Z`: every previously-zero
+lane was *still zero*, with **identical per-lane counts** to the demo drop
+(198 signals across the same 15 (competitor, source) pairs). That confirmed
+the fan-out fix alone wasn't enough — the underlying requests were being
+silently challenged by Cloudflare/WAF on broken lanes regardless of how many
+times we hit them. Sorted into 4 buckets and acted on three.
+
+### Bucket A — UA challenge (covers all RSS lanes + G2)
+
+- **Bot User-Agent rewritten** in `lib/collect.js` (RSS + HTML) and
+  `lib/g2Scrape.js`. Was a self-identifying string
+  (`Mozilla/5.0 (compatible; CompetitorTracker/1.0; +https://example.internal)`)
+  with a fake URL — exactly the shape Cloudflare bot management flags. Now
+  defaults to a real Chrome 120 desktop UA, overridable via
+  `TRACKER_USER_AGENT` env var so ops can rotate or add a contact email
+  without a code change.
+
+### Bucket D — URL collision (jonah-digital)
+
+- **`jonah-digital.pricing_url` cleared.** It was pointing at the homepage
+  (`https://jonahdigital.com/`), which was already wired as
+  `case_studies_url`. Same URL hitting two extractors gave us a duplicate
+  fetch with zero useful pricing output. Homepage is now owned by
+  `case_studies_url` only.
+
+### Bucket B — selector tune (turned out to be misclassification, not selectors)
+
+Wrote `scripts/probe-zero-pages.js` (kept in repo as a documented diagnostic
+template) to run the bot's own fetcher + extractMeta against the three
+HTML zero-signal URLs. Findings:
+
+- **`eliseai.com/datalog`** redirects to `https://eliseai.com/blog` and is
+  a full **article-index page** (47 raw `<h1/h2/h3>`, 81 article-card
+  elements, real titles like "Introducing Agent by EliseAI: The First
+  Mobile CRM Built for the AI Era"). It was wired as `docs_url` →
+  `extractFeatureSignals`, which understandably found no feature keywords
+  in article titles. **Fix:** moved to `articles_url` (Phase B-2 lane
+  built for exactly this), `docs_url` cleared.
+- **`leasehawk.com/careers/`** has only 4 marketing headings and zero job
+  titles in the static HTML, no ATS widget (just a Google Tag Manager
+  iframe). The extractor was returning 0 *correctly* — there's nothing to
+  extract. Combined with brand deprecation, **fix:** cleared
+  `careers_url`.
+- **`developer.funnelleasing.com`** is a pure JS SPA (48 KB shell, empty
+  `<title>`). Static HTML extraction can never work. **Fix:** cleared
+  `docs_url`. Real fix lives in bucket C.
+
+### Bucket C — JS-rendered pages (parked)
+
+Untouched today. When we tackle Playwright (see §6 below), it will solve:
+- `developer.funnelleasing.com` (now cleared, will re-enable when ready)
+- `anyonehome.com/feed/` (Cloudflare 403, also covered by Playwright via
+  full Chrome handshake)
+- Any future SPA we encounter
+
+### What to watch in the next CI drop
+
+If the UA fix lands cleanly, expect:
+- **Funnel RSS** (blog/insights/media at minimum) to start producing
+  signals — these are the highest-confidence wins because we proved the
+  feeds have items in the last 7 days.
+- **eliseai `articles_index`** lane to light up (was completely absent
+  before — moved out of the dead docs slot).
+- **G2** for funnel-leasing to flip from ~11 to ~22 signals (both
+  `funnel-leasing` and `fenix-ai` URLs, no longer rate-limited).
+
+If Funnel RSS is *still* zero after the UA fix, the next move is bucket C
+(Playwright) — at that point we know the issue is GitHub Actions runner
+IPs being on a Cloudflare datacenter blocklist, which UA games can't
+solve.
 
 ---
 
@@ -79,22 +155,17 @@ inside the per-lane scraper, not the orchestrator.
 
 ---
 
-## 3. Pages that returned 0 even though the URL is healthy
+## 3. ~~Pages that returned 0 even though the URL is healthy~~ → resolved 2026-05-07
 
-These produced 0 signals in drop T21 even with the orchestrator working
-fine for that drop. They are HTTP 200 with real visible content. The
-zero is likely a per-lane scraper issue (selectors not matching the
-site's markup, or content being JS-rendered).
+All three audited via `scripts/probe-zero-pages.js`. See "Bucket B" above.
+Summary:
+- eliseai datalog → moved to `articles_url`
+- leasehawk careers → cleared (no jobs in static HTML, no ATS embed)
+- funnel developer portal → cleared (pure SPA, parked for Playwright)
 
-| URL | Status | Suspected cause |
-|-----|--------|-----------------|
-| `https://www.eliseai.com/datalog` (eliseai docs) | 200, 129 KB, "Latest news from EliseAI" | Likely SPA/Webflow rendering — `extractPageSignals` may not find headings/snippets in the static HTML. |
-| `https://developer.funnelleasing.com/` (funnel docs) | 200, 48 KB, empty `<title>` | Definitely client-side rendered API portal. Static HTML is shell only. |
-| `https://leasehawk.com/careers/` | 200, 30 KB, "Careers \| LeaseHawk" | Worth re-running with fan-out fix; if still zero, scraper selector issue. |
-
-Action: dump the HTML for each, see what `extractPageSignals` actually
-extracts, decide whether to (a) tune selectors, (b) clear the URL, or
-(c) build a SPA-aware scraper for these (overkill for now).
+The diagnostic script is intentionally kept in the repo as a template for
+future zero-signal investigations. Run it with
+`node initiative-1-tracker/tracker/scripts/probe-zero-pages.js`.
 
 ---
 
@@ -122,11 +193,11 @@ Pull these forward when there's bandwidth:
 
 | Competitor | Item |
 |------------|------|
-| **eliseai** | `blog` empty + `pricing_url` cleared (404) + `docs_url` (datalog) returns zero. Datalog is the most interesting — investigate why scraper finds no content despite real article list visible. |
-| **leasehawk** | Brand deprecating; revisit in 3–6 months. `careers_url` returned zero in T21 drop — re-check after fan-out fix lands. |
-| **funnel-leasing** | `pricing_url` cleared (404) + `developer.funnelleasing.com` is a SPA with empty static HTML. Both expected zero. RSS lanes (blog/insights/media) should now work post-fix. |
+| **eliseai** | `blog` empty (no RSS), `pricing_url` cleared (404), `docs_url` cleared 2026-05-07 (was an article index, moved to `articles_url`). Watch the next CI drop for `eliseai articles_index` lane lighting up. |
+| **leasehawk** | Brand deprecating; revisit in 3–6 months. `careers_url` cleared 2026-05-07 (no jobs in static HTML). Now down to features_page + pricing_page only — that's the floor for this competitor. |
+| **funnel-leasing** | `pricing_url` cleared (404), `docs_url` cleared 2026-05-07 (developer portal is a SPA; defer to Playwright). RSS lanes (blog/insights/media) should now work post-UA-fix. |
 | **anyone-home** | `blog` cleared (Cloudflare 403). Need a Cloudflare-bypass strategy if we want their blog: try `cloudscraper`-equivalent in Node, or curl with browser-impersonating headers (`curl-impersonate`). Changelog feed (`anyonehome-updates.com`) is on a different host and seems CF-friendlier. |
-| **jonah-digital** | Drop T21 captured 33 signals across articles/case_studies/features. Drop T22 captured 0 — confirms the fan-out fix is essential. The 8 testimonials on the homepage are all `<blockquote>` siblings; if they ever switch to a JS carousel, the scraper will silently zero out — consider an alert on "case_studies signal count drops to 0 from prior run". |
+| **jonah-digital** | Drop T21 captured 33 signals across articles/case_studies/features. Drop T22 captured 0 — confirms the fan-out fix is essential. `pricing_url` cleared 2026-05-07 (was the homepage, collided with `case_studies_url`). The 8 testimonials on the homepage are all `<blockquote>` siblings; if they ever switch to a JS carousel, the scraper will silently zero out — consider an alert on "case_studies signal count drops to 0 from prior run". |
 
 ---
 

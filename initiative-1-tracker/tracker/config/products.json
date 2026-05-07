@@ -4,7 +4,8 @@
       "blog": "",
       "press": "",
       "changelog": "",
-      "docs_url": "https://www.eliseai.com/datalog",
+      "docs_url": "",
+      "articles_url": "https://eliseai.com/blog",
       "pricing_url": "",
       "features_url": "https://eliseai.com/",
       "careers_url": "https://eliseai.com/careers/",
@@ -29,7 +30,7 @@
         "https://www.g2.com/products/funnel-leasing/reviews",
         "https://www.g2.com/products/fenix-ai/reviews"
       ],
-      "docs_url": "https://developer.funnelleasing.com/",
+      "docs_url": "",
       "youtube_rss": "",
       "pricing_url": "",
       "features_url": "https://funnelleasing.com/",
@@ -43,7 +44,7 @@
       "youtube_rss": "",
       "pricing_url": "https://leasehawk.com/",
       "features_url": "https://leasehawk.com/",
-      "careers_url": "https://leasehawk.com/careers/"
+      "careers_url": ""
     },
     "anyone-home": {
       "blog": "",
@@ -63,7 +64,7 @@
       "press": "",
       "changelog": "",
       "docs_url": "",
-      "pricing_url": "https://jonahdigital.com/",
+      "pricing_url": "",
       "features_url": "https://jonahdigital.com/add-ons/",
       "careers_url": "",
       "articles_url": "https://jonahdigital.com/articles/",

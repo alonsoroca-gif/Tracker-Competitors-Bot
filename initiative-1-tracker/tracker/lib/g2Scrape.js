@@ -9,6 +9,12 @@ const cheerio = require('cheerio');
 const DEFAULT_TIMEOUT_MS = 20000;
 const MAX_HTML = 400000;
 
+// Same browser-like UA as collect.js — see comment there. G2 in particular
+// serves Cloudflare and is known to challenge bot UAs aggressively.
+const DEFAULT_USER_AGENT =
+  process.env.TRACKER_USER_AGENT ||
+  'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
+
 async function fetchHtml(url) {
   const controller = new AbortController();
   const t = setTimeout(() => controller.abort(), DEFAULT_TIMEOUT_MS);
@@ -17,8 +23,7 @@ async function fetchHtml(url) {
       signal: controller.signal,
       redirect: 'follow',
       headers: {
-        'user-agent':
-          'Mozilla/5.0 (compatible; CompetitorTracker/1.0; +https://example.internal)',
+        'user-agent': DEFAULT_USER_AGENT,
         accept: 'text/html,application/xhtml+xml;q=0.9,*/*;q=0.8',
       },
     });

@@ -344,6 +344,34 @@ assert(
   'funnel-leasing pricing_url cleared (was 404 in live drop)'
 );
 
+// 2026-05-07 — bucket-B fixes after probing zero-signal pages from laptop
+// (see scripts/probe-zero-pages.js). The HTML at eliseai.com/datalog
+// redirects to /blog and is an article-index, not a docs page — moved into
+// articles_url. funnel-leasing developer portal is a pure SPA; cleared.
+// leasehawk careers has zero job titles in static HTML (no ATS embed) and
+// the brand is deprecating, so the careers lane was retired.
+assert(
+  eliseUrls.docs_url === '',
+  'eliseai docs_url cleared — /datalog was redirecting to /blog (an article index, not docs)'
+);
+assert(
+  eliseUrls.articles_url === 'https://eliseai.com/blog',
+  'eliseai articles_url set to /blog (Phase B-2 lane handles HTML article indexes)'
+);
+assert(
+  Array.isArray(eliseUrls.articles_urls) && eliseUrls.articles_urls.includes('https://eliseai.com/blog'),
+  'eliseai articles_urls array contains /blog'
+);
+assert(
+  funnelUrlsPostDemo.docs_url === '',
+  'funnel-leasing docs_url cleared (developer.funnelleasing.com is a JS SPA — defer to Playwright)'
+);
+const leasehawkUrls = getSourceUrls('leasehawk');
+assert(
+  leasehawkUrls.careers_url === '',
+  'leasehawk careers_url cleared (no jobs in static HTML, no ATS embed, brand deprecating)'
+);
+
 // Phase B-2 — Anyone Home config has new HTML lanes
 const anyoneHomeUrls = getSourceUrls('anyone-home');
 assert(
@@ -402,6 +430,13 @@ assert(
 assert(
   Array.isArray(jonahUrls.case_studies_urls) && jonahUrls.case_studies_urls.includes('https://jonahdigital.com/'),
   'jonah-digital case_studies_urls array contains homepage'
+);
+// 2026-05-07 — pricing_url cleared because the homepage is already wired as
+// case_studies_url; running it through extractPageSignals just adds a duplicate
+// fetch that gets deduped or returns nothing useful.
+assert(
+  jonahUrls.pricing_url === '',
+  'jonah-digital pricing_url cleared (URL collision with case_studies_url)'
 );
 
 // Phase 2: inferDimension routes new types correctly
