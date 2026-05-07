@@ -235,12 +235,41 @@ Skip PRDs for Tier-Later and Tier-Won't-chase rows.
 
 #### 4.4b PRD confirmation + optional PDF export
 
+**Before the first PRD of the cycle**, do a one-time prereq check so the question wording adapts to the manager's machine:
+
+```bash
+PANDOC_OK=$(command -v pandoc >/dev/null 2>&1 && echo yes || echo no)
+WKHTML_OK=$(command -v wkhtmltopdf >/dev/null 2>&1 && echo yes || echo no)
+echo "pandoc: $PANDOC_OK · wkhtmltopdf: $WKHTML_OK"
+```
+
 After producing each PRD, ask the manager **two questions in chat** (use the `AskQuestion` tool when available):
 
-1. "Does this PRD look right? (approve / edit / discard)"
-2. If approved: "Want a downloadable PDF copy of this PRD?"
+1. **"Does this PRD look right?"** — options: `approve` / `edit` / `discard`
+2. If approved, **"Want a downloadable PDF copy of this PRD?"** — wording depends on the prereq check:
 
-If the manager approves AND wants a PDF, run pandoc to write a one-page PDF to `~/Desktop/tracker-decks/`. Slug = `PRD-<competitor>-<short-feature-name>-<run-id>.pdf`.
+   - **Both binaries present** (`pandoc: yes · wkhtmltopdf: yes`): options:
+     - `Yes — export PDF to ~/Desktop/tracker-decks/`
+     - `No — chat-only is fine`
+
+   - **Either binary missing**: options:
+     - `Skip — chat-only is fine`
+     - `I'll install first — show me the command` (if picked, surface this in chat verbatim and stop the PDF flow for this PRD; do not retry mid-cycle):
+
+       ```
+       One-time install required before PDF export will work:
+
+           brew install pandoc wkhtmltopdf
+
+       After install completes, re-run /trackerstart on the next drop and the
+       PDF option will work normally. (You can also run the install in a
+       separate terminal now and pick "Yes — export PDF" on the *next* PRD
+       in this same cycle — the skill re-checks per cycle, not per PRD.)
+       ```
+
+     - `Save the PRD markdown instead (no install needed)` — fall back to writing `~/Desktop/tracker-decks/PRD-<slug>.md` and tell the manager: "Saved as markdown. Convert with pandoc later, or open in any markdown viewer."
+
+If the manager picks "Yes — export PDF," run:
 
 ```bash
 mkdir -p ~/Desktop/tracker-decks
@@ -255,11 +284,13 @@ pandoc /tmp/prd-input.md -f markdown -t pdf \
 echo "Saved: ~/Desktop/tracker-decks/PRD-<slug>.pdf"
 ```
 
-**Prereqs:** `brew install pandoc wkhtmltopdf` (one-time). If pandoc is missing, fall back to writing the PRD markdown to `~/Desktop/tracker-decks/PRD-<slug>.md` and tell the manager to convert manually.
+Slug = `PRD-<competitor>-<short-feature-name>-<run-id>.pdf`.
 
 If the manager says "edit," apply their edits inline in chat and re-ask the two questions before exporting.
 
 If the manager says "discard," drop the row from §4.6 prioritization and continue with the next PRD.
+
+**Never** ask "want a PDF?" without surfacing the install requirement when binaries are missing — the manager should never have to guess why an export silently failed.
 
 ### 4.5 Slack message (chat-paste)
 
@@ -367,6 +398,7 @@ These are easy to do and wrong:
 7. **Force-pushing or skipping the auto-merge step.** The manager pulls `main`; if `main` is stale, the manager sees a stale drop and assumes no new activity.
 8. **Skipping Phase 0.** Without the freshness + hash check, the skill races the CI cron and may re-interpret unchanged signals.
 9. **Surfacing carryover signals as if they were new.** §4.2 onward must use the **net-new** set from the diff step, not the full dedup'd set. Repeating last drop's "main moves" wastes the manager's time.
+10. **Offering PDF export without checking prereqs.** If `pandoc` or `wkhtmltopdf` is missing, the manager must be told the install command (`brew install pandoc wkhtmltopdf`) at the moment they're asked about PDF, not after a silent failure. See Phase 4.4b.
 
 ---
 
