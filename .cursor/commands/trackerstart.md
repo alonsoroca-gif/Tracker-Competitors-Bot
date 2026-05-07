@@ -29,7 +29,7 @@ If the user's message includes `--slack` or "post to slack" AND the env var `SLA
 
 - It does not modify the engine code in `initiative-1-tracker/tracker/`.
 - It does not write files to `tracker-drops/<id>/` beyond what `publish-drop.js` writes.
-- It does not push to `main` directly (only to `agent/P1.1` first, then auto-merges).
+- It does not push to `main` directly. The skill pushes to `agent/P1.1`; the `auto-merge-agent.yml` GitHub Action mirrors that into `main` automatically (~30s lag).
 - It does not force-push or rewrite history.
 
 ## Reference
