@@ -101,19 +101,17 @@ git commit -m "tracker: drop <run-id> (<N> new)"
 git push origin agent/P1.1
 ```
 
-Then auto-merge into `main`:
+That's it for the skill — the **`auto-merge-agent.yml`** GitHub Action picks it up from there. Every push to `agent/P1.1` (drops, skill edits, manual commits) triggers the workflow, which:
 
-```bash
-git checkout main
-git pull --rebase origin main
-git merge --no-ff agent/P1.1 -m "tracker: merge drop <run-id> into main"
-git push origin main
-git checkout agent/P1.1
-```
+1. Checks out `main`
+2. Merges `origin/agent/P1.1` with `--no-ff`
+3. Pushes `main`
 
-**Never** push to `main` directly. **Never** force-push. **Never** skip the rebase.
+Typical lag: ~30 seconds. Watch it run in the **Actions** tab on GitHub.
 
-If the merge has conflicts (rare — `tracker-drops/` is append-only), **stop and surface the conflict to the user**. Do not auto-resolve.
+**Never** push to `main` directly. **Never** force-push. **Never** skip the rebase. **Never** disable the auto-merge workflow without telling the manager.
+
+If the auto-merge workflow fails (rare — `tracker-drops/` is append-only and `.cursor/skills/` only we touch), GitHub surfaces the failure in the Actions tab. The skill should also `git fetch origin && git log origin/main..origin/agent/P1.1 --oneline` after Phase 2 to confirm `main` caught up; if it didn't within ~60 seconds, **surface the conflict to the user**. Do not auto-resolve.
 
 ---
 
@@ -331,7 +329,7 @@ Aim for 1–2 battle cards per drop. Three is the absolute max in chat — beyon
 
 ## Coordination rules
 
-The repo has **two runners** — this skill (manual via `/trackerstart`) and the GitHub Actions cron at `.github/workflows/tracker-drop.yml` (3× weekday: 8:30am / 12pm / 5pm MT). The Phase 0 freshness + hash check is what prevents the skill from racing the bot or re-interpreting unchanged signals.
+The repo has **two writers** to `agent/P1.1` — this skill (manual via `/trackerstart`) and the GitHub Actions cron at `.github/workflows/tracker-drop.yml` (3× weekday: 8:30am / 12pm / 5pm MT). And **one syncer** — `.github/workflows/auto-merge-agent.yml` — which mirrors every push on `agent/P1.1` into `main`. The Phase 0 freshness + hash check is what prevents the skill from racing the bot or re-interpreting unchanged signals.
 
 | Scenario | Behavior |
 |---|---|
@@ -339,6 +337,7 @@ The repo has **two runners** — this skill (manual via `/trackerstart`) and the
 | Latest drop hash == prior drop hash | Stop cycle ("no new content") |
 | Last drop is older OR missing | Run Phases 1–5 in full |
 | Both runners fire same minute (rare) | Loser's `git push` fails → skill retries with `git pull --rebase` then re-runs Phase 1 |
+| Skill files edited (this `SKILL.md`, `examples.md`, `trackerstart.md`) | Commit to `agent/P1.1` → auto-merge workflow mirrors to `main` automatically |
 
 **The rebase in Phase 2 is non-negotiable.** Always rebase `agent/P1.1` and `main` before pushing.
 
@@ -380,7 +379,8 @@ These are easy to do and wrong:
 | Drop publisher | `scripts/publish-drop.js` (also wired as `npm run drop`) |
 | Drops folder | `tracker-drops/` (root of repo) |
 | Latest-drop pointer | `tracker-drops/.latest-drop-id` |
-| CI workflow | `.github/workflows/tracker-drop.yml` (3× weekday MT — 8:30am/12pm/5pm) |
+| CI drop workflow | `.github/workflows/tracker-drop.yml` (3× weekday MT — 8:30am/12pm/5pm) |
+| CI auto-merge workflow | `.github/workflows/auto-merge-agent.yml` (mirrors every push on `agent/P1.1` → `main`, ~30s lag) |
 | Force-write env var | `TRACKER_DROP_FORCE=1` |
 | Slash command | `.cursor/commands/trackerstart.md` (thin router to this skill) |
 | PRD PDF export dir | `~/Desktop/tracker-decks/` (created on demand by Phase 4.4b) |

@@ -1,0 +1,47 @@
+# Mirror every push on agent/P1.1 into main, so the two branches never drift.
+# Triggered by drops, skill edits, manual commits — anything that lands on agent/P1.1.
+# See .cursor/skills/tracker-drop-cycle/SKILL.md (Phase 2 / Coordination rules).
+
+name: Auto-merge agent/P1.1 into main
+
+on:
+  push:
+    branches: [agent/P1.1]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: auto-merge-agent
+  cancel-in-progress: false
+
+jobs:
+  merge:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Merge agent/P1.1 into main
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git fetch origin agent/P1.1
+
+          if git merge-base --is-ancestor origin/agent/P1.1 HEAD; then
+            echo "main already contains origin/agent/P1.1 — nothing to do."
+            exit 0
+          fi
+
+          SHORT=$(git log -1 --format='%h %s' origin/agent/P1.1)
+          if ! git merge --no-ff origin/agent/P1.1 -m "auto-merge: agent/P1.1 → main (${SHORT})"; then
+            echo "::error::Merge conflict between agent/P1.1 and main. Resolve manually."
+            git merge --abort || true
+            exit 1
+          fi
+
+          git push origin main
