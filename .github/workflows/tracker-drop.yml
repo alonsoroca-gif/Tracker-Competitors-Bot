@@ -25,10 +25,11 @@ jobs:
   collect-and-drop:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      - name: Checkout agent/P1.1 (writer-staging branch)
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          ref: agent/P1.1
 
       - name: Setup Node
         uses: actions/setup-node@v4
