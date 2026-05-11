@@ -34,11 +34,12 @@ Two checks, in order:
 1. **Freshness** — is the latest drop <15 min old? (CI cron interval)
 2. **Content hash** — does the latest drop's `signals.json` match the prior drop byte-for-byte?
 
-Run from `<repo-root>`:
+Run from `<repo-root>`. **Always read from `agent/P1.1`** — that's the writer-staging branch where both CI cron and the skill push drops first. `main` is the consumer mirror and may lag by ~30s during auto-merge propagation.
 
 ```bash
 git fetch origin
-git pull --rebase origin main
+git checkout agent/P1.1
+git pull --rebase origin agent/P1.1
 node -e '
 const fs = require("fs");
 const path = require("path");
@@ -360,7 +361,23 @@ Aim for 1–2 battle cards per drop. Three is the absolute max in chat — beyon
 
 ## Coordination rules
 
-The repo has **two writers** to `agent/P1.1` — this skill (manual via `/trackerstart`) and the GitHub Actions cron at `.github/workflows/tracker-drop.yml` (3× weekday: 8:30am / 12pm / 5pm MT). And **one syncer** — `.github/workflows/auto-merge-agent.yml` — which mirrors every push on `agent/P1.1` into `main`. The Phase 0 freshness + hash check is what prevents the skill from racing the bot or re-interpreting unchanged signals.
+**Branch model (single-writer architecture):**
+
+- `agent/P1.1` — **writer-staging branch.** Both writers land drops here:
+  - This skill (manual via `/trackerstart`)
+  - GitHub Actions cron at `.github/workflows/tracker-drop.yml` (3× weekday: 8:30am / 12pm / 5pm MT)
+- `main` — **consumer mirror.** Auto-promoted from `agent/P1.1` by `.github/workflows/auto-merge-agent.yml` within ~30s.
+
+**Two safety-net workflows keep the branches in sync:**
+
+| Workflow | Direction | Trigger | Purpose |
+|---|---|---|---|
+| `auto-merge-agent.yml` | `agent/P1.1` → `main` | Every push to `agent/P1.1` | Promote new drops to consumer view |
+| `mirror-main-to-agent.yml` | `main` → `agent/P1.1` | Every push to `main` | Catch any rogue push to main; fast-forward agent/P1.1 |
+
+Together they form a closed loop. Divergence on the `.latest-drop-id` pointer file is **structurally impossible** under normal operation, and **operationally caught** within ~30s if a human bypasses the structure.
+
+The Phase 0 freshness + hash check prevents the skill from racing the cron or re-interpreting unchanged signals.
 
 | Scenario | Behavior |
 |---|---|
@@ -411,8 +428,9 @@ These are easy to do and wrong:
 | Drop publisher | `scripts/publish-drop.js` (also wired as `npm run drop`) |
 | Drops folder | `tracker-drops/` (root of repo) |
 | Latest-drop pointer | `tracker-drops/.latest-drop-id` |
-| CI drop workflow | `.github/workflows/tracker-drop.yml` (3× weekday MT — 8:30am/12pm/5pm) |
+| CI drop workflow | `.github/workflows/tracker-drop.yml` (3× weekday MT — 8:30am/12pm/5pm; pushes to `agent/P1.1`) |
 | CI auto-merge workflow | `.github/workflows/auto-merge-agent.yml` (mirrors every push on `agent/P1.1` → `main`, ~30s lag) |
+| CI safety-net mirror | `.github/workflows/mirror-main-to-agent.yml` (fast-forwards `agent/P1.1` from `main` if anything bypasses the structure) |
 | Force-write env var | `TRACKER_DROP_FORCE=1` |
 | Slash command | `.cursor/commands/trackerstart.md` (thin router to this skill) |
 | PRD PDF export dir | `~/Desktop/tracker-decks/` (created on demand by Phase 4.4b) |
