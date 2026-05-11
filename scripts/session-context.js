@@ -40,5 +40,4 @@ console.log('\n' + '='.repeat(50));
 console.log('Docs: docs/PR-TASKS-TODAY-TOMORROW.md');
 console.log('      initiative-1-tracker/docs/YOUTUBE-CHANNELS.md');
 console.log('      initiative-1-tracker/TASKS.md');
-console.log('\nNext task file: run  node scripts/agent-get-next-task.js --write-file');
-console.log('                then read initiative-1-tracker/AGENT-NEXT-TASK.md');
+console.log('\nTracker cycle: invoke /trackerstart in Cursor (see .cursor/skills/tracker-drop-cycle/SKILL.md)');
