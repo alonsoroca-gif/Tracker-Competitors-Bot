@@ -235,62 +235,81 @@ Skip PRDs for Tier-Later and Tier-Won't-chase rows.
 
 #### 4.4b PRD confirmation + optional PDF export
 
-**Before the first PRD of the cycle**, do a one-time prereq check so the question wording adapts to the manager's machine:
-
-```bash
-PANDOC_OK=$(command -v pandoc >/dev/null 2>&1 && echo yes || echo no)
-WKHTML_OK=$(command -v wkhtmltopdf >/dev/null 2>&1 && echo yes || echo no)
-echo "pandoc: $PANDOC_OK · wkhtmltopdf: $WKHTML_OK"
-```
-
 After producing each PRD, ask the manager **two questions in chat** (use the `AskQuestion` tool when available):
 
 1. **"Does this PRD look right?"** — options: `approve` / `edit` / `discard`
-2. If approved, **"Want a downloadable PDF copy of this PRD?"** — wording depends on the prereq check:
-
-   - **Both binaries present** (`pandoc: yes · wkhtmltopdf: yes`): options:
-     - `Yes — export PDF to ~/Desktop/tracker-decks/`
-     - `No — chat-only is fine`
-
-   - **Either binary missing**: options:
-     - `Skip — chat-only is fine`
-     - `I'll install first — show me the command` (if picked, surface this in chat verbatim and stop the PDF flow for this PRD; do not retry mid-cycle):
-
-       ```
-       One-time install required before PDF export will work:
-
-           brew install pandoc wkhtmltopdf
-
-       After install completes, re-run /trackerstart on the next drop and the
-       PDF option will work normally. (You can also run the install in a
-       separate terminal now and pick "Yes — export PDF" on the *next* PRD
-       in this same cycle — the skill re-checks per cycle, not per PRD.)
-       ```
-
-     - `Save the PRD markdown instead (no install needed)` — fall back to writing `~/Desktop/tracker-decks/PRD-<slug>.md` and tell the manager: "Saved as markdown. Convert with pandoc later, or open in any markdown viewer."
-
-If the manager picks "Yes — export PDF," run:
-
-```bash
-mkdir -p ~/Desktop/tracker-decks
-cat > /tmp/prd-input.md <<'EOF'
-<paste the PRD markdown block here, including the "#### PRD: ..." header>
-EOF
-pandoc /tmp/prd-input.md -f markdown -t pdf \
-  --pdf-engine=wkhtmltopdf \
-  -V geometry:margin=0.75in \
-  -V fontsize=11pt \
-  -o ~/Desktop/tracker-decks/PRD-<slug>.pdf
-echo "Saved: ~/Desktop/tracker-decks/PRD-<slug>.pdf"
-```
-
-Slug = `PRD-<competitor>-<short-feature-name>-<run-id>.pdf`.
+2. If approved, **"Want a downloadable PDF copy of this PRD?"** — options: `Yes — export PDF to ~/Desktop/tracker-decks/` / `No — chat-only is fine`
 
 If the manager says "edit," apply their edits inline in chat and re-ask the two questions before exporting.
 
 If the manager says "discard," drop the row from §4.6 prioritization and continue with the next PRD.
 
-**Never** ask "want a PDF?" without surfacing the install requirement when binaries are missing — the manager should never have to guess why an export silently failed.
+##### Render approach — HTML + Chrome headless (use this; pandoc is deprecated for this skill)
+
+Earlier versions of this skill called for `pandoc --pdf-engine=wkhtmltopdf`. **Don't.** Both binaries are not installed on a stock macOS dev machine, `wkhtmltopdf` was removed from Homebrew core (deprecated upstream), and asking the manager to `brew install` mid-cycle breaks flow. The reliable path is to render the PRD as HTML and let Chrome headless print it to PDF. Chrome is always installed.
+
+Slug convention: `PRD-<competitor>-<short-feature-name>-<run-id>.pdf`.
+
+**Step 1 — write the PRD as standalone HTML** to `tracker-decks/<slug>.html` inside the workspace. This folder is committed alongside the drop so the manager can re-render manually later. Use the embedded-CSS template at the bottom of this section so every PRD has consistent typography.
+
+**Step 2 — render to PDF via Chrome headless.** This command **must** be issued with `required_permissions: ["all"]` because Chrome will not start under the macOS seatbelt sandbox (it `SIGABRT`s on launch regardless of `--no-sandbox`):
+
+```bash
+mkdir -p ~/Desktop/tracker-decks
+"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" \
+  --headless=new \
+  --disable-gpu \
+  --no-pdf-header-footer \
+  --print-to-pdf="$HOME/Desktop/tracker-decks/PRD-<slug>.pdf" \
+  "file://$PWD/tracker-decks/PRD-<slug>.html"
+```
+
+A successful run prints `<N> bytes written to file ...` and the PDF lands in `~/Desktop/tracker-decks/` (~100 KB per single-page PRD). Verify with `ls -la ~/Desktop/tracker-decks/`.
+
+**Step 3 — also drop a `render-to-pdf.sh` companion script** alongside the HTML files (workspace `tracker-decks/`) so the manager can re-render manually from a normal terminal if the Cursor permission prompt fails to surface. Single source of truth, two ways to invoke.
+
+**If the `["all"]` permission bubble times out** (Cursor UI bug: "Failed to find tool call context: Timeout waiting for bubble creation"), retry the same command once. If it times out twice, fall back: leave the `.html` files + `render-to-pdf.sh` in `tracker-decks/` and tell the manager to run `bash tracker-decks/render-to-pdf.sh` from a normal terminal. Do **not** silently degrade to writing `.md` files — the manager has been clear they want the PDF.
+
+##### HTML template (paste verbatim, then fill the body)
+
+```html
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>PRD — <feature name></title>
+<style>
+  @page { size: Letter; margin: 0.75in; }
+  body { font-family: -apple-system, "Helvetica Neue", Arial, sans-serif; font-size: 11pt; line-height: 1.45; color: #1a1a1a; max-width: 7in; }
+  h1 { font-size: 18pt; margin: 0 0 4pt 0; border-bottom: 2px solid #1a1a1a; padding-bottom: 4pt; }
+  .meta { font-size: 9pt; color: #666; margin-bottom: 14pt; }
+  h2 { font-size: 12pt; margin: 14pt 0 4pt 0; color: #c0392b; }
+  ul { margin: 4pt 0 4pt 18pt; padding: 0; } li { margin-bottom: 3pt; }
+  code { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 9.5pt; background: #f4f4f4; padding: 1pt 3pt; border-radius: 2pt; }
+  .pill { display: inline-block; padding: 1pt 6pt; border-radius: 8pt; font-size: 9pt; font-weight: 600; color: white; }
+  .pill-l { background: #c0392b; } .pill-m { background: #d35400; } .pill-s { background: #16a085; } .pill-now { background: #27ae60; }
+  .footer { margin-top: 18pt; padding-top: 6pt; border-top: 1px solid #ccc; font-size: 8.5pt; color: #888; }
+</style>
+</head>
+<body>
+<h1>PRD: <feature name></h1>
+<div class="meta">Drop: <code><run-id></code> &middot; Tier <span class="pill pill-now">Now</span> &middot; Effort <span class="pill pill-l">L</span> &middot; Triggered by <competitor signal></div>
+<h2>Problem</h2><p>...</p>
+<h2>Target user</h2><p>...</p>
+<h2>Scope (in)</h2><ul><li>...</li></ul>
+<h2>Scope (out)</h2><ul><li>...</li></ul>
+<h2>Success metric</h2><p>...</p>
+<h2>Evidence</h2><p><code>tracker-drops/<run-id>/signals.json</code> row: ...</p>
+<h2>Effort estimate</h2><ul><li>...</li></ul>
+<p style="margin-top:8pt"><strong>Engineering ask:</strong> ...</p>
+<div class="footer">Generated by tracker-drop-cycle skill · drop <code><run-id></code></div>
+</body>
+</html>
+```
+
+##### Rule binding
+
+This template is anchored to the **engineering-shaped PRD rule** at `.cursor/rules/prds-must-be-engineering-shaped.mdc`. The `Engineering ask` block at the bottom of the template is **non-optional** — if you cannot fill it with real build work, the PRD does not pass and should be downgraded per §4.3 to `Tier = Won't chase`. Do not generate the PDF for a PRD that fails this check.
 
 ### 4.5 Slack message (chat-paste)
 
