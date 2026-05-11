@@ -37,9 +37,18 @@ async function main() {
   const { runFullCollect } = require('../lib/runCollectAll');
   const { writeCollectMeta } = require('../lib/collectMeta');
   const { SIGNALS_FILE } = require('../lib/storage');
+  const { shutdownBrowser } = require('../lib/collect');
 
   const days = parseDays();
   const { newCount, pruned, intelMeta } = await runFullCollect(days, { verbose: false });
+
+  // Close the Playwright browser if any lane spun it up. Without this the node
+  // process hangs until the browser child times out (~30s).
+  try {
+    await shutdownBrowser();
+  } catch (e) {
+    console.error('shutdownBrowser failed (continuing):', e.message);
+  }
 
   try {
     writeCollectMeta({ newCount, pruned, retentionDays: days, intelMeta });

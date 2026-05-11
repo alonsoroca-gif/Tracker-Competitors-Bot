@@ -39,6 +39,15 @@ jobs:
         working-directory: initiative-1-tracker/tracker
         run: npm install
 
+      - name: Install Playwright browsers (chromium only)
+        working-directory: initiative-1-tracker/tracker
+        # Adds ~30–45s and ~100 MB to the runner cache. Required for the
+        # Playwright fallback in lib/collect.js (SPA pages where Cheerio sees
+        # an empty body). --with-deps installs OS-level shared libs Chromium
+        # needs on ubuntu-latest. Browsers land in the runner's default
+        # ~/.cache/ms-playwright (NOT the workspace cache used locally).
+        run: npx playwright install --with-deps chromium
+
       - name: Run collect + publish drop
         working-directory: initiative-1-tracker/tracker
         run: node scripts/publish-drop.js --days 7

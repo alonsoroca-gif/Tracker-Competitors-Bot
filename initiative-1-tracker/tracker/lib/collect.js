@@ -47,7 +47,11 @@ const parser = new Parser({
 });
 
 const DEFAULT_TIMEOUT_MS = 15000;
-const MAX_HTML_CHARS = 200000;
+// 1 MB cap — generous enough for hydrated SPAs whose serialized DOM can hit
+// 300–500 KB (e.g. featuredcustomers.com's testimonial section lives past the
+// 200 KB mark). Cheerio parses 1 MB in tens of ms so this is not a hot path
+// concern. Smaller caps (200 KB) were silently dropping the content we needed.
+const MAX_HTML_CHARS = 1_000_000;
 const MAX_SNIPPET = 600;
 const MAX_EVIDENCE = 1200;
 
@@ -337,6 +341,302 @@ async function fetchText(url, timeoutMs = DEFAULT_TIMEOUT_MS) {
   } finally {
     clearTimeout(timer);
   }
+}
+
+// =====================================================================
+// Playwright fallback path
+// =====================================================================
+//
+// The static fetchText path above succeeds for ~80% of sources (server-rendered
+// marketing pages with usable HTML in the initial response). The remaining ~20%
+// are single-page apps (Webflow, custom React/Vue) where the body is hydrated
+// client-side — Cheerio sees an empty DOM. Those URLs return parse_ok:false
+// stub signals with zero evidence_snippet (drop 2026-05-07T22-19-26Z had three:
+// jonahdigital.com/, jonahdigital.com/add-ons/, featuredcustomers.com/...).
+//
+// fetchRendered launches a shared headless Chromium via Playwright, navigates
+// to the URL, waits for the DOM to stabilize, and returns the resulting HTML.
+// Lane collectors call fetchTextWithFallback, which tries the static path
+// first and only falls through to Playwright when the static body is too thin
+// to extract anything useful. The Playwright path is the slow path (~5–15s per
+// URL); it must not be triggered on URLs that work statically.
+//
+// Hard exclusions (PLAYWRIGHT_EXCLUDE_HOSTS):
+//   - g2.com  — Cloudflare bot-shield rejects Playwright the same way it
+//     rejects undici. G2 needs an API or Apify-style residential proxy,
+//     not a local headless browser. See SKILL.md §3 (G2 API path).
+//
+// Disable via TRACKER_NO_PLAYWRIGHT_FALLBACK=1 (e.g. when debugging selector
+// changes — you want to see exactly what the static fetch returns).
+// =====================================================================
+
+const PLAYWRIGHT_DISABLED = process.env.TRACKER_NO_PLAYWRIGHT_FALLBACK === '1';
+// 15s navigate timeout + 4s post-DOMContentLoaded settle ≈ 19s worst-case per
+// rendered URL. networkidle was tried at 30s and routinely never fires on
+// marketing pages (analytics + chat widgets keep firing requests indefinitely).
+const PLAYWRIGHT_TIMEOUT_MS = Number(process.env.TRACKER_PLAYWRIGHT_TIMEOUT_MS || 15000);
+// 6s settle empirically catches sites with lazy review hydration
+// (e.g. featuredcustomers.com, which doesn't fill its testimonial divs
+// until ~5–6s after DOMContentLoaded). 4s was tested and missed them.
+const PLAYWRIGHT_SETTLE_MS = Number(process.env.TRACKER_PLAYWRIGHT_SETTLE_MS || 6000);
+const PLAYWRIGHT_MIN_BODY_CHARS = Number(process.env.TRACKER_PLAYWRIGHT_MIN_BODY_CHARS || 200);
+const PLAYWRIGHT_EXCLUDE_HOSTS = new Set([
+  // Cloudflare-shielded; needs API/proxy, not a local headless browser.
+  'www.g2.com',
+  'g2.com',
+]);
+// Resource types we don't need for text extraction. Blocking them at the
+// network layer cuts page load from ~10–30s to ~2–5s on most marketing pages.
+const PLAYWRIGHT_BLOCK_RESOURCE_TYPES = new Set([
+  'image',
+  'media',
+  'font',
+  'stylesheet', // we don't parse CSS-only content
+]);
+// Hosts whose scripts we don't need (analytics, chat widgets, ad networks).
+// Blocking these is the single biggest networkidle accelerator.
+const PLAYWRIGHT_BLOCK_HOST_FRAGMENTS = [
+  'google-analytics.com',
+  'googletagmanager.com',
+  'doubleclick.net',
+  'facebook.net',
+  'segment.io',
+  'segment.com',
+  'mixpanel.com',
+  'hotjar.com',
+  'fullstory.com',
+  'intercom.io',
+  'intercom.com',
+  'drift.com',
+  'qualified.com',
+  'optimizely.com',
+  'newrelic.com',
+  'amplitude.com',
+];
+
+let _browserPromise = null;
+
+async function getBrowser() {
+  if (_browserPromise) return _browserPromise;
+  const { chromium } = require('playwright');
+  _browserPromise = chromium.launch({
+    headless: true,
+    args: [
+      '--disable-blink-features=AutomationControlled',
+      '--disable-features=IsolateOrigins,site-per-process',
+    ],
+  });
+  return _browserPromise;
+}
+
+async function shutdownBrowser() {
+  if (!_browserPromise) return;
+  try {
+    const b = await _browserPromise;
+    await b.close();
+  } catch (_) {
+    // Browser may already be dead; not actionable.
+  } finally {
+    _browserPromise = null;
+  }
+}
+
+function isPlaywrightExcluded(url) {
+  try {
+    const host = new URL(url).hostname.toLowerCase();
+    return PLAYWRIGHT_EXCLUDE_HOSTS.has(host);
+  } catch (_) {
+    return true;
+  }
+}
+
+async function fetchRendered(url, timeoutMs = PLAYWRIGHT_TIMEOUT_MS) {
+  if (PLAYWRIGHT_DISABLED) {
+    throw new Error('playwright fallback disabled (TRACKER_NO_PLAYWRIGHT_FALLBACK=1)');
+  }
+  if (isPlaywrightExcluded(url)) {
+    throw new Error(`host excluded from playwright fallback: ${url}`);
+  }
+
+  const browser = await getBrowser();
+  const ctx = await browser.newContext({
+    userAgent: DEFAULT_USER_AGENT,
+    viewport: { width: 1280, height: 800 },
+    javaScriptEnabled: true,
+    extraHTTPHeaders: {
+      'accept-language': 'en-US,en;q=0.9',
+      'accept-encoding': 'gzip, deflate, br',
+      referer: 'https://www.google.com/',
+    },
+  });
+  try {
+    const page = await ctx.newPage();
+
+    // Block resource types and tracker hosts that contribute nothing to text
+    // extraction but routinely keep the network busy for 30+ seconds.
+    await page.route('**/*', (route) => {
+      const req = route.request();
+      if (PLAYWRIGHT_BLOCK_RESOURCE_TYPES.has(req.resourceType())) {
+        return route.abort();
+      }
+      const reqHost = (() => {
+        try { return new URL(req.url()).hostname.toLowerCase(); } catch (_) { return ''; }
+      })();
+      if (reqHost && PLAYWRIGHT_BLOCK_HOST_FRAGMENTS.some((f) => reqHost.includes(f))) {
+        return route.abort();
+      }
+      return route.continue();
+    });
+
+    // domcontentloaded fires when DOM is parsed (~1–3s). networkidle was tried
+    // and routinely never fires on marketing pages because analytics/chat
+    // widgets keep firing requests indefinitely. After DOMContentLoaded we
+    // give frameworks a small settle window to hydrate, then read the DOM.
+    await page.goto(url, { waitUntil: 'domcontentloaded', timeout: timeoutMs });
+    await page.waitForTimeout(PLAYWRIGHT_SETTLE_MS);
+    const html = await page.content();
+    return html.slice(0, MAX_HTML_CHARS);
+  } finally {
+    await ctx.close();
+  }
+}
+
+/**
+ * Static fetch with Playwright fallback when the static body is too thin to be useful.
+ *
+ * Returns:
+ *   { html, renderer, fallbackReason, bodyChars }
+ *
+ * renderer is 'static' or 'playwright'; lane collectors should stamp this into
+ * the resulting signal's metadata so we can audit which lanes leaned on Playwright
+ * in a given drop.
+ *
+ * NOTE: bodyChars-as-trigger is unreliable for SPAs whose static shells return
+ * 4–8KB of nav/footer chrome text. Lane-aware retries via fetchStaticOrRendered
+ * (below) are the recommended primary path — this function is kept for callers
+ * that don't have a per-lane extractor signal.
+ */
+async function fetchTextWithFallback(url, opts = {}) {
+  const { minBodyChars = PLAYWRIGHT_MIN_BODY_CHARS } = opts;
+
+  let html = '';
+  let staticError = null;
+
+  try {
+    html = await fetchText(url, DEFAULT_TIMEOUT_MS);
+  } catch (err) {
+    staticError = err;
+  }
+
+  if (!staticError) {
+    const $ = cheerio.load(html);
+    $('script, style, noscript, svg, iframe').remove();
+    const bodyText = $('body').text().replace(/\s+/g, ' ').trim();
+    if (bodyText.length >= minBodyChars) {
+      return { html, renderer: 'static', fallbackReason: null, bodyChars: bodyText.length };
+    }
+    staticError = new Error(`static body too thin (${bodyText.length} chars < ${minBodyChars})`);
+  }
+
+  if (PLAYWRIGHT_DISABLED || isPlaywrightExcluded(url)) {
+    throw staticError;
+  }
+
+  try {
+    const rendered = await fetchRendered(url, PLAYWRIGHT_TIMEOUT_MS);
+    return {
+      html: rendered,
+      renderer: 'playwright',
+      fallbackReason: String(staticError.message || staticError),
+      bodyChars: rendered.length,
+    };
+  } catch (renderErr) {
+    const wrapped = new Error(
+      `static failed (${staticError.message}); playwright failed (${renderErr.message})`
+    );
+    wrapped.cause = renderErr;
+    throw wrapped;
+  }
+}
+
+/**
+ * Lane-aware fetch helper. Takes the URL and an `extract` callback. Tries the
+ * static fast path first; if the extractor reports the result is empty/thin,
+ * retries with the Playwright slow path and re-extracts. Returns the chosen
+ * extraction plus a `renderer` marker for metadata stamping.
+ *
+ * Contract for `extract`:
+ *   extract(html, $) => { isEmpty: boolean, ...rest }
+ *   - `isEmpty: true` means "static had nothing useful; please try harder"
+ *   - any other fields are passed through to the caller untouched
+ *
+ * This is the primary recommended path for any lane whose extractor has a
+ * clear notion of "I found nothing" (e.g. selector-count check, parse_ok flag).
+ * It avoids the body-length false-positives that plague fetchTextWithFallback.
+ */
+const PLAYWRIGHT_DEBUG = process.env.TRACKER_PLAYWRIGHT_DEBUG === '1';
+function pwLog(...args) {
+  if (PLAYWRIGHT_DEBUG) console.error('[pw]', ...args);
+}
+
+async function fetchStaticOrRendered(url, extract) {
+  let html = '';
+  let staticError = null;
+
+  try {
+    html = await fetchText(url, DEFAULT_TIMEOUT_MS);
+  } catch (err) {
+    staticError = err;
+    pwLog('static-fail', url, err.message);
+  }
+
+  if (!staticError) {
+    const $ = cheerio.load(html);
+    $('script, style, noscript, svg, iframe').remove();
+    const staticResult = extract(html, $);
+    pwLog('static-extract', url, 'isEmpty=', staticResult && staticResult.isEmpty);
+    if (!staticResult || staticResult.isEmpty !== true) {
+      return { ...staticResult, html, renderer: 'static', fallbackReason: null };
+    }
+  }
+
+  if (PLAYWRIGHT_DISABLED || isPlaywrightExcluded(url)) {
+    pwLog('skip-pw', url, 'disabled=', PLAYWRIGHT_DISABLED, 'excluded=', isPlaywrightExcluded(url));
+    if (staticError) throw staticError;
+    const $ = cheerio.load(html);
+    $('script, style, noscript, svg, iframe').remove();
+    const staticResult = extract(html, $);
+    return { ...staticResult, html, renderer: 'static', fallbackReason: 'fallback disabled or host excluded' };
+  }
+
+  pwLog('try-render', url);
+  let rendered = '';
+  try {
+    rendered = await fetchRendered(url, PLAYWRIGHT_TIMEOUT_MS);
+    pwLog('render-ok', url, 'html_len=', rendered.length);
+  } catch (renderErr) {
+    pwLog('render-fail', url, renderErr.message);
+    if (staticError) throw staticError;
+    const $ = cheerio.load(html);
+    $('script, style, noscript, svg, iframe').remove();
+    const staticResult = extract(html, $);
+    return {
+      ...staticResult,
+      html,
+      renderer: 'static',
+      fallbackReason: `render attempted, failed: ${renderErr.message}`,
+    };
+  }
+
+  const $r = cheerio.load(rendered);
+  $r('script, style, noscript, svg, iframe').remove();
+  const renderedResult = extract(rendered, $r);
+  return {
+    ...renderedResult,
+    html: rendered,
+    renderer: 'playwright',
+    fallbackReason: staticError ? `static failed (${staticError.message})` : 'static extraction empty',
+  };
 }
 
 function normalizeWhitespace(str) {
@@ -676,10 +976,10 @@ function extractNamedEntities(text) {
 }
 
 async function fetchArticleEvidence(url) {
-  if (!isValidPublicUrl(url)) return { title: '', description: '', content: '' };
+  if (!isValidPublicUrl(url)) return { title: '', description: '', content: '', renderer: null };
 
   try {
-    const html = await fetchText(url, DEFAULT_TIMEOUT_MS);
+    const { html, renderer } = await fetchTextWithFallback(url);
     const $ = loadHtml(html);
     const meta = extractMeta($, url);
 
@@ -694,9 +994,10 @@ async function fetchArticleEvidence(url) {
       title: meta.title,
       description: meta.description,
       content: normalizeWhitespace(articleText.join('\n\n') || meta.bodyText).slice(0, 6000),
+      renderer,
     };
   } catch (_) {
-    return { title: '', description: '', content: '' };
+    return { title: '', description: '', content: '', renderer: null };
   }
 }
 
@@ -790,21 +1091,30 @@ async function extractPageSignals(pageUrl, pageKind, competitorId, productId) {
   if (!isValidPublicUrl(pageUrl)) return [];
 
   try {
-    const html = await fetchText(pageUrl, DEFAULT_TIMEOUT_MS);
-    const $ = loadHtml(html);
-    const meta = extractMeta($, pageUrl);
+    const out = await fetchStaticOrRendered(pageUrl, (html, $) => {
+      const meta = extractMeta($, pageUrl);
+      let signals = [];
+      if (pageKind === 'pricing_url') {
+        signals = extractPricingSignals(meta, pageUrl, competitorId, productId);
+      } else if (pageKind === 'features_url' || pageKind === 'docs_url') {
+        signals = extractFeatureSignals(meta, pageUrl, competitorId, productId);
+      } else if (pageKind === 'careers_url') {
+        signals = extractCareerSignals(meta, pageUrl, competitorId, productId);
+      }
+      // Empty when no signals were produced OR every signal is "thin" (short
+      // evidence_snippet). The thin-check catches SPAs whose static shell has
+      // just enough chrome text for the extractor to match one positioning
+      // keyword — technically a signal, practically useless.
+      const meaningful = signals.filter((s) => (s.evidence_snippet || '').length >= 50);
+      const isEmpty = signals.length === 0 || meaningful.length === 0;
+      return { signals, isEmpty };
+    });
 
-    if (pageKind === 'pricing_url') {
-      return extractPricingSignals(meta, pageUrl, competitorId, productId);
+    const signals = out.signals || [];
+    for (const s of signals) {
+      s.metadata = { ...(s.metadata || {}), renderer: out.renderer };
     }
-    if (pageKind === 'features_url' || pageKind === 'docs_url') {
-      return extractFeatureSignals(meta, pageUrl, competitorId, productId);
-    }
-    if (pageKind === 'careers_url') {
-      return extractCareerSignals(meta, pageUrl, competitorId, productId);
-    }
-
-    return [];
+    return signals;
   } catch (_) {
     return [];
   }
@@ -999,16 +1309,6 @@ async function collectYouTubeCommentSignals(competitorId, productId, videoIds) {
 async function collectGenericReviewSignals(competitorId, productId, reviewsUrl) {
   if (!isValidPublicUrl(reviewsUrl)) return [];
 
-  let html;
-  try {
-    html = await fetchText(reviewsUrl, DEFAULT_TIMEOUT_MS);
-  } catch (_) {
-    return [];
-  }
-
-  const $ = loadHtml(html);
-  const meta = extractMeta($, reviewsUrl);
-
   const REVIEW_SELECTORS = [
     '[itemprop="reviewBody"]',
     '[itemprop="description"]',
@@ -1017,18 +1317,29 @@ async function collectGenericReviewSignals(competitorId, productId, reviewsUrl) 
     'div[class*="testimonial"], div[class*="review"], div[class*="quote"]',
   ];
 
-  const excerpts = [];
-  for (const sel of REVIEW_SELECTORS) {
-    $(sel).each((_, el) => {
-      if (excerpts.length >= 12) return false;
-      const text = normalizeWhitespace($(el).text());
-      if (text.length >= 30 && text.length <= 1200) excerpts.push(text);
-      return undefined;
+  let result;
+  try {
+    result = await fetchStaticOrRendered(reviewsUrl, (html, $) => {
+      const meta = extractMeta($, reviewsUrl);
+      const excerpts = [];
+      for (const sel of REVIEW_SELECTORS) {
+        $(sel).each((_, el) => {
+          if (excerpts.length >= 12) return false;
+          const text = normalizeWhitespace($(el).text());
+          if (text.length >= 30 && text.length <= 1200) excerpts.push(text);
+          return undefined;
+        });
+        if (excerpts.length >= 4) break;
+      }
+      const uniqueExcerpts = unique(excerpts).slice(0, 8);
+      pwLog('reviews-extract', reviewsUrl, 'html_len=', html.length, 'excerpts=', uniqueExcerpts.length);
+      return { meta, uniqueExcerpts, isEmpty: uniqueExcerpts.length === 0 };
     });
-    if (excerpts.length >= 4) break;
+  } catch (_) {
+    return [];
   }
 
-  const uniqueExcerpts = unique(excerpts).slice(0, 8);
+  const { meta, uniqueExcerpts, renderer } = result;
 
   if (!uniqueExcerpts.length) {
     return [
@@ -1046,7 +1357,7 @@ async function collectGenericReviewSignals(competitorId, productId, reviewsUrl) 
         confidence: 0.3,
         importance: 0.45,
         entities: { review_quotes: [] },
-        metadata: { page_kind: 'reviews_other', parse_ok: false },
+        metadata: { page_kind: 'reviews_other', parse_ok: false, renderer },
       }),
     ];
   }
@@ -1074,7 +1385,7 @@ async function collectGenericReviewSignals(competitorId, productId, reviewsUrl) 
       }),
       importance,
       entities,
-      metadata: { page_kind: 'reviews_other', parse_ok: true },
+      metadata: { page_kind: 'reviews_other', parse_ok: true, renderer },
     }),
   ];
 }
@@ -1087,16 +1398,6 @@ async function collectGenericReviewSignals(competitorId, productId, reviewsUrl) 
 async function collectCaseStudySignals(competitorId, productId, pageUrl) {
   if (!isValidPublicUrl(pageUrl)) return [];
 
-  let html;
-  try {
-    html = await fetchText(pageUrl, DEFAULT_TIMEOUT_MS);
-  } catch (_) {
-    return [];
-  }
-
-  const $ = loadHtml(html);
-  const meta = extractMeta($, pageUrl);
-
   const TESTIMONIAL_SELECTORS = [
     '[itemprop="review"]',
     '[itemprop="reviewBody"]',
@@ -1106,27 +1407,35 @@ async function collectCaseStudySignals(competitorId, productId, pageUrl) {
     'section[class*="testimonial"], section[class*="customer"], section[class*="story"]',
   ];
 
-  const excerpts = [];
-  for (const sel of TESTIMONIAL_SELECTORS) {
-    $(sel).each((_, el) => {
-      if (excerpts.length >= 12) return false;
-      const text = normalizeWhitespace($(el).text());
-      if (text.length >= 40 && text.length <= 1400) excerpts.push(text);
-      return undefined;
+  let result;
+  try {
+    result = await fetchStaticOrRendered(pageUrl, (html, $) => {
+      const meta = extractMeta($, pageUrl);
+      const excerpts = [];
+      for (const sel of TESTIMONIAL_SELECTORS) {
+        $(sel).each((_, el) => {
+          if (excerpts.length >= 12) return false;
+          const text = normalizeWhitespace($(el).text());
+          if (text.length >= 40 && text.length <= 1400) excerpts.push(text);
+          return undefined;
+        });
+        if (excerpts.length >= 6) break;
+      }
+      const uniqueExcerpts = unique(excerpts).slice(0, 8);
+      const companyLogos = unique(
+        $('img[alt]')
+          .map((_, el) => normalizeWhitespace($(el).attr('alt') || ''))
+          .get()
+          .filter((t) => t.length >= 2 && t.length <= 60)
+          .filter((t) => !/icon|logo only|menu|search|placeholder/i.test(t))
+      ).slice(0, 12);
+      return { meta, uniqueExcerpts, companyLogos, isEmpty: uniqueExcerpts.length === 0 };
     });
-    if (excerpts.length >= 6) break;
+  } catch (_) {
+    return [];
   }
 
-  const uniqueExcerpts = unique(excerpts).slice(0, 8);
-
-  // Capture customer / company identifiers from logos and headings near the quotes.
-  const companyLogos = unique(
-    $('img[alt]')
-      .map((_, el) => normalizeWhitespace($(el).attr('alt') || ''))
-      .get()
-      .filter((t) => t.length >= 2 && t.length <= 60)
-      .filter((t) => !/icon|logo only|menu|search|placeholder/i.test(t))
-  ).slice(0, 12);
+  const { meta, uniqueExcerpts, companyLogos, renderer } = result;
 
   if (!uniqueExcerpts.length) {
     return [
@@ -1144,7 +1453,7 @@ async function collectCaseStudySignals(competitorId, productId, pageUrl) {
         confidence: 0.3,
         importance: 0.5,
         entities: { case_study_quotes: [], customer_logos: companyLogos },
-        metadata: { page_kind: 'case_studies', parse_ok: false },
+        metadata: { page_kind: 'case_studies', parse_ok: false, renderer },
       }),
     ];
   }
@@ -1176,7 +1485,7 @@ async function collectCaseStudySignals(competitorId, productId, pageUrl) {
       }),
       importance: Math.max(importance || 0.6, 0.7),
       entities,
-      metadata: { page_kind: 'case_studies', parse_ok: true },
+      metadata: { page_kind: 'case_studies', parse_ok: true, renderer },
     }),
   ];
 }
@@ -1189,18 +1498,6 @@ async function collectCaseStudySignals(competitorId, productId, pageUrl) {
 async function collectArticleIndexSignals(competitorId, productId, pageUrl) {
   if (!isValidPublicUrl(pageUrl)) return [];
 
-  let html;
-  try {
-    html = await fetchText(pageUrl, DEFAULT_TIMEOUT_MS);
-  } catch (_) {
-    return [];
-  }
-
-  const $ = loadHtml(html);
-  const meta = extractMeta($, pageUrl);
-
-  // Article-card extraction: look for cards with title-link + (optional) date + (optional) summary.
-  const cards = [];
   const cardSelectors = [
     'article',
     '.post-card, .blog-card, .news-card, .article-card',
@@ -1215,39 +1512,49 @@ async function collectArticleIndexSignals(competitorId, productId, pageUrl) {
     pageOrigin = '';
   }
 
-  for (const sel of cardSelectors) {
-    $(sel).each((_, el) => {
-      if (cards.length >= 12) return false;
-      const $el = $(el);
-      const titleEl = $el.find('h2 a, h3 a, h4 a, a[class*="title"], a[class*="heading"]').first();
-      const title = normalizeWhitespace(titleEl.text() || $el.find('h2, h3, h4').first().text());
-      let href = titleEl.attr('href') || '';
-      if (href && !/^https?:/i.test(href) && pageOrigin) {
-        try {
-          href = new URL(href, pageOrigin).toString();
-        } catch (_) {
-          /* leave as-is */
-        }
+  let result;
+  try {
+    result = await fetchStaticOrRendered(pageUrl, (html, $) => {
+      const meta = extractMeta($, pageUrl);
+      const cards = [];
+      for (const sel of cardSelectors) {
+        $(sel).each((_, el) => {
+          if (cards.length >= 12) return false;
+          const $el = $(el);
+          const titleEl = $el.find('h2 a, h3 a, h4 a, a[class*="title"], a[class*="heading"]').first();
+          const title = normalizeWhitespace(titleEl.text() || $el.find('h2, h3, h4').first().text());
+          let href = titleEl.attr('href') || '';
+          if (href && !/^https?:/i.test(href) && pageOrigin) {
+            try {
+              href = new URL(href, pageOrigin).toString();
+            } catch (_) {
+              /* leave as-is */
+            }
+          }
+          const dateEl = $el.find('time').first();
+          const dateAttr = dateEl.attr('datetime') || normalizeWhitespace(dateEl.text() || '');
+          const summary = normalizeWhitespace($el.find('p').first().text());
+          if (title && title.length >= 8 && title.length <= 200) {
+            cards.push({ title, href, date: dateAttr, summary });
+          }
+          return undefined;
+        });
+        if (cards.length >= 6) break;
       }
-      const dateEl = $el.find('time').first();
-      const dateAttr = dateEl.attr('datetime') || normalizeWhitespace(dateEl.text() || '');
-      const summary = normalizeWhitespace($el.find('p').first().text());
-      if (title && title.length >= 8 && title.length <= 200) {
-        cards.push({ title, href, date: dateAttr, summary });
-      }
-      return undefined;
+      const seenTitles = new Set();
+      const uniqueCards = cards.filter((c) => {
+        const key = c.title.toLowerCase();
+        if (seenTitles.has(key)) return false;
+        seenTitles.add(key);
+        return true;
+      }).slice(0, 8);
+      return { meta, uniqueCards, isEmpty: uniqueCards.length === 0 };
     });
-    if (cards.length >= 6) break;
+  } catch (_) {
+    return [];
   }
 
-  // Deduplicate by title (some sites repeat cards in featured + grid sections).
-  const seenTitles = new Set();
-  const uniqueCards = cards.filter((c) => {
-    const key = c.title.toLowerCase();
-    if (seenTitles.has(key)) return false;
-    seenTitles.add(key);
-    return true;
-  }).slice(0, 8);
+  const { meta, uniqueCards, renderer } = result;
 
   if (!uniqueCards.length) {
     return [
@@ -1265,7 +1572,7 @@ async function collectArticleIndexSignals(competitorId, productId, pageUrl) {
         confidence: 0.3,
         importance: 0.45,
         entities: { article_titles: [] },
-        metadata: { page_kind: 'articles_index', parse_ok: false },
+        metadata: { page_kind: 'articles_index', parse_ok: false, renderer },
       }),
     ];
   }
@@ -1304,7 +1611,7 @@ async function collectArticleIndexSignals(competitorId, productId, pageUrl) {
       }),
       importance: importance || 0.6,
       entities,
-      metadata: { page_kind: 'articles_index', parse_ok: true },
+      metadata: { page_kind: 'articles_index', parse_ok: true, renderer },
     }),
   ];
 }
@@ -1494,4 +1801,5 @@ module.exports = {
   filterLastDays,
   getSourceUrls,
   isValidPublicUrl,
+  shutdownBrowser,
 };

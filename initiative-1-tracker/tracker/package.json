@@ -15,6 +15,7 @@
   "dependencies": {
     "cheerio": "^1.0.0",
     "express": "^4.21.0",
+    "playwright": "^1.48.0",
     "rss-parser": "^3.13.0"
   },
   "keywords": ["tracker", "competitors", "slack"],

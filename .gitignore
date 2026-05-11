@@ -28,3 +28,7 @@ coding-automation-agent/
 
 # Tracker data (collected signals)
 initiative-1-tracker/tracker/data/
+
+# Playwright browser cache — Chromium binary lives here so we don't pollute
+# the user's ~/Library/Caches. Roughly 100–300 MB; never commit.
+initiative-1-tracker/tracker/.playwright-browsers/
