@@ -1619,6 +1619,12 @@ async function collectArticleIndexSignals(competitorId, productId, pageUrl) {
 async function collectG2ReviewSignals(competitorId, productId, g2Url) {
   if (!isValidPublicUrl(g2Url)) return [];
   try {
+    // APIFY INTEGRATION POINT — when APIFY_TOKEN is authorized and ready,
+    // replace the line below with the branching call documented in
+    // docs/APIFY-INTEGRATION.md ("Wiring into the pipeline"). The
+    // scaffold lives at lib/apifyClient.js + lib/g2ApifyScrape.js and
+    // is inert until that swap happens. Until then this fetch will
+    // continue to return HTTP 403 from Cloudflare — by design, not bug.
     const { reviews, note } = await fetchG2ReviewSnippets(g2Url, { maxReviews: 12 });
     const texts = reviews.map((r) => r.text);
     if (!texts.length) {
