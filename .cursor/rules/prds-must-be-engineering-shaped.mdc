@@ -1,0 +1,70 @@
+---
+description: Every PRD emitted by the tracker-drop-cycle (or any /trackerstart output) must have a real, scoped engineering ask — not packaging, positioning, or marketing artifacts dressed up as a PRD.
+alwaysApply: true
+---
+
+# PRDs must be engineering-shaped
+
+## The rule
+
+When producing a PRD in this repo — especially from the `tracker-drop-cycle` skill's Phase 4.4 — the PRD must describe **product code we will write that competitors cannot easily copy.** A PRD that resolves to "make a video, write a page, swap a hero image" is a marketing brief, not a PRD. Convert it or downgrade the row to "Won't chase."
+
+## The test
+
+For every PRD you write, the line **"Net-new engineering ask"** must be a real bullet list of build work, not "None — packaging only." If you're tempted to write "packaging only," stop and re-derive the gap: the competitor signal almost always points to a deeper platform feature we can ship that the competitor structurally cannot.
+
+## Required PRD shape
+
+Every PRD must include:
+
+- **Problem** — anchored on the competitor signal, ending with the structural reason this is a platform play (e.g., "EliseAI cannot ship this because they don't own the PMS layer").
+- **Target user** — the actual product user, not a generic "prospect" or "buyer."
+- **Scope (in)** — bullet list of concrete features/screens/APIs. Each bullet implies code.
+- **Scope (out)** — what we deliberately don't build.
+- **Success metric** — one measurable thing, target if known.
+- **Evidence** — `tracker-drops/<run-id>/signals.json` row reference.
+- **Effort estimate** — S/M/L/XL with sub-component breakdown. If the breakdown is just "PMM video + dev hero swap," the PRD failed this rule.
+
+## Concrete examples
+
+### Bad (rejected by this rule)
+
+```markdown
+#### PRD: Mobile-first leasing CRM demo
+- Problem: EliseAI claims "first mobile CRM." Our site shows desktop.
+- Scope (in):
+  - 90s portrait video on the leasing CRM page
+  - Three phone-frame screenshots
+- Effort: S (PMM video + dev hero swap)
+- Net-new engineering ask: None — packaging only
+```
+
+Why it fails: the engineering ask is "swap a hero image." That's positioning. A competitor can swap their hero image too. This PRD does not defend Entrata.
+
+### Good (passes this rule)
+
+```markdown
+#### PRD: Field-Mode Leasing — in-property agent app
+- Problem: EliseAI's "Agent" is a mobile CRM. The actual gap is what an
+  agent does AT the property, hands full. EliseAI cannot ship this — they
+  don't own the PMS, maintenance, screening, or pricing engines.
+- Scope (in):
+  - In-tour module: photo capture tied to unit record, voice-to-text notes
+  - Push-to-apply: SMS deep-link with live PMS pricing for this unit + term
+  - In-field maintenance ticket creation pre-populated with unit ID + photo
+  - Live conditional-pricing preview from screening engine
+  - Offline-first sync via IndexedDB + retry queue
+- Effort: L — mobile screens (M), pricing API integration (S), screening
+  integration (M, conditional-preview is net-new), maintenance ticketing
+  (S), offline sync (M).
+```
+
+Why it passes: every Scope-in bullet implies real code; the effort breakdown spans multiple teams; the structural reason a competitor can't copy this is named in the Problem statement.
+
+## When to downgrade instead of converting
+
+If a competitor signal genuinely doesn't map to product code we should build (talent moves, branding refreshes, editorial cadence changes), do **not** write a PRD. Mark the row `Tier = Won't chase` in §4.3 with a sub-bullet stating "(signal-only, no product gap)." This rule explicitly bars manufacturing engineering-shaped PRDs from signals that don't warrant them.
+
+## Origin
+
+Established 2026-05-11 after a `/trackerstart` cycle produced two PRDs whose "Net-new engineering ask" lines both read "None — packaging only." The manager rejected the cycle until the PRDs were rewritten with platform-integration scope (Field-Mode Leasing + Conversion Audit). This rule prevents that failure mode from recurring.
