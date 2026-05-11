@@ -16,6 +16,7 @@ on:
 
 permissions:
   contents: write
+  actions: write   # required for the explicit `gh workflow run auto-merge-agent.yml` dispatch step below
 
 concurrency:
   group: tracker-drop
