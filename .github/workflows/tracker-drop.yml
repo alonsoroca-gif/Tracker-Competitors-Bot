@@ -59,6 +59,16 @@ jobs:
           git push
           echo "pushed=true" >> "$GITHUB_OUTPUT"
 
+      - name: Trigger auto-merge into main
+        # GitHub suppresses downstream workflow triggers for pushes made by
+        # the default GITHUB_TOKEN (loop-prevention guard). workflow_dispatch
+        # is exempt from that rule, so we explicitly kick off the auto-merge
+        # here to ensure CI drops reach main within ~30s.
+        if: steps.gitpush.outputs.pushed == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh workflow run auto-merge-agent.yml
+
       - name: Slack — drop summary (optional)
         if: steps.gitpush.outputs.pushed == 'true'
         env:
