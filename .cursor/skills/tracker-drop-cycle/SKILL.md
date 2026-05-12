@@ -34,15 +34,18 @@ Two checks, in order:
 1. **Freshness** — is the latest drop <15 min old? (CI cron interval)
 2. **Content hash** — does the latest drop's `signals.json` match the prior drop byte-for-byte?
 
-Run from `<repo-root>`:
+Run from `<repo-root>`. **Always read from `agent/P1.1`** — that's the writer-staging branch where both CI cron and the skill push drops first. `main` is the consumer mirror and may lag by ~30s during auto-merge propagation.
 
 ```bash
 git fetch origin
-git pull --rebase origin main
+git checkout agent/P1.1
+git pull --rebase origin agent/P1.1
 node -e '
 const fs = require("fs");
 const path = require("path");
 const crypto = require("crypto");
+const fmtAge = (min) => min < 60 ? `${min} min` : min < 1440 ? `${(min/60).toFixed(1)} hrs` : `${Math.round(min/1440)} days`;
+const fmtSize = (bytes) => bytes < 1e6 ? `${(bytes/1e3).toFixed(0)} KB` : `${(bytes/1e6).toFixed(1)} MB`;
 const id = fs.readFileSync("tracker-drops/.latest-drop-id", "utf8").trim();
 const dir = path.join("tracker-drops", id);
 const ageMin = Math.round((Date.now() - fs.statSync(dir).mtimeMs) / 60000);
@@ -50,20 +53,66 @@ const drops = fs.readdirSync("tracker-drops").filter(f => f.match(/^\d{4}-/)).so
 const idx = drops.indexOf(id);
 const prior = idx > 0 ? drops[idx - 1] : null;
 const hash = (p) => crypto.createHash("sha256").update(fs.readFileSync(p)).digest("hex");
-const latestHash = hash(path.join(dir, "signals.json"));
-const priorHash = prior ? hash(path.join("tracker-drops", prior, "signals.json")) : null;
-console.log(`Latest drop: ${id} (age: ${ageMin} min)`);
-console.log(`Prior drop:  ${prior || "(none)"}`);
-console.log(`Hash match:  ${latestHash === priorHash ? "YES (no new content)" : "NO (content changed)"}`);
+const latestPath = path.join(dir, "signals.json");
+const latestHash = hash(latestPath);
+const latestSize = fs.statSync(latestPath).size;
+const priorPath = prior ? path.join("tracker-drops", prior, "signals.json") : null;
+const priorHash = priorPath ? hash(priorPath) : null;
+const priorAgeMin = prior ? Math.round((Date.now() - fs.statSync(path.join("tracker-drops", prior)).mtimeMs) / 60000) : null;
+const lastMeaningfulIdx = (() => {
+  for (let i = drops.length - 2; i >= 0; i--) {
+    if (hash(path.join("tracker-drops", drops[i+1], "signals.json")) !== hash(path.join("tracker-drops", drops[i], "signals.json"))) return i + 1;
+  }
+  return -1;
+})();
+const lastMeaningful = lastMeaningfulIdx >= 0 ? drops[lastMeaningfulIdx] : null;
+const lastMeaningfulAgeMin = lastMeaningful ? Math.round((Date.now() - fs.statSync(path.join("tracker-drops", lastMeaningful)).mtimeMs) / 60000) : null;
+console.log(`Latest drop:        ${id} (age: ${fmtAge(ageMin)}, signals.json: ${fmtSize(latestSize)})`);
+console.log(`Prior drop:         ${prior || "(none)"}${prior ? ` (age: ${fmtAge(priorAgeMin)})` : ""}`);
+console.log(`Hash match:         ${latestHash === priorHash ? "YES (no new content)" : "NO (content changed)"}`);
+console.log(`Last meaningful:    ${lastMeaningful || "(latest is the only one)"}${lastMeaningful ? ` (age: ${fmtAge(lastMeaningfulAgeMin)})` : ""}`);
 process.exit((ageMin < 15 && latestHash !== priorHash) ? 0 : 1);
 '
 ```
 
 **Decision tree:**
 
-- **Hash match + recent** → Announce: "Latest drop `<id>` is byte-identical to prior `<prior-id>` — no new signals to interpret. Stopping cycle." Then **stop**.
-- **Hash differs + drop is <15 min old** AND user did **not** say "force" / "fresh" / `--force` → skip Phases 1–2. Announce: "Latest drop `<id>` is `<N>` min old (likely from CI) and has new content. Skipping collect, jumping to Phase 3." Then proceed to Phase 3.
+- **Hash match + recent** → STOP, but **never stop silently**. Use the `AskQuestion` tool to present the manager with clickable options (see "Phase 0 stop UX" below). Wait for their response before doing anything else.
+- **Hash differs + drop is <15 min old** AND user did **not** say "force" / "fresh" / `--force` → skip Phases 1–2. Announce: "Latest drop `<id>` is `<fmtAge>` old (likely from CI) and has new content. Skipping collect, jumping to Phase 3." Then proceed to Phase 3.
 - **Drop is ≥15 min old** OR **missing** OR user requested a fresh collect → proceed to Phase 1.
+
+### Phase 0 stop UX (clickable options)
+
+When stopping due to hash match (no new content), call the `AskQuestion` tool with these options. Pull the human-readable values from the node script's output above (`fmtAge`, file size, etc.) — **never show raw drop IDs without context**.
+
+Example call:
+
+```
+AskQuestion:
+  prompt: "Latest drop is byte-identical to prior — what now?"
+  options:
+    - "Stop here (next CI cron is <NEXT_CRON_TIME_MT>)"
+    - "Interpret the last drop with new content (<lastMeaningful>, <fmtAge> old, <fmtSize>)"
+    - "Force a fresh collect anyway (Phases 1–5)"
+    - "Show me what's on the agent branch (no collect)"
+```
+
+Where:
+- `<NEXT_CRON_TIME_MT>` — the next scheduled cron (8:30am, 12pm, or 5pm MT, whichever is next). Compute from current time, not hardcoded.
+- `<lastMeaningful>` — the drop ID returned by the script's `Last meaningful` line (most recent drop with `signals.json` content distinct from its predecessor). Falls back to "no prior content" if every drop is identical.
+- `<fmtAge>` — human-readable age (`30 min`, `1.5 hrs`, `2 days`).
+- `<fmtSize>` — human-readable size of `signals.json` (`8.9 MB`).
+
+**Map manager response → action:**
+
+| Manager picks | Skill action |
+|---|---|
+| Stop here | End cycle. Print a one-line confirmation with the next cron time. |
+| Interpret last meaningful | Skip Phases 1–2. Override `latest` to use `<lastMeaningful>`. Proceed to Phase 3 with that drop ID. |
+| Force fresh collect | Treat as `--force` flag. Run Phases 1–5 in full. |
+| Show agent branch | Do `git fetch origin && git log --oneline origin/main..origin/agent/P1.1`. Print the result. Then re-prompt with the same four options. |
+
+**Never** stop without surfacing these options. The "free-text override" approach (asking the manager to type back specific commands) is anti-pattern #1 in this skill — see Anti-patterns section.
 
 ---
 
@@ -379,7 +428,23 @@ Aim for 1–2 battle cards per drop. Three is the absolute max in chat — beyon
 
 ## Coordination rules
 
-The repo has **two writers** to `agent/P1.1` — this skill (manual via `/trackerstart`) and the GitHub Actions cron at `.github/workflows/tracker-drop.yml` (3× weekday: 8:30am / 12pm / 5pm MT). And **one syncer** — `.github/workflows/auto-merge-agent.yml` — which mirrors every push on `agent/P1.1` into `main`. The Phase 0 freshness + hash check is what prevents the skill from racing the bot or re-interpreting unchanged signals.
+**Branch model (single-writer architecture):**
+
+- `agent/P1.1` — **writer-staging branch.** Both writers land drops here:
+  - This skill (manual via `/trackerstart`)
+  - GitHub Actions cron at `.github/workflows/tracker-drop.yml` (3× weekday: 8:30am / 12pm / 5pm MT)
+- `main` — **consumer mirror.** Auto-promoted from `agent/P1.1` by `.github/workflows/auto-merge-agent.yml` within ~30s.
+
+**Two safety-net workflows keep the branches in sync:**
+
+| Workflow | Direction | Trigger | Purpose |
+|---|---|---|---|
+| `auto-merge-agent.yml` | `agent/P1.1` → `main` | Every push to `agent/P1.1` | Promote new drops to consumer view |
+| `mirror-main-to-agent.yml` | `main` → `agent/P1.1` | Every push to `main` | Catch any rogue push to main; fast-forward agent/P1.1 |
+
+Together they form a closed loop. Divergence on the `.latest-drop-id` pointer file is **structurally impossible** under normal operation, and **operationally caught** within ~30s if a human bypasses the structure.
+
+The Phase 0 freshness + hash check prevents the skill from racing the cron or re-interpreting unchanged signals.
 
 | Scenario | Behavior |
 |---|---|
@@ -418,6 +483,7 @@ These are easy to do and wrong:
 8. **Skipping Phase 0.** Without the freshness + hash check, the skill races the CI cron and may re-interpret unchanged signals.
 9. **Surfacing carryover signals as if they were new.** §4.2 onward must use the **net-new** set from the diff step, not the full dedup'd set. Repeating last drop's "main moves" wastes the manager's time.
 10. **Offering PDF export without checking prereqs.** If `pandoc` or `wkhtmltopdf` is missing, the manager must be told the install command (`brew install pandoc wkhtmltopdf`) at the moment they're asked about PDF, not after a silent failure. See Phase 4.4b.
+11. **Stopping Phase 0 without surfacing options.** When the cycle stops on a hash-match (no new content), the manager must be presented with clickable `AskQuestion` options (stop / interpret last meaningful / force fresh / show agent branch). Never end the message with "stopping cycle" and nothing else, and never ask the manager to type back free-text commands like "interpret 2026-05-08T...". Drop IDs in option labels must be paired with human context (age, size). See Phase 0 stop UX.
 
 ---
 
@@ -430,8 +496,9 @@ These are easy to do and wrong:
 | Drop publisher | `scripts/publish-drop.js` (also wired as `npm run drop`) |
 | Drops folder | `tracker-drops/` (root of repo) |
 | Latest-drop pointer | `tracker-drops/.latest-drop-id` |
-| CI drop workflow | `.github/workflows/tracker-drop.yml` (3× weekday MT — 8:30am/12pm/5pm) |
+| CI drop workflow | `.github/workflows/tracker-drop.yml` (3× weekday MT — 8:30am/12pm/5pm; pushes to `agent/P1.1`) |
 | CI auto-merge workflow | `.github/workflows/auto-merge-agent.yml` (mirrors every push on `agent/P1.1` → `main`, ~30s lag) |
+| CI safety-net mirror | `.github/workflows/mirror-main-to-agent.yml` (fast-forwards `agent/P1.1` from `main` if anything bypasses the structure) |
 | Force-write env var | `TRACKER_DROP_FORCE=1` |
 | Slash command | `.cursor/commands/trackerstart.md` (thin router to this skill) |
 | PRD PDF export dir | `~/Desktop/tracker-decks/` (created on demand by Phase 4.4b) |

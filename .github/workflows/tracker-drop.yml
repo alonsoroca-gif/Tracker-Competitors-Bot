@@ -16,6 +16,7 @@ on:
 
 permissions:
   contents: write
+  actions: write   # required for the explicit `gh workflow run auto-merge-agent.yml` dispatch step below
 
 concurrency:
   group: tracker-drop
@@ -25,10 +26,11 @@ jobs:
   collect-and-drop:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      - name: Checkout agent/P1.1 (writer-staging branch)
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          ref: agent/P1.1
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -66,6 +68,16 @@ jobs:
           git commit -m "tracker drop: $(date -u +'%Y-%m-%dT%H%MZ')"
           git push
           echo "pushed=true" >> "$GITHUB_OUTPUT"
+
+      - name: Trigger auto-merge into main
+        # GitHub suppresses downstream workflow triggers for pushes made by
+        # the default GITHUB_TOKEN (loop-prevention guard). workflow_dispatch
+        # is exempt from that rule, so we explicitly kick off the auto-merge
+        # here to ensure CI drops reach main within ~30s.
+        if: steps.gitpush.outputs.pushed == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh workflow run auto-merge-agent.yml
 
       - name: Slack — drop summary (optional)
         if: steps.gitpush.outputs.pushed == 'true'

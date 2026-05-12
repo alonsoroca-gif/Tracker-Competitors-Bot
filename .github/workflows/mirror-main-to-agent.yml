@@ -1,0 +1,52 @@
+# Safety-net mirror: any push that lands on main gets fast-forwarded
+# back into agent/P1.1, so the two branches never drift even if someone
+# pushes to main directly (hotfix, manual commit, external automation).
+#
+# Pairs with auto-merge-agent.yml (which mirrors the other direction).
+# Together they form a closed loop that prevents structural divergence
+# of the .latest-drop-id pointer file (and any other shared state).
+#
+# See .cursor/skills/tracker-drop-cycle/SKILL.md (Coordination rules).
+
+name: Mirror main into agent/P1.1 (safety net)
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: mirror-main-to-agent
+  cancel-in-progress: false
+
+jobs:
+  mirror:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout agent/P1.1
+        uses: actions/checkout@v4
+        with:
+          ref: agent/P1.1
+          fetch-depth: 0
+
+      - name: Fast-forward agent/P1.1 from main
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git fetch origin main
+
+          if git merge-base --is-ancestor origin/main HEAD; then
+            echo "agent/P1.1 already contains origin/main — nothing to do."
+            exit 0
+          fi
+
+          if git merge --ff-only origin/main; then
+            git push origin agent/P1.1
+            echo "Mirrored main → agent/P1.1 (fast-forward)."
+          else
+            echo "::warning::main contains commits agent/P1.1 cannot fast-forward (would require a real merge). Manual review needed."
+            exit 1
+          fi
