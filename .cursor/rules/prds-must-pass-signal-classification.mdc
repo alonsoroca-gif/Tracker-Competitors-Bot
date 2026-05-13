@@ -1,0 +1,77 @@
+# PRDs must pass signal classification
+
+## The rule
+
+Every PRD produced by the `tracker-drop-cycle` skill must originate from a §4.2 main move that was classified as **`Product / capability`** in the §4.2a signal-classification gate — either directly, or via manager-confirmed promotion from `Operational / SLA`. PRDs derived from any of the other seven buckets (`PMM / channel-building`, `Pricing / positioning`, `Talent / org`, `Funding / financial`, `Editorial / content`, `Strategic / partnership`, `Operational / SLA` not promoted, or `Noise / data quality`) are rule violations and must be deleted from §4.4.
+
+## Why this exists
+
+Without this rule, the skill is structurally biased toward inventing engineering work for any signal it can find a Core gap for. The parity gate (Phase 4.2b) only answers *"does Core have it?"* — it cannot answer the prior question *"is this even a Product signal?"*.
+
+The 2026-05-13 manager review surfaced this second-order failure mode after Phase 4.2b shipped. A PMM signal — Funnel Leasing's 670 ratings on featuredcustomers.com — was converted into a "Customer Stories Hub" PRD because parity returned `Partial` and the engineering-shaped-PRD rule pushed the bot to find buildable scope. The right answer was "no PRD — route to PMM." This rule prevents that pattern.
+
+## The test
+
+For every PRD in §4.4, the §4.2a classification table must show the originating row labeled `Product / capability` (or `Operational / SLA → promoted to Product` with the manager's promotion timestamp). If the originating row is anything else, the PRD is invalid:
+
+1. Delete the PRD from §4.4.
+2. Keep the §4.3 row visible with `Tier = Won't chase — <classification>` and the named routing target (e.g. `Won't chase — PMM signal, routed to PMM team`).
+3. Never silently drop the signal from §4.3; that hides the bot's work.
+
+## Concrete examples
+
+### Bad (rejected by this rule)
+
+```markdown
+#### PRD: Customer Stories Hub
+- Originating signal classification: PMM / channel-building
+- Problem: Funnel has 670 ratings on featuredcustomers.com...
+```
+
+Why it fails: classification is PMM, not Product. No PRD should exist for this row. The right response is "route to PMM team; no PRD" with the signal still visible in §4.3 as `Won't chase — PMM`.
+
+### Good (passes this rule)
+
+```markdown
+#### PRD: Field-Mode Leasing — in-property agent app
+- Originating signal classification: Product / capability (manager-confirmed 2026-05-12 via §4.2a AskQuestion)
+- Problem: EliseAI's "Agent" is a mobile CRM. The actual gap is what an agent does AT the property...
+```
+
+Or, an Operational signal promoted to Product:
+
+```markdown
+#### PRD: Lead-Routing Automation (5-minute SLA)
+- Originating signal classification: Operational / SLA → promoted to Product
+  (manager promotion 2026-05-XX: "Yes, this requires lead-routing capability Entrata doesn't have")
+- Problem: Anyone Home advertises 5-min lead-response SLA on their homepage...
+```
+
+## When to downgrade instead of writing a PRD
+
+If a §4.2 main move classifies as anything other than `Product / capability` (and isn't promoted from `Operational / SLA`), the §4.3 row gets `Tier = Won't chase` with the classification + named routing target. This is a **first-class outcome**, not a fallback:
+
+| Classification | §4.3 row format |
+|---|---|
+| PMM / channel-building | `Tier = Won't chase — PMM signal · routed to PMM team` |
+| Pricing / positioning | `Tier = Won't chase — pricing signal · routed to Commercial / Sales Ops` |
+| Talent / org | `Tier = Won't chase — talent signal · exec briefing` |
+| Funding / financial | `Tier = Won't chase — funding signal · exec briefing` |
+| Editorial / content | `Tier = Won't chase — editorial signal · routed to PMM / Content` |
+| Strategic / partnership | `Tier = Won't chase — partnership signal · routed to BD / Partnerships` |
+| Operational / SLA (not promoted) | `Tier = Won't chase — operational signal · routed to CX / Ops` |
+| Noise / data quality | `Tier = Won't chase — scraper-noise signal · routed to Tracker eng` |
+
+## Relationship to the other two PRD rules
+
+This rule layers on top of the two existing PRD rules:
+
+1. **`prds-must-pass-signal-classification.mdc`** *(this rule)* — answers *"should this signal produce a PRD at all?"*
+2. **`prds-must-pass-core-parity.mdc`** — answers *"if it should, does Core already ship it?"*
+3. **`prds-must-be-engineering-shaped.mdc`** — answers *"if Core doesn't ship it, is what we're proposing real engineering work?"*
+
+A PRD must pass all three to be valid. The gates run in this order in the skill: §4.2a (classification) → §4.2b (parity) → §4.4 (engineering-shaped PRD draft).
+
+## Origin
+
+Established 2026-05-13 after the `/trackerstart` cycle on drop `2026-05-12T23-57-24Z` exposed the gap-chasing failure mode: the bot produced an engineering-shaped Customer Stories Hub PRD from a PMM signal because parity alone couldn't tell that the underlying signal didn't warrant a product play. This rule (and the §4.2a gate it anchors) is the structural fix.
