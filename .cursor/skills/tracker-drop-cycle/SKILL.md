@@ -21,7 +21,7 @@ Tracker drop cycle:
 - [ ] Phase 1 — Run drop (collect + write tracker-drops/<id>/)
 - [ ] Phase 2 — Push (agent/P1.1 → auto-merge into main if non-empty)
 - [ ] Phase 3 — Pull (git pull origin main)
-- [ ] Phase 4 — Interpret in chat (six blocks, non-skippable)
+- [ ] Phase 4 — Interpret in chat (seven blocks, non-skippable; 4.2b is the parity gate)
 - [ ] Phase 5 — Prototype in chat (battle cards for Tier-Now gaps)
 ```
 
@@ -221,7 +221,7 @@ console.log("NET-NEW BY SOURCE:");      for (const [k,v] of by(r=>r.source))    
 
 Use the **net-new** set (not the full dedup'd set) for §4.2 onward. If net-new is empty (`0`), stop the cycle and report: "Latest drop has no content changes vs. prior drop `<prior-id>`. Nothing new to interpret."
 
-Then produce these six blocks **in this order**. Every block is required — if you cannot produce one, say so explicitly and explain why.
+Then produce these **seven** blocks **in this order**. Every block is required — if you cannot produce one, say so explicitly and explain why. Block 4.2b (Core parity scan) is the structural gate that decides which §4.3 rows even get a PRD.
 
 ### 4.1 Drop health
 
@@ -240,9 +240,74 @@ Status values: `✅` working / `⚠️` partial (selectors return shallow conten
 
 3–7 bullets, one per significant competitor move. Every bullet ends with a citation chip in the format `[<source> · <date> · "<≤25-word excerpt>"]`. No claim without a chip.
 
+### 4.2b Core parity scan (hard-required — gates §4.3)
+
+**Why this exists:** Without this step, the skill recommends features that Entrata Core already ships. The 2026-05-12 manager review surfaced three consecutive PRDs (All-In Pricing, JSON-LD feed, Live-PMS Siteplan) that all proposed building things already in `Applications/Entrata`, `Applications/EntrataLeasingWebsite`, `Applications/ProspectPortal`. The parity check is the structural fix — the skill literally scans Core before it writes the §4.3 table.
+
+**How:** For each Phase 4.2 main move, mentally draft the candidate feature you'd propose (1 sentence). Then run the parity check against all candidates in one batch:
+
+```bash
+echo '[
+  {"id":"1","competitor_signal":"<short paraphrase of move>","proposed_feature":"<your candidate feature>","product_id":"<best guess: leasing-ai|prospect-portal|...|null>"},
+  {"id":"2", ...}
+]' | node initiative-1-tracker/tracker/scripts/core-parity-check.js --stdin --format markdown
+```
+
+**No env var, no setup.** The script auto-resolves Entrata Core in this order: `--core <path>` flag → `$ENTRATA_MONO_ROOT` (legacy) → `initiative-1-tracker/tracker/.core-path` cache (auto-written on first discovery) → scan of common locations (`~/Desktop/Core Repo/entrata-core`, `~/Documents/...`, `~/Projects/...`, `~/Code/...`, `~/Core Repo/...`, `~/entrata-core`). The first time the script finds Core, it caches the path so every subsequent run is instant.
+
+The script reuses the keyword scanner in `lib/repoInsight.js` (with a parity-specific whole-word matcher) and walks every app under `${CORE_ROOT}/Applications/`. It returns one of five verdicts per candidate:
+
+| Verdict | Meaning | Action in §4.3 |
+|---|---|---|
+| **Existing** | High match density across ≥4 files in multiple apps (score ≥ 40 AND files ≥ 4) — Core already ships this concept | Row gets `Tier = Won't chase — already shipped`; no PRD written |
+| **Partial** | Confident foundation exists (score ≥ 15 AND files ≥ 2) but specific concept is incomplete | Row stays at Tier-Now (or Later), but §4.4 PRD scope must be the **delta**, not a rebuild |
+| **Borderline** | Low-confidence: single-file dominance, score 8–14, or Existing-grade score with thin file breadth | **Stop. Surface via `AskQuestion` and let the manager promote to Partial or Gap before assigning Tier.** Never auto-promote a Borderline row. |
+| **Gap** | No meaningful Core presence (score < 8) | Row proceeds normally to §4.4 |
+| **Unknown** | Auto-discovery couldn't find Core (rare — only when Core isn't in any of the standard locations on this machine) | See "When parity is Unknown" below |
+
+**Paste the parity table directly into chat** as block 4.2b — it's the manager-visible proof the bot did the check. Then continue to §4.3.
+
+#### When any row is `Borderline`
+
+Borderline exists because keyword matching is honest about its own uncertainty. Score-noise near a threshold, single-file matches, and Existing-grade scores concentrated in too few files all surface as `Borderline` — the script refuses to guess. Before continuing to §4.3, batch all Borderline rows into a single `AskQuestion`:
+
+```
+AskQuestion:
+  prompt: "<N> parity verdicts came back Borderline. For each, choose: treat as Partial (delta-shaped PRD), treat as Gap (full PRD), or skip (no PRD)."
+  questions:
+    - id: "row-<n>"
+      prompt: "<proposed feature> — <top Core file path> (<score>/<files>/<apps>)"
+      options:
+        - "Partial — Core has the foundation; PRD scope is the delta"
+        - "Gap — Core hits look incidental; PRD describes the whole feature"
+        - "Skip — no PRD this drop; revisit next cycle"
+```
+
+Show the top Core file path in each option label so the manager can spot-check whether the match is real or a vocabulary collision. **Do not** silently pick a side for the manager — the whole point of Borderline is "the bot is not confident; show your work to the human."
+
+#### When parity is `Unknown`
+
+If the script exits with code 2 and every row is `Unknown`, Core isn't in any of the standard locations on this machine. The script will have printed the list of paths it tried on stderr. **Do not silently treat Unknown as Gap.** Instead, surface a clickable choice to the manager via `AskQuestion`:
+
+```
+AskQuestion:
+  prompt: "Couldn't auto-discover Entrata Core. Where is your local checkout?"
+  options:
+    - "It's at <first stderr path the script tried>"
+    - "I'll paste the absolute path"   ← then read the manager's reply and run with --save-core <path>
+    - "Proceed without the parity gate (PRDs won't be Core-aware — flag in §4.3)"
+    - "Stop the cycle; I'll fix Core access first"
+```
+
+If the manager pastes a path, run `node initiative-1-tracker/tracker/scripts/core-parity-check.js --save-core <path>` once — that writes the cache file, and every future drop on this machine auto-resolves. The manager only does this once per machine, ever.
+
+#### Rule binding
+
+This step is anchored to `.cursor/rules/prds-must-pass-core-parity.mdc`. Skipping §4.2b violates that rule and any §4.4 PRDs produced are invalid by definition.
+
 ### 4.3 Gaps → Features (hard-required)
 
-This is the deliverable the manager cares about most. Convert every Phase 4.2 main move into one or more rows.
+This is the deliverable the manager cares about most. Convert every Phase 4.2 main move into one or more rows, **using the §4.2b parity verdict to set Tier**.
 
 Use the table when there are ≤4 gaps; switch to a numbered list with bold field labels when there are 5+ gaps so chat doesn't horizontal-scroll:
 
@@ -251,36 +316,61 @@ Use the table when there are ≤4 gaps; switch to a numbered list with bold fiel
 |---|---|---|---|
 | 1 | EliseAI "Agent" mobile CRM | Mobile-first prospect→tour→app demo flow | Now |
 | 2 | Anyone Home bundled stack | "Leasing OS" bundle SKU + landing page | Now |
+| 3 | Jonah FTC "All-In Pricing" framing | (already shipped) | Won't chase |
 ```
 
-For each row, a sub-bullet immediately below with the full detail (kept off the table to avoid wide cells):
+For each row, a sub-bullet immediately below with the full detail (kept off the table to avoid wide cells). **The sub-bullet now has a required `Core parity` line that copies the §4.2b verdict verbatim:**
 
 ```
 1. **Gap:** No AI-native mobile CRM narrative on entrata.com.
+   **Core parity:** Gap — 0 hits across 27 apps; no in-property tour module in Core.
    **Acceptance:** 90s video; opens on phone screen; no desktop screenshots.
+
+3. **Gap:** Jonah positions as FTC pricing-transparency-ready.
+   **Core parity:** Existing — 388 hits across 20 files in `Applications/Entrata/Accounting/` and `Applications/EntrataLeasingWebsite/`. Top file: `CAccountingSystemController.class.php`.
+   **Why won't chase:** Core already ships fee-disclosure logic. PMM packaging note only.
 ```
 
-Tier values: **Now** (act this cycle) / **Later** (next 1–2 cycles) / **Won't chase** (signal-only, no action).
+#### Tier rules (now driven by parity)
 
-If a move maps to no gap (e.g. talent/brand signals), still add the row with `Tier = Won't chase` and note "(signal-only, no product gap)" in the sub-bullet. Never silently drop a Phase 4.2 move from this section.
+By the time §4.3 runs, every Borderline row from §4.2b has already been promoted to Partial, Gap, or Skip by the manager. Use the **post-promotion** verdict here.
+
+| Parity verdict | Mandatory tier | Notes |
+|---|---|---|
+| **Existing** | Won't chase | No PRD. Sub-bullet must cite the top Core file from the parity output. |
+| **Partial** | Now or Later (manager judgment) | §4.4 PRD scope must be the **delta**, not a rebuild |
+| **Gap** | Now or Later (manager judgment) | §4.4 PRD scope is the whole feature |
+| **Borderline** | Should not appear here — promote in §4.2b first | If you see a Borderline row at §4.3, the §4.2b promotion step was skipped. Go back. |
+| **Unknown** | Stop. Re-prompt the manager per §4.2b. | Do not assign a tier or write a PRD. |
+
+If a move maps to no gap (talent/brand signals), the row still appears with `Tier = Won't chase` and `Core parity: N/A (signal-only)` in the sub-bullet. Never silently drop a Phase 4.2 move from this section.
+
+**Auto-downgrade is non-optional.** A row with `Core parity: Existing` and `Tier: Now` is a skill bug — the parity gate exists to prevent exactly that. If you find yourself wanting to write a PRD for an `Existing` row "anyway," stop and tell the manager why you think the parity check is wrong; do not bypass it.
 
 ### 4.4 PRD draft
 
-One PRD per **Tier-Now** feature from §4.3. Use this template:
+One PRD per **Tier-Now** feature from §4.3. Skip PRDs for Tier-Later and Tier-Won't-chase rows. **Never write a PRD for a row with `Core parity: Existing`** — that's a §4.3 rule violation; the row should already be `Won't chase`.
+
+Use this template:
 
 ```markdown
 #### PRD: <feature name>
 
 - **Problem:** <1–2 sentences, anchored on the competitor signal>
 - **Target user:** <leasing agent / PMM / sales rep / prospect>
-- **Scope (in):** <bullet list, ≤5 items>
+- **Existing Entrata implementation:** <one of:>
+  - Parity = Gap → "No existing implementation found in Core. Scanned <N> apps under `${ENTRATA_MONO_ROOT}/Applications/`; 0 hits on terms <list>."
+  - Parity = Partial → "Foundation exists in `<top Core file path>` (<N> hits on terms <list>). Specifically, Core ships <1-sentence summary of what's there> but not <what's missing>."
+- **Delta vs Core:** <what this PRD ships ON TOP OF the existing implementation. For Gap PRDs this is the entire feature. For Partial PRDs this is the surgical addition.>
+- **Scope (in):** <bullet list, ≤5 items — each item must be net-new vs what Core already ships>
 - **Scope (out):** <what we deliberately don't build>
 - **Success metric:** <1 measurable thing, with target if known>
 - **Evidence:** `tracker-drops/<run-id>/signals.json` row(s): <competitor_id> · <source> · <date>
 - **Effort estimate:** S / M / L (engineering rough cut)
+- **Net-new engineering ask:** <bullet list of concrete build work — must be net-new vs the "Existing Entrata implementation" line above>
 ```
 
-Skip PRDs for Tier-Later and Tier-Won't-chase rows.
+**The `Existing Entrata implementation` + `Delta vs Core` + `Net-new engineering ask` triplet is non-optional.** Together they form the parity-aware engineering ask. If you can't fill all three with concrete content, the PRD has failed the parity rule and §4.3 should have downgraded the row.
 
 #### 4.4b PRD confirmation + optional PDF export
 
@@ -342,23 +432,30 @@ A successful run prints `<N> bytes written to file ...` and the PDF lands in `~/
 </head>
 <body>
 <h1>PRD: <feature name></h1>
-<div class="meta">Drop: <code><run-id></code> &middot; Tier <span class="pill pill-now">Now</span> &middot; Effort <span class="pill pill-l">L</span> &middot; Triggered by <competitor signal></div>
+<div class="meta">Drop: <code><run-id></code> &middot; Tier <span class="pill pill-now">Now</span> &middot; Effort <span class="pill pill-l">L</span> &middot; Core parity <span class="pill pill-s">Gap</span> &middot; Triggered by <competitor signal></div>
 <h2>Problem</h2><p>...</p>
 <h2>Target user</h2><p>...</p>
+<h2>Existing Entrata implementation</h2><p>Parity verdict: <strong>Gap</strong> (or Partial). <em>What Core already ships — file paths from `core-parity-check.js` output, 1-sentence plain English. If Gap, write "No existing implementation found; scanned N apps under ${ENTRATA_MONO_ROOT}/Applications/."</em></p>
+<h2>Delta vs Core</h2><p><em>Surgical addition on top of the existing implementation. For Gap PRDs, the whole feature. For Partial PRDs, the specific gap.</em></p>
 <h2>Scope (in)</h2><ul><li>...</li></ul>
 <h2>Scope (out)</h2><ul><li>...</li></ul>
 <h2>Success metric</h2><p>...</p>
 <h2>Evidence</h2><p><code>tracker-drops/<run-id>/signals.json</code> row: ...</p>
 <h2>Effort estimate</h2><ul><li>...</li></ul>
-<p style="margin-top:8pt"><strong>Engineering ask:</strong> ...</p>
-<div class="footer">Generated by tracker-drop-cycle skill · drop <code><run-id></code></div>
+<p style="margin-top:8pt"><strong>Net-new engineering ask:</strong> ...</p>
+<div class="footer">Generated by tracker-drop-cycle skill · drop <code><run-id></code> · parity-checked against <code>${ENTRATA_MONO_ROOT}</code></div>
 </body>
 </html>
 ```
 
 ##### Rule binding
 
-This template is anchored to the **engineering-shaped PRD rule** at `.cursor/rules/prds-must-be-engineering-shaped.mdc`. The `Engineering ask` block at the bottom of the template is **non-optional** — if you cannot fill it with real build work, the PRD does not pass and should be downgraded per §4.3 to `Tier = Won't chase`. Do not generate the PDF for a PRD that fails this check.
+This template is anchored to **two** Cursor rules; every PRD must pass both:
+
+1. **`.cursor/rules/prds-must-be-engineering-shaped.mdc`** — the `Net-new engineering ask` line must contain real build work, not packaging.
+2. **`.cursor/rules/prds-must-pass-core-parity.mdc`** — the `Existing Entrata implementation` + `Delta vs Core` lines must reflect the §4.2b parity verdict, and `Existing` rows must have been downgraded in §4.3 before reaching the PRD stage.
+
+A PRD that fails either rule is not eligible for PDF export. If you find yourself wanting to generate a PDF for a row with `Core parity: Existing`, stop and go back to §4.3 — the parity gate was bypassed somewhere.
 
 ### 4.5 Slack message (chat-paste)
 
@@ -484,6 +581,8 @@ These are easy to do and wrong:
 9. **Surfacing carryover signals as if they were new.** §4.2 onward must use the **net-new** set from the diff step, not the full dedup'd set. Repeating last drop's "main moves" wastes the manager's time.
 10. **Offering PDF export without checking prereqs.** If `pandoc` or `wkhtmltopdf` is missing, the manager must be told the install command (`brew install pandoc wkhtmltopdf`) at the moment they're asked about PDF, not after a silent failure. See Phase 4.4b.
 11. **Stopping Phase 0 without surfacing options.** When the cycle stops on a hash-match (no new content), the manager must be presented with clickable `AskQuestion` options (stop / interpret last meaningful / force fresh / show agent branch). Never end the message with "stopping cycle" and nothing else, and never ask the manager to type back free-text commands like "interpret 2026-05-08T...". Drop IDs in option labels must be paired with human context (age, size). See Phase 0 stop UX.
+12. **Skipping the §4.2b Core parity scan.** The parity scan is the structural fix for the 2026-05-12 manager review (PRDs proposing features Core already shipped). It is not optional. Producing a §4.3 table without a parity verdict per row, or writing §4.4 PRDs for `Existing`-verdict rows, is a rule violation per `.cursor/rules/prds-must-pass-core-parity.mdc`.
+13. **Treating `Unknown` parity as `Gap`.** If `ENTRATA_MONO_ROOT` isn't set and the parity script returns `Unknown` for every row, stop and re-prompt the manager. Do not auto-proceed and do not silently treat the unverified set as if it had passed the gate.
 
 ---
 
@@ -494,6 +593,10 @@ These are easy to do and wrong:
 | Repo URL | `https://github.com/alonsoroca-gif/Tracker-Competitors-Bot.git` |
 | Tracker scripts dir | `initiative-1-tracker/tracker/scripts/` |
 | Drop publisher | `scripts/publish-drop.js` (also wired as `npm run drop`) |
+| Core parity check | `initiative-1-tracker/tracker/scripts/core-parity-check.js` (Phase 4.2b gate) |
+| Core path resolution | `--core` flag → `$ENTRATA_MONO_ROOT` → `tracker/.core-path` cache → auto-scan of `~/Desktop/Core Repo/entrata-core` etc. First successful resolution is cached. |
+| Core path cache (gitignored) | `initiative-1-tracker/tracker/.core-path` (one-time write per machine) |
+| App-to-folder mapping | `initiative-1-tracker/tracker/config/app-inventory.json` |
 | Drops folder | `tracker-drops/` (root of repo) |
 | Latest-drop pointer | `tracker-drops/.latest-drop-id` |
 | CI drop workflow | `.github/workflows/tracker-drop.yml` (3× weekday MT — 8:30am/12pm/5pm; pushes to `agent/P1.1`) |
@@ -502,6 +605,7 @@ These are easy to do and wrong:
 | Force-write env var | `TRACKER_DROP_FORCE=1` |
 | Slash command | `.cursor/commands/trackerstart.md` (thin router to this skill) |
 | PRD PDF export dir | `~/Desktop/tracker-decks/` (created on demand by Phase 4.4b) |
+| PRD Cursor rules | `.cursor/rules/prds-must-be-engineering-shaped.mdc` + `.cursor/rules/prds-must-pass-core-parity.mdc` |
 
 ---
 
