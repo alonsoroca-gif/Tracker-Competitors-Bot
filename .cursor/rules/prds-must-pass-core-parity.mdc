@@ -1,0 +1,64 @@
+---
+description: Every proposed feature in a tracker-drop-cycle output must pass a Core parity check against the Entrata Core monolith before being elevated to a PRD. Features that already exist in Core are downgraded to "Won't chase — already shipped" instead of generating engineering work.
+alwaysApply: true
+---
+
+# PRDs must pass Core parity
+
+## The rule
+
+Before the `tracker-drop-cycle` skill writes a PRD for a Tier-Now feature, the proposed feature **must** be checked against the Entrata Core monolith at `${ENTRATA_MONO_ROOT}` (or the default `/Users/alonso.roca/Desktop/Core Repo/entrata-core`). The check is run by `initiative-1-tracker/tracker/scripts/core-parity-check.js`, which emits one of four verdicts: `Existing` / `Partial` / `Gap` / `Unknown`. The verdict gates whether a PRD gets written at all.
+
+| Parity | Action |
+|---|---|
+| **Existing** | Do NOT write a PRD. Downgrade the row to `Tier = Won't chase — already shipped in Core` in §4.3, with sub-bullet citing the top Core file path the parity check returned. |
+| **Partial** | Write the PRD, but the "Net-new engineering ask" line MUST acknowledge what already exists. Scope (in) becomes the *delta* — the specific gap on top of the partial implementation, not a rebuild of the whole concept. |
+| **Borderline** | Do NOT auto-tier. Surface the row to the manager via `AskQuestion` in §4.2b (see SKILL.md for the prompt template) and let them promote to Partial, Gap, or Skip. The script is being honest about its own uncertainty; the rule is being honest that a human resolves it. |
+| **Gap** | Write the PRD normally. The "Net-new engineering ask" stands on its own. |
+| **Unknown** | The parity scan could not run (auto-discovery failed). Surface that to the manager in §4.2b and ask them whether to proceed without the gate. Do not silently treat `Unknown` as `Gap`. |
+
+## The test
+
+For every PRD the skill produces, two lines are now non-optional and join the existing "Net-new engineering ask" line as the PRD's commit-gates:
+
+- **Existing Entrata implementation** — what already exists in Core (file paths, line snippets, brief plain-English summary). If parity is `Gap`, write "No existing implementation found in Core; scanned <N> apps under `${ENTRATA_MONO_ROOT}/Applications/`."
+- **Delta vs Core** — exactly what this PRD ships on top of what Core already has. For `Gap` PRDs this is the entire feature. For `Partial` PRDs this is the surgical addition.
+
+If either line is empty, the PRD failed this rule and must be either re-derived or downgraded.
+
+## Concrete examples
+
+### Bad (rejected by this rule — 2026-05-12 manager review)
+
+The 2026-05-12 review surfaced three PRDs that would have failed this rule had it existed:
+
+| PRD | Why it would have failed |
+|---|---|
+| Live-PMS Siteplan (Jonah/Engrain response) | Parity ≈ `Partial` — Entrata already has prospect-portal map and pricing data wiring; the PRD should have been the *interactive-siteplan delta*, not a rebuild. |
+| "All-In Pricing" mode | Parity = `Existing` — Entrata's accounting + pricing controllers already ship fee disclosure logic across 20+ files. This should have been `Won't chase` with a one-line PMM note, not an engineering PRD. |
+| PMS-driven JSON-LD feed | Parity = `Existing` — structured-data emission already lives across 30 files in 9 apps. Should have been `Won't chase`. |
+
+### Good (passes this rule)
+
+```markdown
+#### PRD: Field-Mode Leasing — in-property agent app
+
+- Existing Entrata implementation:
+  - Prospect Portal contact + scheduling lives in `Applications/ProspectPortal/Application/ContactButton/`
+  - No in-property mobile tour module, no offline IndexedDB sync, no photo-to-unit attachment found in Core (parity verdict: Gap, 0 hits)
+- Delta vs Core: the entire mobile-first in-tour module + offline sync + photo capture pipeline.
+- Net-new engineering ask: ...
+```
+
+## When this rule and `prds-must-be-engineering-shaped` interact
+
+Both rules apply to every PRD. A PRD must pass both:
+
+1. **Engineering-shaped** — implies real build work
+2. **Core-parity** — that build work is not duplicating Core
+
+A PRD can fail one and pass the other. The most common failure mode the 2026-05-12 review surfaced was PRDs that *did* imply real engineering work, but engineering work that re-builds something Core already ships. This rule catches exactly that case — the engineering-shaped rule alone won't.
+
+## Origin
+
+Established 2026-05-12 after the manager review caught three consecutive PRDs that proposed building features the Entrata Core monolith already ships (SightMap-style siteplan, All-In Pricing disclosure, JSON-LD schema feed). The root cause: the drop pipeline (`scripts/publish-drop.js`) and the skill's Phase 4 interpretation both read only `signals.json` — they never cross-reference against the Core monolith at `/Users/alonso.roca/Desktop/Core Repo/entrata-core/`. The parity check codifies "look before you build" as a structural gate.

@@ -32,3 +32,8 @@ initiative-1-tracker/tracker/data/
 # Playwright browser cache — Chromium binary lives here so we don't pollute
 # the user's ~/Library/Caches. Roughly 100–300 MB; never commit.
 initiative-1-tracker/tracker/.playwright-browsers/
+
+# Cached Entrata Core path (machine-specific; resolved by core-parity-check.js
+# the first time it auto-discovers Core, then reused on every subsequent run
+# so the manager never has to re-export ENTRATA_MONO_ROOT).
+initiative-1-tracker/tracker/.core-path
