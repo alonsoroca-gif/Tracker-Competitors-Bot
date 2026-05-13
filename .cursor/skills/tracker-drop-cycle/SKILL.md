@@ -21,7 +21,7 @@ Tracker drop cycle:
 - [ ] Phase 1 — Run drop (collect + write tracker-drops/<id>/)
 - [ ] Phase 2 — Push (agent/P1.1 → auto-merge into main if non-empty)
 - [ ] Phase 3 — Pull (git pull origin main)
-- [ ] Phase 4 — Interpret in chat (seven blocks, non-skippable; 4.2b is the parity gate)
+- [ ] Phase 4 — Interpret in chat (eight blocks, non-skippable; 4.2a is the classification gate, 4.2b is the parity gate)
 - [ ] Phase 5 — Prototype in chat (battle cards for Tier-Now gaps)
 ```
 
@@ -176,7 +176,7 @@ Then read `tracker-drops/.latest-drop-id` to get the active run-id, and confirm 
 
 ---
 
-## Phase 4 — Interpret in chat (six required blocks)
+## Phase 4 — Interpret in chat (eight required blocks)
 
 **Critical:** Output goes to **chat only**. Do not write `INTERPRETATION.md` or any other file. The repo has a legacy `INTERPRETATION.md` pattern in `tracker-drops/2026-05-04T19-37-46Z/` — **ignore it** unless the user explicitly says "save the interpretation".
 
@@ -221,7 +221,7 @@ console.log("NET-NEW BY SOURCE:");      for (const [k,v] of by(r=>r.source))    
 
 Use the **net-new** set (not the full dedup'd set) for §4.2 onward. If net-new is empty (`0`), stop the cycle and report: "Latest drop has no content changes vs. prior drop `<prior-id>`. Nothing new to interpret."
 
-Then produce these **seven** blocks **in this order**. Every block is required — if you cannot produce one, say so explicitly and explain why. Block 4.2b (Core parity scan) is the structural gate that decides which §4.3 rows even get a PRD.
+Then produce these **eight** blocks **in this order**. Every block is required — if you cannot produce one, say so explicitly and explain why. Blocks 4.2a (signal classification) and 4.2b (Core parity scan) are the two structural gates that decide which §4.3 rows even get a PRD. They run in order: classification first ("is this a Product signal at all?"), then parity ("if it is, does Core already ship it?").
 
 ### 4.1 Drop health
 
@@ -240,11 +240,100 @@ Status values: `✅` working / `⚠️` partial (selectors return shallow conten
 
 3–7 bullets, one per significant competitor move. Every bullet ends with a citation chip in the format `[<source> · <date> · "<≤25-word excerpt>"]`. No claim without a chip.
 
+### 4.2a Signal classification (hard-required — gates §4.2b)
+
+**Why this exists:** Without this step, the skill is structurally biased toward inventing engineering work for any signal it can find a Core gap for. The 2026-05-13 manager review surfaced this second-order failure mode after Phase 4.2b shipped: a PMM signal (Funnel Leasing's 670 ratings on featuredcustomers.com) was converted into a "Customer Stories Hub" PRD because parity returned `Partial` and the engineering-shaped-PRD rule pushed the bot to find buildable scope. The right answer was "no PRD — route to PMM." The classification gate asks the *prior* question — *is this even a Product signal?* — before parity gets to ask *"does Core have it?"*.
+
+**How:** Classify every §4.2 main move into exactly one **primary bucket** below. Paste the classification table into chat as block 4.2a. Then **always** surface every row via `AskQuestion` for manager confirmation — never auto-classify silently, even when confidence is high. Only rows whose **final** bucket is `Product / capability` (either directly classified, or `Operational / SLA` promoted via the secondary AskQuestion) pass through to §4.2b parity. Every other bucket terminates with `Tier = Won't chase` in §4.3.
+
+#### The 9 buckets
+
+| # | Bucket | Definition | Owner of response | PRD eligible? |
+|---|---|---|---|---|
+| 1 | **Product / capability** | Competitor shipped or announced a concrete new product feature with describable functionality | Product + Eng → proceeds to §4.2b parity | ✅ Always |
+| 2 | **PMM / channel-building** | Investment in marketing channels, social proof, testimonials, listings, aggregator presence | PMM | ❌ Never |
+| 3 | **Pricing / positioning** | Tier change, packaging change, pricing-page language change | Commercial / Sales Ops | ❌ Never |
+| 4 | **Talent / org** | Hire, departure, reorg, layoff, exec change | Exec context briefing | ❌ Never |
+| 5 | **Funding / financial** | Capital raise, acquisition, valuation, IPO, M&A | Exec context | ❌ Never |
+| 6 | **Editorial / content** | Blog cadence, thought-leadership, conferences, press | PMM / Content | ❌ Never |
+| 7 | **Operational / SLA** | Support model, response-time claim, uptime claim, staffing model | CX / Ops — see "When Operational implies a product gap" below | ⚠️ Conditional |
+| 8 | **Strategic / partnership** | Partnership announcement, integration with adjacent platform, channel deal | BD / Partnerships | ❌ Never |
+| 9 | **Noise / data quality** | Scraper noise, lane returning empty content, vocabulary drift on a competitor's site | Tracker eng (us — we own the scraper) | ❌ Never |
+
+#### Auto-suggest heuristics (the bot's first pass)
+
+These are *suggestions*, not decisions. The bot pastes the classification table with its auto-suggested bucket per row and the heuristic that fired; the manager always confirms via `AskQuestion` before §4.2b runs.
+
+| Signal pattern | Auto-suggested bucket |
+|---|---|
+| Lane = `pricing_page`, OR snippet contains `$N/mo`, `tier`, `package` | `Pricing / positioning` |
+| Lane = `careers`, OR snippet contains `hire`, `joined`, `appointed`, `CPO`, `CRO`, `VP of` | `Talent / org` |
+| Lane = `g2_reviews`, `reviews_other`; OR source domain matches `featuredcustomers.com`/`capterra.com`/`getapp.com`; OR snippet about ratings/testimonials/social proof | `PMM / channel-building` |
+| Snippet contains `raised $`, `Series A/B/C`, `valuation`, `acquired by` | `Funding / financial` |
+| Lane = `articles_index`, `case_studies`; snippet about content cadence / thought-leadership | `Editorial / content` |
+| Snippet contains `partnership`, `integrated with`, `now works with`, `available on` | `Strategic / partnership` |
+| Snippet contains `SLA`, `response time`, `uptime`, `staffed 24/7`, `<N>-minute response` | `Operational / SLA` |
+| Snippet describes a new feature (`launches`, `introducing`, `new module`, `now you can`, `release notes`) | `Product / capability` |
+| Evidence snippet is blank, garbled, or `<30 chars` | `Noise / data quality` |
+| Multi-pattern match (e.g. "EliseAI launches Voice Agent v2 at $0.10/call") | Pick the dominant bucket; list secondaries in the table's `Notes` column |
+
+#### Required AskQuestion shape (always, every drop)
+
+```
+AskQuestion:
+  prompt: "Classify each §4.2 main move. Only Product-classified rows proceed to §4.2b parity."
+  questions:
+    - id: "row-<n>"
+      prompt: "<one-line paraphrase of signal> — bot suggests <bucket> (heuristic: <which pattern fired>)"
+      options:
+        - "Product / capability"
+        - "PMM / channel-building"
+        - "Pricing / positioning"
+        - "Talent / org"
+        - "Funding / financial"
+        - "Editorial / content"
+        - "Operational / SLA"
+        - "Strategic / partnership"
+        - "Noise / data quality"
+```
+
+The bot **never** skips this AskQuestion, even when every auto-suggestion is high-confidence. The manager seeing the table is the cycle's only proof that classification ran.
+
+#### When Operational implies a product gap
+
+If any row is classified `Operational / SLA` (either by auto-suggest or by manager override), surface a **secondary AskQuestion** per Operational row before proceeding to §4.2b:
+
+```
+AskQuestion:
+  prompt: "Operational signal: <signal>. Does this require Entrata product to ship a capability we don't have?"
+  options:
+    - "Yes — promote to Product. Run §4.2b parity on this row."
+    - "No — stays Ops. Route to CX / Ops team. No PRD."
+```
+
+This secondary prompt is the **only** path by which an Operational signal becomes PRD-eligible. The Product promotion must be recorded in the §4.4 PRD's `Originating signal classification` line as `Operational / SLA → promoted to Product` with the promotion timestamp.
+
+#### What passes through to §4.2b
+
+Only rows whose **final** bucket is `Product / capability`. The bot prints a one-line summary at the end of §4.2a:
+
+```
+§4.2a result: <N> moves classified. <M> Product (→ §4.2b parity). <K> Won't-chase (routed: PMM=<n>, Pricing=<n>, Talent=<n>, ...).
+```
+
+If `M == 0`, **skip §4.2b entirely** and proceed to §4.3 with every row marked Won't-chase. This is a deliberate first-class outcome (a "PMM-heavy drop" or "talent-news drop"), not a failure mode.
+
+#### Rule binding
+
+This step is anchored to `.cursor/rules/prds-must-pass-signal-classification.mdc`. Producing a §4.4 PRD for a row whose final classification is not `Product / capability` is a rule violation.
+
 ### 4.2b Core parity scan (hard-required — gates §4.3)
 
 **Why this exists:** Without this step, the skill recommends features that Entrata Core already ships. The 2026-05-12 manager review surfaced three consecutive PRDs (All-In Pricing, JSON-LD feed, Live-PMS Siteplan) that all proposed building things already in `Applications/Entrata`, `Applications/EntrataLeasingWebsite`, `Applications/ProspectPortal`. The parity check is the structural fix — the skill literally scans Core before it writes the §4.3 table.
 
-**How:** For each Phase 4.2 main move, mentally draft the candidate feature you'd propose (1 sentence). Then run the parity check against all candidates in one batch:
+**Note:** §4.2b runs only on rows that passed §4.2a classification as `Product / capability` (including `Operational → Product` promotions). Rows classified into the other seven buckets skip parity entirely — they never produce PRDs, so the parity question is moot. If §4.2a classified zero rows as Product, skip §4.2b entirely.
+
+**How:** For each §4.2a-Product row, mentally draft the candidate feature you'd propose (1 sentence). Then run the parity check against all candidates in one batch:
 
 ```bash
 echo '[
@@ -307,55 +396,83 @@ This step is anchored to `.cursor/rules/prds-must-pass-core-parity.mdc`. Skippin
 
 ### 4.3 Gaps → Features (hard-required)
 
-This is the deliverable the manager cares about most. Convert every Phase 4.2 main move into one or more rows, **using the §4.2b parity verdict to set Tier**.
+This is the deliverable the manager cares about most. Convert every Phase 4.2 main move into one or more rows, **using both the §4.2a classification verdict and the §4.2b parity verdict to set Tier**. Classification runs first and is the dominant gate: non-Product rows are auto-downgraded to `Won't chase` regardless of what Core does or doesn't have.
 
-Use the table when there are ≤4 gaps; switch to a numbered list with bold field labels when there are 5+ gaps so chat doesn't horizontal-scroll:
+Use the table when there are ≤4 gaps; switch to a numbered list with bold field labels when there are 5+ gaps so chat doesn't horizontal-scroll. The table now carries a `Classification` column so the manager sees both gates at a glance:
 
 ```markdown
-| # | Competitor signal | Proposed feature | Tier |
-|---|---|---|---|
-| 1 | EliseAI "Agent" mobile CRM | Mobile-first prospect→tour→app demo flow | Now |
-| 2 | Anyone Home bundled stack | "Leasing OS" bundle SKU + landing page | Now |
-| 3 | Jonah FTC "All-In Pricing" framing | (already shipped) | Won't chase |
+| # | Competitor signal | Classification | Proposed feature | Tier |
+|---|---|---|---|---|
+| 1 | EliseAI "Agent" mobile CRM | Product | Mobile-first prospect→tour→app demo flow | Now |
+| 2 | Anyone Home bundled stack | Product | "Leasing OS" bundle SKU + landing page | Now |
+| 3 | Jonah FTC "All-In Pricing" framing | Pricing | (route to Commercial) | Won't chase |
+| 4 | Funnel — 670 ratings on featuredcustomers.com | PMM | (route to PMM team) | Won't chase |
 ```
 
-For each row, a sub-bullet immediately below with the full detail (kept off the table to avoid wide cells). **The sub-bullet now has a required `Core parity` line that copies the §4.2b verdict verbatim:**
+For each row, a sub-bullet immediately below with the full detail (kept off the table to avoid wide cells). Sub-bullets carry both a `Classification` line and a `Core parity` line; the latter is omitted for non-Product rows since parity didn't run on them:
 
 ```
 1. **Gap:** No AI-native mobile CRM narrative on entrata.com.
+   **Classification:** Product / capability (manager-confirmed via §4.2a).
    **Core parity:** Gap — 0 hits across 27 apps; no in-property tour module in Core.
    **Acceptance:** 90s video; opens on phone screen; no desktop screenshots.
 
-3. **Gap:** Jonah positions as FTC pricing-transparency-ready.
-   **Core parity:** Existing — 388 hits across 20 files in `Applications/Entrata/Accounting/` and `Applications/EntrataLeasingWebsite/`. Top file: `CAccountingSystemController.class.php`.
-   **Why won't chase:** Core already ships fee-disclosure logic. PMM packaging note only.
+3. **Signal:** Jonah positions as FTC pricing-transparency-ready.
+   **Classification:** Pricing / positioning (manager-confirmed via §4.2a).
+   **Routing:** Commercial / Sales Ops — fold into pricing-page response.
+   **Why won't chase:** Not a product capability. Parity did not run.
+
+4. **Signal:** Funnel has 670 ratings @ 4.8/5 on featuredcustomers.com.
+   **Classification:** PMM / channel-building (manager-confirmed via §4.2a).
+   **Routing:** PMM team — pursue parallel listing.
+   **Why won't chase:** Not a product capability. Parity did not run.
 ```
 
-#### Tier rules (now driven by parity)
+#### Tier rules (now driven by both classification and parity)
 
-By the time §4.3 runs, every Borderline row from §4.2b has already been promoted to Partial, Gap, or Skip by the manager. Use the **post-promotion** verdict here.
+By the time §4.3 runs, every classification has been manager-confirmed in §4.2a, and every Borderline parity verdict from §4.2b has been promoted to Partial / Gap / Skip. Use the **post-promotion** verdicts here.
+
+**Classification dominates parity** — a non-Product classification short-circuits straight to `Won't chase`. Apply this priority:
+
+| Step | Check | Result |
+|---|---|---|
+| 1 | Is the classification anything other than `Product / capability`? | If yes → `Tier = Won't chase — <classification>` and stop. Parity didn't run; no Tier-Now/Later. |
+| 2 | If classification = `Product`, what's the parity verdict? | Continue to the parity table below. |
+
+For Product-classified rows, parity sets the Tier:
 
 | Parity verdict | Mandatory tier | Notes |
 |---|---|---|
-| **Existing** | Won't chase | No PRD. Sub-bullet must cite the top Core file from the parity output. |
+| **Existing** | Won't chase — already shipped | No PRD. Sub-bullet must cite the top Core file from the parity output. |
 | **Partial** | Now or Later (manager judgment) | §4.4 PRD scope must be the **delta**, not a rebuild |
 | **Gap** | Now or Later (manager judgment) | §4.4 PRD scope is the whole feature |
 | **Borderline** | Should not appear here — promote in §4.2b first | If you see a Borderline row at §4.3, the §4.2b promotion step was skipped. Go back. |
 | **Unknown** | Stop. Re-prompt the manager per §4.2b. | Do not assign a tier or write a PRD. |
 
-If a move maps to no gap (talent/brand signals), the row still appears with `Tier = Won't chase` and `Core parity: N/A (signal-only)` in the sub-bullet. Never silently drop a Phase 4.2 move from this section.
+Every §4.2 main move appears in §4.3 with one row — never silently drop a signal. Non-Product rows show their classification + routing target so the chat history records where each signal went.
 
-**Auto-downgrade is non-optional.** A row with `Core parity: Existing` and `Tier: Now` is a skill bug — the parity gate exists to prevent exactly that. If you find yourself wanting to write a PRD for an `Existing` row "anyway," stop and tell the manager why you think the parity check is wrong; do not bypass it.
+**Two non-optional auto-downgrades:**
+
+1. A row with `Classification: <non-Product>` and `Tier: Now` is a skill bug — the §4.2a classification gate exists to prevent gap-chasing PRDs on PMM / Pricing / Talent / etc. signals.
+2. A row with `Classification: Product` and `Core parity: Existing` and `Tier: Now` is a skill bug — the §4.2b parity gate exists to prevent re-building features Core already ships.
+
+If you find yourself wanting to override either auto-downgrade, stop and tell the manager why you think the gate is wrong; do not bypass it.
 
 ### 4.4 PRD draft
 
-One PRD per **Tier-Now** feature from §4.3. Skip PRDs for Tier-Later and Tier-Won't-chase rows. **Never write a PRD for a row with `Core parity: Existing`** — that's a §4.3 rule violation; the row should already be `Won't chase`.
+One PRD per **Tier-Now** feature from §4.3. Skip PRDs for Tier-Later and Tier-Won't-chase rows. Two non-optional preconditions:
+
+1. **Never write a PRD for a row with `Classification: <non-Product>`** — that's a §4.2a / §4.3 rule violation; the row should already be `Won't chase` with a named routing target.
+2. **Never write a PRD for a row with `Core parity: Existing`** — that's a §4.2b / §4.3 rule violation; the row should already be `Won't chase — already shipped`.
 
 Use this template:
 
 ```markdown
 #### PRD: <feature name>
 
+- **Originating signal classification:** <one of:>
+  - "Product / capability (manager-confirmed via §4.2a)"
+  - "Operational / SLA → promoted to Product (manager promotion <timestamp>: <one-line reason>)"
 - **Problem:** <1–2 sentences, anchored on the competitor signal>
 - **Target user:** <leasing agent / PMM / sales rep / prospect>
 - **Existing Entrata implementation:** <one of:>
@@ -370,7 +487,7 @@ Use this template:
 - **Net-new engineering ask:** <bullet list of concrete build work — must be net-new vs the "Existing Entrata implementation" line above>
 ```
 
-**The `Existing Entrata implementation` + `Delta vs Core` + `Net-new engineering ask` triplet is non-optional.** Together they form the parity-aware engineering ask. If you can't fill all three with concrete content, the PRD has failed the parity rule and §4.3 should have downgraded the row.
+**The four-line gate-trace** — `Originating signal classification` + `Existing Entrata implementation` + `Delta vs Core` + `Net-new engineering ask` — is non-optional. Together they form the classification-aware, parity-aware engineering ask. If you can't fill all four with concrete content, the PRD has failed one of the two gates and §4.3 should have downgraded the row.
 
 #### 4.4b PRD confirmation + optional PDF export
 
@@ -432,7 +549,8 @@ A successful run prints `<N> bytes written to file ...` and the PDF lands in `~/
 </head>
 <body>
 <h1>PRD: <feature name></h1>
-<div class="meta">Drop: <code><run-id></code> &middot; Tier <span class="pill pill-now">Now</span> &middot; Effort <span class="pill pill-l">L</span> &middot; Core parity <span class="pill pill-s">Gap</span> &middot; Triggered by <competitor signal></div>
+<div class="meta">Drop: <code><run-id></code> &middot; Tier <span class="pill pill-now">Now</span> &middot; Effort <span class="pill pill-l">L</span> &middot; Classification <span class="pill pill-s">Product</span> &middot; Core parity <span class="pill pill-s">Gap</span> &middot; Triggered by <competitor signal></div>
+<h2>Originating signal classification</h2><p><em>Product / capability (manager-confirmed via §4.2a). Or: Operational / SLA → promoted to Product (timestamp, reason).</em></p>
 <h2>Problem</h2><p>...</p>
 <h2>Target user</h2><p>...</p>
 <h2>Existing Entrata implementation</h2><p>Parity verdict: <strong>Gap</strong> (or Partial). <em>What Core already ships — file paths from `core-parity-check.js` output, 1-sentence plain English. If Gap, write "No existing implementation found; scanned N apps under ${ENTRATA_MONO_ROOT}/Applications/."</em></p>
@@ -450,12 +568,13 @@ A successful run prints `<N> bytes written to file ...` and the PDF lands in `~/
 
 ##### Rule binding
 
-This template is anchored to **two** Cursor rules; every PRD must pass both:
+This template is anchored to **three** Cursor rules; every PRD must pass all three:
 
-1. **`.cursor/rules/prds-must-be-engineering-shaped.mdc`** — the `Net-new engineering ask` line must contain real build work, not packaging.
+1. **`.cursor/rules/prds-must-pass-signal-classification.mdc`** — the originating §4.2 main move must have classified as `Product / capability` in §4.2a (directly, or via `Operational → Product` promotion). PRDs from any of the other seven buckets are rule violations.
 2. **`.cursor/rules/prds-must-pass-core-parity.mdc`** — the `Existing Entrata implementation` + `Delta vs Core` lines must reflect the §4.2b parity verdict, and `Existing` rows must have been downgraded in §4.3 before reaching the PRD stage.
+3. **`.cursor/rules/prds-must-be-engineering-shaped.mdc`** — the `Net-new engineering ask` line must contain real build work, not packaging.
 
-A PRD that fails either rule is not eligible for PDF export. If you find yourself wanting to generate a PDF for a row with `Core parity: Existing`, stop and go back to §4.3 — the parity gate was bypassed somewhere.
+A PRD that fails any of the three is not eligible for PDF export. If you find yourself wanting to generate a PDF for a row with `Classification: <non-Product>` or `Core parity: Existing`, stop and go back to §4.3 — one of the two gates was bypassed.
 
 ### 4.5 Slack message (chat-paste)
 
@@ -581,8 +700,10 @@ These are easy to do and wrong:
 9. **Surfacing carryover signals as if they were new.** §4.2 onward must use the **net-new** set from the diff step, not the full dedup'd set. Repeating last drop's "main moves" wastes the manager's time.
 10. **Offering PDF export without checking prereqs.** If `pandoc` or `wkhtmltopdf` is missing, the manager must be told the install command (`brew install pandoc wkhtmltopdf`) at the moment they're asked about PDF, not after a silent failure. See Phase 4.4b.
 11. **Stopping Phase 0 without surfacing options.** When the cycle stops on a hash-match (no new content), the manager must be presented with clickable `AskQuestion` options (stop / interpret last meaningful / force fresh / show agent branch). Never end the message with "stopping cycle" and nothing else, and never ask the manager to type back free-text commands like "interpret 2026-05-08T...". Drop IDs in option labels must be paired with human context (age, size). See Phase 0 stop UX.
-12. **Skipping the §4.2b Core parity scan.** The parity scan is the structural fix for the 2026-05-12 manager review (PRDs proposing features Core already shipped). It is not optional. Producing a §4.3 table without a parity verdict per row, or writing §4.4 PRDs for `Existing`-verdict rows, is a rule violation per `.cursor/rules/prds-must-pass-core-parity.mdc`.
+12. **Skipping the §4.2b Core parity scan.** The parity scan is the structural fix for the 2026-05-12 manager review (PRDs proposing features Core already shipped). It is not optional. Producing a §4.3 table without a parity verdict per Product row, or writing §4.4 PRDs for `Existing`-verdict rows, is a rule violation per `.cursor/rules/prds-must-pass-core-parity.mdc`.
 13. **Treating `Unknown` parity as `Gap`.** If `ENTRATA_MONO_ROOT` isn't set and the parity script returns `Unknown` for every row, stop and re-prompt the manager. Do not auto-proceed and do not silently treat the unverified set as if it had passed the gate.
+14. **Skipping the §4.2a Signal classification gate.** The classification gate is the structural fix for the 2026-05-13 manager review (the bot produced an engineering-shaped Customer Stories Hub PRD from a PMM signal because parity returned Partial). Always-ask `AskQuestion` is non-optional — even when every auto-suggestion is high-confidence, the manager-confirmation table is the cycle's only proof that classification ran. Producing a §4.4 PRD for any row whose final classification is not `Product / capability` is a rule violation per `.cursor/rules/prds-must-pass-signal-classification.mdc`.
+15. **Running §4.2b parity on non-Product rows.** Parity is wasted effort on signals that wouldn't produce a PRD even if Core ships nothing — PMM, Pricing, Talent, Funding, Editorial, Strategic-partnership, and Noise rows must skip §4.2b entirely. Only Product-classified rows (including `Operational → Product` promotions) pass the §4.2a filter into §4.2b.
 
 ---
 
@@ -605,7 +726,7 @@ These are easy to do and wrong:
 | Force-write env var | `TRACKER_DROP_FORCE=1` |
 | Slash command | `.cursor/commands/trackerstart.md` (thin router to this skill) |
 | PRD PDF export dir | `~/Desktop/tracker-decks/` (created on demand by Phase 4.4b) |
-| PRD Cursor rules | `.cursor/rules/prds-must-be-engineering-shaped.mdc` + `.cursor/rules/prds-must-pass-core-parity.mdc` |
+| PRD Cursor rules | `.cursor/rules/prds-must-pass-signal-classification.mdc` (§4.2a gate) + `.cursor/rules/prds-must-pass-core-parity.mdc` (§4.2b gate) + `.cursor/rules/prds-must-be-engineering-shaped.mdc` (§4.4 shape). Every PRD must pass all three. |
 
 ---
 
