@@ -210,6 +210,17 @@ const DEFAULT_THRESHOLDS = {
   confident_partial_min: 15,
   min_distinct_terms_per_file: 2,
   min_specific_terms_required: 1,
+  // Per-file score cap (Added 2026-05-22). Caps each file's contribution
+  // to the total score before summing. A real shipped feature spreads
+  // across many cooperating files — a single file scoring 100+ is almost
+  // always vocabulary noise (e.g. CEntrataApp.class.php hitting 112 on
+  // [public, management] for an unrelated "developer portal" query).
+  // The cap forces the verdict to come from BREADTH (many files contribute
+  // small amounts of real signal) rather than DEPTH (one file repeats
+  // junk terms). Tunable via --max-file-score; set to 0 to disable.
+  // See test/parity-fixtures.json `gap-developer-portal-public-keyword`
+  // for the regression fixture that defends this cap.
+  max_file_score: 15,
 };
 
 const HOME = process.env.HOME || process.env.USERPROFILE || '';
@@ -283,6 +294,48 @@ const PMS_DOMAIN_STOP = new Set([
   'case', 'cases', 'reference', 'references', 'proof', 'proofs',
   'capture', 'captures', 'flow', 'flows', 'submit', 'submits',
   'submission', 'submissions', 'widget', 'widgets', 'studies', 'study',
+  // Added 2026-05-22 after the EliseAI Agent / Funnel Developer Portal
+  // cycle surfaced two new false-positive `Existing` verdicts driven
+  // by PHP-keyword and generic dev-vocabulary inflation:
+  //  - `public` matched every PHP class/method declaration (1000+
+  //    files), producing a 1676-score verdict for "developer portal"
+  //    where the top Core anchor was CEntrataApp.class.php scoring
+  //    112 purely on [public, management].
+  //  - `first` matched name/date/ordinal fields across the monolith
+  //    (CSmsChatController, CNewDashboardController, etc.), inflating
+  //    the EliseAI Agent verdict to 102 with no real implementation.
+  //  - `keys` matched array keys, foreign keys, encryption keys —
+  //    generic data-structure vocabulary, not feature signal.
+  //  - `management` matched every CManager / management-suffix class
+  //    in Core; tells nothing about whether a specific feature is shipped.
+  //  - `layer` is generic architecture vocabulary (data layer, service
+  //    layer, presentation layer) — never a real feature term.
+  // See test/parity-fixtures.json `gap-mobile-agent-crm-natural` and
+  // `gap-developer-portal-public-keyword` for the regression fixtures
+  // that defend this expansion.
+  'first', 'public', 'keys', 'management', 'layer',
+  // Second wave (also 2026-05-22): after the initial expansion landed,
+  // the EliseAI Agent verdict still floated at score=47-53 (just above
+  // the Existing threshold) when the bot generated richer candidate
+  // descriptions. Root cause: another set of common code-vocabulary
+  // and competitor marketing copy inflating the score:
+  //  - `notes`/`note` — developer/doc notes scattered across every
+  //    controller and module
+  //  - `logging`/`log`/`logs` — every CLog* class, every error path
+  //  - Generic announcement verbs (`built`, `introducing`/`introduce`,
+  //    `launches`/`launch`/`launched`/`launching`) — competitor
+  //    marketing copy that tokenizes but tells us nothing about
+  //    implementation.
+  // Note: `mobile`, `tracking`, `interaction` were considered but kept
+  // OUT of the stoplist — they're vague-but-product-relevant and
+  // removing them would create false-negatives on legitimately
+  // mobile-shaped or interaction-shaped features. Per-file score cap
+  // (max_file_score=15) is the structural defense for those cases.
+  // See `gap-mobile-agent-crm-natural` for the regression fixture.
+  'notes', 'note', 'logging', 'log', 'logs',
+  'built', 'instant',
+  'introducing', 'introduce',
+  'launches', 'launch', 'launched', 'launching',
 ]);
 
 function parseArgs(argv) {
@@ -301,6 +354,7 @@ function parseArgs(argv) {
     else if (a === '--partial-score') args.thresholds.partial_score = Number(argv[++i]);
     else if (a === '--partial-files') args.thresholds.partial_files = Number(argv[++i]);
     else if (a === '--confident-partial-min') args.thresholds.confident_partial_min = Number(argv[++i]);
+    else if (a === '--max-file-score') args.thresholds.max_file_score = Number(argv[++i]);
     else if (a === '--help' || a === '-h') {
       printHelpAndExit();
     }
@@ -616,6 +670,19 @@ function checkOne(feature, applicationsDir, allApps, thresholds) {
   // terms. A single common-but-not-stop word matching a thousand lines
   // (e.g. "url") would otherwise dominate the verdict.
   const filtered = rawHits.filter((h) => (h.matched_terms || []).length >= minDistinct);
+
+  // Per-file score cap — cap each file's contribution at max_file_score
+  // before summing. Prevents single noisy files (e.g. CEntrataApp.class.php
+  // scoring 112 on [public, management] for an unrelated query) from
+  // dominating the verdict. A real shipped feature spreads across many
+  // cooperating files — depth-per-file is suspicious, breadth-across-files
+  // is signal. Tunable via thresholds.max_file_score; 0 disables the cap.
+  const maxFileScore = thresholds.max_file_score;
+  if (maxFileScore && maxFileScore > 0) {
+    for (const h of filtered) {
+      h.score = Math.min(h.score, maxFileScore);
+    }
+  }
 
   for (const h of filtered) {
     const entry = perAppMap.get(h.app) || { app: h.app, score: 0, files: 0 };

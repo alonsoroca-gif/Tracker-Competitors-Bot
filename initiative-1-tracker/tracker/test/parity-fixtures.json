@@ -113,5 +113,23 @@
     "product_id": "prospect-portal",
     "expected_verdict": ["Gap"],
     "rationale": "No metaverse integration in Core."
+  },
+  {
+    "id": "gap-mobile-agent-crm-natural",
+    "competitor_signal": "EliseAI launches Agent — first mobile CRM for AI era",
+    "proposed_feature": "Mobile-first CRM for leasing teams with in-property tour mode, offline sync, photo capture, and SMS push-to-apply",
+    "product_id": "leasing-ai",
+    "expected_verdict": ["Partial", "Gap", "Borderline"],
+    "known_limitation": "regression_after_stoplist_expansion_2026_05_22",
+    "rationale": "Companion fixture to `known-fn-mobile-agent-crm`. That earlier fixture documented the false-NEGATIVE caused by hyphenated marketing compounds (`mobile-first, leasing-agent, in-field`) producing 0/0/0. THIS fixture documents the inverse false-POSITIVE we hit on 2026-05-22 when the bot generates a NATURAL (un-hyphenated) candidate feature for the same signal: pre-fix verdict was Existing (score=102, files=17, apps=7) driven almost entirely by `first` (matching name/date/ordinal fields across Core) and `mobile` (matching every mobile UI mention). After expanding PMS_DOMAIN_STOP to filter `first`, the verdict drops to Partial (score=15, files=2, apps=1) — defensible because Core has CRM and contact-center foundations but no in-property mobile leasing module. This fixture's expected_verdict bans Existing (the bug we're defending against) but accepts Partial / Borderline / Gap as defensible verdicts."
+  },
+  {
+    "id": "gap-developer-portal-public-keyword",
+    "competitor_signal": "Funnel Developer Portal launched at developer.funnelleasing.com",
+    "proposed_feature": "Public OpenAPI developer portal with self-serve sandbox accounts, per-tenant API keys, and webhook subscription management",
+    "product_id": "platform",
+    "expected_verdict": ["Gap", "Borderline", "Partial"],
+    "known_limitation": "regression_after_stoplist_expansion_2026_05_22",
+    "rationale": "Pre-fix verdict was Existing (score=1676, files=83, apps=15) driven almost entirely by `public` (every PHP class/method declaration in Core), `keys` (array keys, foreign keys), and `management` (every CManager class). The top Core anchor was CEntrataApp.class.php scoring 112 on [public, management] — pure PHP-keyword noise, zero developer-portal implementation. After expanding PMS_DOMAIN_STOP to filter these PHP-keyword and generic-dev-vocabulary terms, the verdict drops to Gap (score=10, files=1, apps=1) — correctly reflecting that Core has webhook infrastructure but no public developer portal. This fixture's expected_verdict bans Existing (the bug we're defending against) and accepts Gap / Borderline / Partial."
   }
 ]
