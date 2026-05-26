@@ -37,3 +37,13 @@ initiative-1-tracker/tracker/.playwright-browsers/
 # the first time it auto-discovers Core, then reused on every subsequent run
 # so the manager never has to re-export ENTRATA_MONO_ROOT).
 initiative-1-tracker/tracker/.core-path
+
+# Tracker Weekly Brief output (Cursor Automation Mode A writes here every
+# Monday 9am MT). Markdown briefs are workspace-local audit trail — the
+# manager opens them in Cursor's file tree and the continuation chat reads
+# them by relative path. NOT committed because Canvas retention is
+# undocumented and we wanted a stable repo-file fallback that survives
+# across Cursor sessions; archiving briefs across machines is a manual
+# copy-out step (e.g., copy specific briefs into a committed
+# initiative-1-tracker/briefs-archive/ folder when worth preserving).
+.tracker-briefs/
