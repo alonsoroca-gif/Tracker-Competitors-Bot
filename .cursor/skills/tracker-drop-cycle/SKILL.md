@@ -5,7 +5,7 @@ description: Runs the end-to-end Tracker competitive-intel cycle for the Tracker
 
 # tracker-drop-cycle
 
-End-to-end Tracker competitive-intel workflow for the **`Tracker-Competitors-Bot`** repository. Five phases, one trigger. All output that matters lives **in chat**, not in files.
+End-to-end Tracker competitive-intel workflow for the **`Tracker-Competitors-Bot`** repository. Five phases, one trigger. Phases 0–4 output lives **in chat**; Phase 5 invokes a chain of subskills that write artifacts (feature-spec, prototype source, design-critique report, video transcript, walkthrough video) to the prototype workspace, with paths surfaced back into chat at every step.
 
 ## Quick start
 
@@ -22,7 +22,7 @@ Tracker drop cycle:
 - [ ] Phase 2 — Push (agent/P1.1 → auto-merge into main if non-empty)
 - [ ] Phase 3 — Pull (git pull origin main)
 - [ ] Phase 4 — Interpret in chat (eight blocks, non-skippable; 4.2a is the classification gate, 4.2b is the parity gate)
-- [ ] Phase 5 — Prototype in chat (battle cards for Tier-Now gaps)
+- [ ] Phase 5 — Subskill chain (feature-spec → grade → prototype → critique → transcript → video for each Tier-Now PRD)
 ```
 
 ---
@@ -619,40 +619,203 @@ A 3-row table grouping §4.3 rows by tier:
 
 ---
 
-## Phase 5 — Prototype in chat
+## Phase 5 — Subskill chain (per Tier-Now PRD)
 
-For each **Tier-Now** PRD from §4.4, produce one battle card. Template:
+For each **Tier-Now** PRD from §4.4 that passed both gates (§4.2a `Classification = Product / capability` AND §4.2b `Core parity ≠ Existing`), run the six-step subskill chain below. Each step has a manager `AskQuestion` gate before the next runs — the manager can always pause, refine, skip downstream, or abort.
 
-```markdown
-### Battle card — <competitor> <feature/move>
+This phase replaces the prior "battle cards" Phase 5 (commit 2026-05-26). The shift is from a markdown-only artifact to a working prototype + critique + walkthrough video — the actual deliverables a PM needs to drive a counter-positioning conversation forward.
 
-**Trigger:** <citation chip from §4.2>
+### The prototype workspace contract
 
-**What they're claiming**
-- <bullet>
-- <bullet>
+All Phase 5 artifacts land in **`$TRACKER_PROTOTYPE_ROOT/<slug>/`**. The skill resolves the root with this precedence, first hit wins:
 
-**What we actually know vs. don't know**
-- Known: <bullet>
-- Unknown (track in next drop): <bullet>
+1. `$TRACKER_PROTOTYPE_ROOT` environment variable, if set
+2. `~/Developer/entrata-product/alonsoroca-gif-workspace/prototypes/` (default for the original author's machine)
+3. `~/prototypes/` (last-resort fallback)
 
-**Entrata response (3 plays)**
+If none of the candidate roots exist on the manager's machine, the chain stops at the start of 5.3 (`create-prototype`) with an `AskQuestion` asking the manager to pick a path or set the env var. The skill does not create a workspace silently — that's a setup decision, not a runtime decision.
 
-| Play | Owner | Time |
-|---|---|---|
-| <short play> | PMM / PM / Sales / Eng | S/M/L |
+`<slug>` is `<competitor>-<feature>-<run-id>` kebab-cased (e.g., `eliseai-field-mode-leasing-2026-05-26T1604Z`).
 
-(Risk-if-skip detail in a sub-bullet under each play to keep the table narrow.)
+Per-PRD directory layout the chain produces:
 
-**Concrete artifact for Product OS**
-- File: `entrata-product-os/battlecards/<slug>.md` (or `prototypes/<slug>.md` for UX work)
-- Sections: <list 3–5 sections>
-- Acceptance: <single sentence — what makes it shippable>
-
-**Net-new engineering ask:** <yes + brief / none — packaging-only / blocked on X>
+```
+$TRACKER_PROTOTYPE_ROOT/<slug>/
+├── feature-spec.md                 # from 5.1
+├── grade-card.md                   # from 5.2
+├── (prototype source: index.tsx, components/, data/, types/, etc.)   # from 5.3
+├── design-critique-report.md       # from 5.4
+└── docs/
+    ├── VIDEO-TRANSCRIPT.md         # from 5.5
+    └── walkthrough.webm            # from 5.6
 ```
 
-Aim for 1–2 battle cards per drop. Three is the absolute max in chat — beyond that, defer to a separate session.
+### 5.1 `feature-spec`
+
+Invoke the workspace-global `feature-spec` skill with the §4.4 PRD as input.
+
+**Output:** `feature-spec.md` with problem, target user, scope (in/out), acceptance criteria, open questions, proposed flow/structure.
+
+**Chat-visible:**
+
+- Full absolute path to `feature-spec.md`
+- One-paragraph inline summary of the spec (so the manager doesn't have to open the file to know what got generated)
+- Any `> Open question:` lines from the spec, pasted inline as a checklist so they don't get buried — these are the questions that need PM input before engineering can spec further (last cycle surfaced "extra implementation vs. use Entrata's current resources" — that exact framing belongs here every time).
+
+**Gate (AskQuestion):**
+
+```
+prompt: "feature-spec for <slug> is ready. Approve as the source spec for the prototype?"
+options:
+  - "Approve — continue to grade"
+  - "Edit first — pause chain, manager edits the .md, then resume"
+  - "Skip prototype — this PRD doesn't warrant a prototype this cycle"
+```
+
+### 5.2 `grade-spec-handoff`
+
+Invoke `grade-spec-handoff` against the approved `feature-spec.md`.
+
+**Output:** `grade-card.md` (and the verdict inline in chat).
+
+**Chat-visible:**
+
+- The full grade card pasted **inline** in chat verbatim — verdict (`APPROVE` / `NEEDS WORK` / `REJECT`) plus the per-criterion ✅/❌ checklist
+- Path to `grade-card.md` for the file copy
+
+**Gate rule (no AskQuestion — verdict-driven):**
+
+- `APPROVE` → chain continues automatically to 5.3
+- `NEEDS WORK` or `REJECT` → chain **stops**. Skill paste the fix list and an `AskQuestion`: "Address fixes in feature-spec.md and re-run §5.2, or skip this PRD's prototype this cycle?"
+
+Anti-pattern: do not invoke 5.3 (`create-prototype`) on a non-APPROVE grade. The grade exists to prevent burning prototype build time on a spec the manager already knows is weak.
+
+### 5.3 `create-prototype`
+
+Invoke `create-prototype` against the APPROVE-graded `feature-spec.md`.
+
+**Pre-flight (added 2026-05-26 after the manager's last-cycle notes flagged a workspace-structure mismatch):**
+
+1. Resolve `$TRACKER_PROTOTYPE_ROOT` (precedence above).
+2. Check whether the resolved root has the structure `create-prototype` expects (the subskill's own contract — see `~/.cursor/skills/create-prototype/SKILL.md`).
+3. If structure missing, **fall back to webpage-mode prototype** AND say so explicitly in chat: "create-prototype workspace does not support native mobile app extensions on this machine; falling back to webpage prototype at <port>." Do not silently downgrade.
+
+**Output:** prototype source in `$TRACKER_PROTOTYPE_ROOT/<slug>/`, dev server running on a free localhost port (e.g., `:5174`, `:6174` — port is dynamic).
+
+**Chat-visible:**
+
+- Exact line: `Prototype is running at http://localhost:<port>` (where `<port>` is whatever the dev server reported)
+- **Auto-`open` the URL** via `open http://localhost:<port>` so the prototype appears in the manager's default browser without the manager running any command. This is non-optional — last cycle the chain failed this and the manager had to run commands manually to see the output.
+- A one-line "what to look for" hint (e.g., "Field Activity dashboard with live agent statuses; click any row to drill into the unit.")
+
+**Known limitations (inline TODO to revisit):**
+
+- Mobile/native: webpage-only is the current default. Open question for Billy: does Entrata have a Sandbox Mobile option that `create-prototype` should target? (Inherited from 2026-05-22 manager notes.)
+- Workspace structure: the subskill assumes a specific layout. Document the requirement here when discovered, so future managers don't hit the same mismatch silently.
+
+**Gate (AskQuestion):**
+
+```
+prompt: "Prototype is running at <url>. Does it match the feature-spec?"
+options:
+  - "Approve — continue to design-critique"
+  - "Refine — pause; tell me what to change and I'll re-invoke 5.3"
+  - "Skip critique + video — the prototype is enough for this cycle"
+```
+
+### 5.4 `design-critique`
+
+Invoke `design-critique` against the running prototype.
+
+**Output:** `design-critique-report.md` with score (0–100), finding count by severity, and per-finding write-ups.
+
+**Chat-visible (the key fix from last cycle — the .md was not opening):**
+
+- The score and finding count **pasted inline** in chat — never rely on the .md being opened
+- The top 3–5 findings (by severity) summarized inline
+- Path to `design-critique-report.md` as the last line, for managers who want the full read
+
+**Loop behavior:**
+
+After each critique run, `AskQuestion`:
+
+```
+prompt: "Critique score = <N>/100 (findings: <high>H / <med>M / <low>L). Re-run after refining, or proceed?"
+options:
+  - "Re-run 5.3 + 5.4 — I want to refine the prototype and see the score move"
+  - "Proceed to video transcript"
+  - "Skip video — prototype + critique are enough this cycle"
+```
+
+The skill keeps a running ledger of (timestamp, score, finding counts) for the cycle so the manager can see the delta across runs. Re-running 5.3+5.4 in a loop until the manager is satisfied is a first-class flow, not an exception.
+
+### 5.5 `create-video-transcript`
+
+Invoke `create-video-transcript` with the approved prototype + `feature-spec.md`.
+
+**Output:** `docs/VIDEO-TRANSCRIPT.md` with scene-by-scene narration cues.
+
+**Chat-visible:**
+
+- Full absolute path to `VIDEO-TRANSCRIPT.md`
+- A one-paragraph inline summary of the walkthrough arc (scenes covered, approximate runtime)
+
+**Gate (AskQuestion):**
+
+```
+prompt: "Video transcript is ready. Approve as the narration script for the walkthrough?"
+options:
+  - "Approve — record the video"
+  - "Edit first — pause chain, manager edits the .md, then resume"
+  - "Skip video — transcript alone is enough for this cycle"
+```
+
+### 5.6 `create-video`
+
+Invoke `create-video` with the approved transcript + running prototype.
+
+**Output:** `docs/walkthrough.webm` (the final muxed video), plus `walkthrough-audio.wav`, `walkthrough-silent.webm`, `intro.{png,webm}`, `outro.{png,webm}`, `scene-audio/`, `scene-durations.json`.
+
+**Per `tracker-drop-cycle` direction (non-optional):**
+
+The `create-video` subskill defaults to uploading the .webm to Jira (step 7) and creating a GH release (step 8). For Tracker cycles, **both are skipped** — Tracker PRDs don't have Jira epic keys, and the cycle's own auto-merge workflow handles repo state. Pass `--skip-jira --skip-release` (or the equivalent flags the subskill exposes) when invoking from this phase.
+
+**Chat-visible:**
+
+- Full absolute path to `walkthrough.webm`
+- Duration in seconds
+- **Auto-`open` the file** via `open <path>/walkthrough.webm` so the manager sees it without running a command
+- A one-paragraph quality note if the recorder logged any warnings (e.g., "Playwright click on `Unit 1204-B` timed out at 00:02:13; the camera stayed on the dashboard for that scene. Re-record with `data-testid` locators if you need the drill-in to land.")
+
+### Phase 5 exit summary
+
+After 5.6 completes (or the chain exits earlier via a Skip path), print one summary block in chat per PRD:
+
+```
+Subskill chain for <slug>:
+  • feature-spec      → <path>/feature-spec.md
+  • grade verdict     → APPROVE
+  • prototype URL     → http://localhost:<port> (opened in browser)
+  • design-critique   → score=<N>, findings=<HighN>H / <MedN>M / <LowN>L at <path>/design-critique-report.md
+  • video transcript  → <path>/docs/VIDEO-TRANSCRIPT.md
+  • walkthrough video → <path>/docs/walkthrough.webm (opened in player)
+```
+
+If the chain exited early (manager Skip, NEEDS-WORK grade, or pre-flight failure), the summary still prints — with each unfinished line replaced by `→ skipped: <reason>`. The summary is the manager's single proof that the chain ran, what landed, and what didn't.
+
+### Cap on parallelism
+
+One PRD's chain runs at a time. If §4.4 produced multiple Tier-Now PRDs, the skill prompts the manager via `AskQuestion` which PRD to chain first; subsequent PRDs queue and run after the current one's exit summary. Three Tier-Now PRDs in a single cycle is the absolute max — beyond that, defer remaining PRDs to a separate session (same cap as the prior battle-card Phase 5).
+
+### Anti-patterns specific to Phase 5
+
+These extend the global anti-patterns list at the bottom of this file (which covers Phases 0–4). Numbering continues from #15.
+
+16. **Invoking `create-prototype` (5.3) on a `NEEDS WORK` or `REJECT` grade from 5.2.** The grade gate exists to prevent burning prototype build time on a weak spec.
+17. **Printing the prototype URL or video path without auto-opening it.** Last cycle's manager notes (2026-05-22) called out that the chain "told me to run some commands" — the entire point of the chain is that the manager sees the artifact appear, not that they hunt for it.
+18. **Pasting only the path to `design-critique-report.md` without the score and top findings inline.** The .md file was not opening reliably last cycle; the chat-paste is the load-bearing surface for the critique, not the file.
+19. **Silently falling back from native-mobile to webpage prototype in 5.3.** Always name the fallback in chat so the manager knows what they got.
+20. **Letting `create-video` upload to Jira or push a GH release.** Tracker cycles disable both via `--skip-jira --skip-release` (or equivalent). Repo state is handled by the auto-merge workflow.
 
 ---
 
@@ -746,5 +909,5 @@ These are easy to do and wrong:
 
 ## Additional resources
 
-- For a worked Phase 4 + Phase 5 output on a real drop, see [examples.md](examples.md).
+- For a worked Phase 4 output on a real drop, see [examples.md](examples.md). *Note: the Phase 5 walkthrough in `examples.md` reflects the prior "battle cards" Phase 5 and is stale relative to the subskill-chain rewrite (2026-05-26). Phase 5 examples will be regenerated from the next live cycle that runs the chain end-to-end.*
 - For deeper config (publish-drop flags, env vars, lane definitions, debugging recipes), see [reference.md](reference.md).
