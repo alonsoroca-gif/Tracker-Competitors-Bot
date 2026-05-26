@@ -30,6 +30,13 @@
  *   node scripts/core-parity-check.js --self-test
  *
  * Options:
+ *   --save-candidate <dir>
+ *                        After computing verdicts, write each result as a
+ *                        fixture-ready JSON candidate to <dir>. Manager
+ *                        reviews + promotes via:
+ *                          node scripts/list-fixture-candidates.js
+ *                        Used in production by the tracker-drop-cycle skill
+ *                        to grow the regression suite from real bot runs.
  *   --in <file>          Read features array from a JSON file
  *   --stdin              Read features array from stdin
  *   --self-test          Run against three hard-coded signals from the
@@ -355,6 +362,7 @@ function parseArgs(argv) {
     else if (a === '--partial-files') args.thresholds.partial_files = Number(argv[++i]);
     else if (a === '--confident-partial-min') args.thresholds.confident_partial_min = Number(argv[++i]);
     else if (a === '--max-file-score') args.thresholds.max_file_score = Number(argv[++i]);
+    else if (a === '--save-candidate') args.saveCandidate = argv[++i];
     else if (a === '--help' || a === '-h') {
       printHelpAndExit();
     }
@@ -805,11 +813,71 @@ function main() {
   const effectiveThresholds = { ...args.thresholds, _scopeByProduct: args.scopeByProduct };
   const results = features.map((f) => checkOne(f, applicationsDir, allApps, effectiveThresholds));
 
+  if (args.saveCandidate) {
+    saveCandidates(features, results, args.saveCandidate);
+  }
+
   if (args.format === 'markdown') {
     process.stdout.write(toMarkdownTable(results, features) + '\n');
   } else {
     process.stdout.write(JSON.stringify(results, null, 2) + '\n');
   }
+}
+
+/**
+ * Save each result as a fixture-ready JSON candidate to `dir`.
+ *
+ * Auto-regression mode (added 2026-05-26). Lets production parity-check
+ * runs grow the regression suite automatically. Each candidate file
+ * matches the parity-fixtures.json schema with one extra `_observed`
+ * block carrying the actual run output (score, files, top terms) so
+ * the manager has the evidence in hand when promoting.
+ *
+ * Promotion is a manual step — candidates are NEVER auto-merged into
+ * parity-fixtures.json. The manager reviews via
+ * `scripts/list-fixture-candidates.js` and either promotes (copies
+ * into parity-fixtures.json with edited expected_verdict + real
+ * rationale) or discards (deletes the file).
+ */
+function saveCandidates(features, results, dir) {
+  fs.mkdirSync(dir, { recursive: true });
+  const ts = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
+
+  for (let i = 0; i < results.length; i += 1) {
+    const r = results[i];
+    const f = features[i] || {};
+    const baseId = (f.id || `unknown-${i}`).toString();
+    const idSlug = baseId.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+    const filename = `candidate-${ts}-${idSlug}.json`;
+    const candidate = {
+      id: `candidate-${ts}-${idSlug}`,
+      competitor_signal: f.competitor_signal || '',
+      proposed_feature: f.proposed_feature || '',
+      product_id: f.product_id || '',
+      expected_verdict: [r.parity],
+      rationale: `Auto-saved candidate from production run at ${new Date().toISOString()}. Manager review required before promotion to parity-fixtures.json. Confirm the expected_verdict set (consider broadening to [Partial, Borderline, Gap] for variance-stability fixtures) and replace this rationale with a real reason for inclusion.`,
+      _observed: {
+        verdict: r.parity,
+        total_score: r.total_score,
+        files_with_hits: r.files_with_hits,
+        apps_with_hits: r.apps_with_hits,
+        grounding_terms: r.grounding_terms || [],
+        top_files: (r.top_files || []).slice(0, 3).map((tf) => ({
+          score: tf.score,
+          relativePath: tf.relativePath,
+          matched_terms: tf.matched_terms || [],
+        })),
+        captured_at: new Date().toISOString(),
+      },
+    };
+    const out = path.join(dir, filename);
+    fs.writeFileSync(out, JSON.stringify(candidate, null, 2) + '\n', 'utf8');
+  }
+
+  process.stderr.write(
+    `core-parity-check: saved ${results.length} candidate fixture(s) → ${dir}\n` +
+      `Review with: node scripts/list-fixture-candidates.js\n`,
+  );
 }
 
 if (require.main === module) {

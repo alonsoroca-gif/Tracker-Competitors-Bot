@@ -339,8 +339,22 @@ This step is anchored to `.cursor/rules/prds-must-pass-signal-classification.mdc
 echo '[
   {"id":"1","competitor_signal":"<short paraphrase of move>","proposed_feature":"<your candidate feature>","product_id":"<best guess: leasing-ai|prospect-portal|...|null>"},
   {"id":"2", ...}
-]' | node initiative-1-tracker/tracker/scripts/core-parity-check.js --stdin --format markdown
+]' | node initiative-1-tracker/tracker/scripts/core-parity-check.js \
+    --stdin \
+    --format markdown \
+    --save-candidate initiative-1-tracker/tracker/test/fixtures-pending
 ```
+
+The `--save-candidate` flag writes every parity verdict the bot computes to `initiative-1-tracker/tracker/test/fixtures-pending/` as a fixture-ready JSON file. This is **auto-regression mode** (added 2026-05-26) — the regression suite grows naturally from real production runs instead of relying only on hand-written fixtures. The manager reviews + promotes (or discards) candidates after the drop ships:
+
+```bash
+node initiative-1-tracker/tracker/scripts/list-fixture-candidates.js                   # see what's pending
+node initiative-1-tracker/tracker/scripts/list-fixture-candidates.js show <id>         # inspect one
+node initiative-1-tracker/tracker/scripts/list-fixture-candidates.js promote <id> "Partial,Borderline,Gap"   # add to suite
+node initiative-1-tracker/tracker/scripts/list-fixture-candidates.js discard <id>      # delete
+```
+
+**Candidates are never auto-promoted.** The pipeline saves them; the manager decides what becomes a regression fixture. Use this any time a parity verdict was *interesting* (a hard-fought Borderline manager-promotion, a surprising Existing on a feature you thought was novel, a Gap on something Core probably should have) — promote it as a fixture so the next stoplist or threshold change can't silently regress it.
 
 **No env var, no setup.** The script auto-resolves Entrata Core in this order: `--core <path>` flag → `$ENTRATA_MONO_ROOT` (legacy) → `initiative-1-tracker/tracker/.core-path` cache (auto-written on first discovery) → scan of common locations (`~/Desktop/Core Repo/entrata-core`, `~/Documents/...`, `~/Projects/...`, `~/Code/...`, `~/Core Repo/...`, `~/entrata-core`). The first time the script finds Core, it caches the path so every subsequent run is instant.
 
