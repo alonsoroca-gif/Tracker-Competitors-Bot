@@ -1,0 +1,19 @@
+# Auto-saved fixture candidates from production parity-check runs.
+#
+# When core-parity-check.js is invoked with --save-candidate <dir>, it
+# writes each result here as a fixture-ready JSON file. The tracker-drop-
+# cycle skill enables this flag during Phase 4.2b so the regression suite
+# grows naturally from real runs.
+#
+# Promotion is always a MANUAL decision. The pipeline never auto-merges
+# candidates into parity-fixtures.json.
+#
+# Review / promote / discard:
+#   node scripts/list-fixture-candidates.js
+#   node scripts/list-fixture-candidates.js show <id>
+#   node scripts/list-fixture-candidates.js promote <id> [verdict-set]
+#   node scripts/list-fixture-candidates.js discard <id>
+#   node scripts/list-fixture-candidates.js clear
+#
+# This directory is committed (so candidates survive across machines)
+# but candidate-*.json files are produced by the bot and not hand-written.

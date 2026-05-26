@@ -4,7 +4,9 @@
     "competitor_signal": "Jonah positioning as FTC pricing-transparency-ready — all-in pricing disclosure with mandatory fees included",
     "proposed_feature": "All-In Pricing mode in Entrata pricing engine — every prospect-facing price includes mandatory fees by default",
     "product_id": "leasing-ai",
-    "expected_verdict": ["Existing"],
+    "expected_verdict": [
+      "Existing"
+    ],
     "rationale": "Manager review 2026-05-12: Core ships fee disclosure across Applications/Entrata/Accounting/ and Applications/EntrataLeasingWebsite/. Confirmed 388 hits across 20 files."
   },
   {
@@ -12,7 +14,9 @@
     "competitor_signal": "Jonah AEO/FAQ push for answer-engine discovery — structured data for ChatGPT / Perplexity / Google AI Overview",
     "proposed_feature": "PMS-driven structured-data feed (JSON-LD) for Entrata leasing pages — FAQ + Apartment + Offer schemas",
     "product_id": "leasing-ai",
-    "expected_verdict": ["Existing"],
+    "expected_verdict": [
+      "Existing"
+    ],
     "rationale": "Manager review 2026-05-12: Core ships structured data emission across 30+ files in 9 apps. Confirmed 683 hits."
   },
   {
@@ -20,7 +24,9 @@
     "competitor_signal": "Funnel Leasing's end-to-end online application flow with co-signer logic",
     "proposed_feature": "Online rental application with deposit collection and co-signer routing",
     "product_id": "online-applications",
-    "expected_verdict": ["Existing"],
+    "expected_verdict": [
+      "Existing"
+    ],
     "rationale": "Flagship Entrata Core feature; Applications/Entrata/ has full online application module with deposit + co-signer flows."
   },
   {
@@ -28,7 +34,9 @@
     "competitor_signal": "Anyone Home positions resident maintenance ticketing as a built-in module",
     "proposed_feature": "Resident maintenance ticketing with photo upload and status tracking",
     "product_id": "online-applications",
-    "expected_verdict": ["Existing"],
+    "expected_verdict": [
+      "Existing"
+    ],
     "rationale": "Applications/ResidentMaintenance/ exists as a top-level Core app with full ticketing flow."
   },
   {
@@ -36,7 +44,9 @@
     "competitor_signal": "RentDynamics ILS / vacancy listing feed integration",
     "proposed_feature": "Vacancy listing feed + ILS syndication for prospect-facing inventory",
     "product_id": "ils-portal",
-    "expected_verdict": ["Gap"],
+    "expected_verdict": [
+      "Gap"
+    ],
     "known_limitation": "false_negative_marketing_vs_implementation_vocab",
     "rationale": "Applications/Vacancy/ exists in Core (this concept IS shipped), but the keyword scanner returns Gap because the proposed-feature text uses marketing vocab (`vacancy, listing, syndication`) that doesn't match the implementation vocab in code (`availableUnit, inventoryFeed`, etc.). Documented limitation; future hardening = synonym dictionary or split-and-stem on hyphenated terms."
   },
@@ -45,7 +55,9 @@
     "competitor_signal": "EliseAI Agent — mobile-first leasing CRM for in-field agents",
     "proposed_feature": "Mobile-optimized leasing-agent CRM with on-property tour mode and lead routing",
     "product_id": "lead-manager",
-    "expected_verdict": ["Gap"],
+    "expected_verdict": [
+      "Gap"
+    ],
     "known_limitation": "false_negative_hyphenated_marketing_terms",
     "rationale": "Hyphenated marketing compounds (`mobile-first, leasing-agent, in-field, mobile-optimized, on-property`) are emitted as single terms by the extractor, but Core code never uses those exact hyphenated forms. Result: score 0, verdict Gap, even though Core has plenty of `mobile`, `agent`, `leasing` etc. code. Fix = either split hyphens in the extractor or expand stop-list to filter out compound marketing phrases."
   },
@@ -54,7 +66,10 @@
     "competitor_signal": "Jonah+Engrain SightMap on prospect sites — interactive siteplan / map embed",
     "proposed_feature": "Live-PMS Siteplan: prospect-facing interactive map of available units tied to PMS pricing",
     "product_id": "prospect-portal",
-    "expected_verdict": ["Borderline", "Partial"],
+    "expected_verdict": [
+      "Borderline",
+      "Partial"
+    ],
     "rationale": "Foundation in ProspectPortal but no interactive siteplan concept. Score 14/3/3 sits right at the Partial/Borderline boundary."
   },
   {
@@ -62,7 +77,11 @@
     "competitor_signal": "EliseAI Field-Mode Leasing — agent app for in-property tours",
     "proposed_feature": "Offline-first IndexedDB sync queue with retry exponential backoff for tour-mode photo capture",
     "product_id": "leasing-ai",
-    "expected_verdict": ["Borderline", "Partial", "Gap"],
+    "expected_verdict": [
+      "Borderline",
+      "Partial",
+      "Gap"
+    ],
     "rationale": "Retry-queue patterns exist in AdminSync but not for tours. Score 12/3/3."
   },
   {
@@ -70,7 +89,9 @@
     "competitor_signal": "Hypothetical: VR-based virtual leasing avatar with holographic agent",
     "proposed_feature": "VR avatar simulator headset integration for in-property holographic agent presence",
     "product_id": "leasing-ai",
-    "expected_verdict": ["Gap"],
+    "expected_verdict": [
+      "Gap"
+    ],
     "rationale": "Deliberately novel concept; no PMS ships VR avatars. Used as the canary for false-positives."
   },
   {
@@ -78,7 +99,9 @@
     "competitor_signal": "Anyone Home voice-narrated walkthrough on prospect site",
     "proposed_feature": "AI-generated voice-narrated property walkthrough using ElevenLabs TTS API",
     "product_id": "prospect-portal",
-    "expected_verdict": ["Gap"],
+    "expected_verdict": [
+      "Gap"
+    ],
     "rationale": "ElevenLabs is a specific third-party vendor not integrated into Core. TTS narration for tours is not a shipped capability."
   },
   {
@@ -86,7 +109,9 @@
     "competitor_signal": "Hypothetical blockchain competitor: NFT-anchored rental agreements with smart-contract enforcement",
     "proposed_feature": "NFT-based rental contract minting with on-chain payment enforcement",
     "product_id": "online-applications",
-    "expected_verdict": ["Gap"],
+    "expected_verdict": [
+      "Gap"
+    ],
     "rationale": "Deliberately absurd concept; Core ships no blockchain anywhere. Canary for noise-floor false-positives."
   },
   {
@@ -94,7 +119,9 @@
     "competitor_signal": "Hypothetical: autonomous drone property inspection with computer-vision damage detection",
     "proposed_feature": "Autonomous drone fleet for exterior property inspection with CV-driven damage classification",
     "product_id": "online-applications",
-    "expected_verdict": ["Gap"],
+    "expected_verdict": [
+      "Gap"
+    ],
     "rationale": "No drone integration in Core. Canary for novel-concept handling."
   },
   {
@@ -102,7 +129,11 @@
     "competitor_signal": "Funnel Leasing accumulating curated third-party social proof on featuredcustomers.com — 18 testimonials, 6 case studies, 670 reference ratings averaging 4.8/5",
     "proposed_feature": "Customer Stories Hub — in-product testimonial + case-study capture flow with admin moderation queue and auto-syndication of structured JSON-LD Review/Organization schemas",
     "product_id": "prospect-portal",
-    "expected_verdict": ["Gap", "Borderline", "Partial"],
+    "expected_verdict": [
+      "Gap",
+      "Borderline",
+      "Partial"
+    ],
     "known_limitation": "regression_after_stoplist_expansion",
     "rationale": "Originally produced a false-positive `Existing` verdict (score=821, 49 files, 13 apps) during the 2026-05-13 /trackerstart cycle because matched terms were entirely generic dev vocab (`case`, `reference`, `flow`, `capture`, `proof`). The top Core anchor was a MoneyGram SOAP payment file — clearly unrelated. After expanding PMS_DOMAIN_STOP to filter these noise words, the verdict drops to Partial (score=28, top file = `ResidentPortal/.../CResidentPortalApp.class.php`, which is genuinely related — Core does have resident feedback / rating foundations). Partial here is the correct verdict: foundation exists, but the specific syndication / JSON-LD / customer-stories-hub concept is the delta. This fixture's expected_verdict explicitly bans `Existing` (the bug we're regression-testing against) but accepts Partial / Borderline / Gap as all defensible truthful verdicts."
   },
@@ -111,7 +142,89 @@
     "competitor_signal": "Hypothetical: Decentraland / Roblox embedded property tours for Gen-Z prospects",
     "proposed_feature": "Metaverse property tour embed with Roblox SDK integration for prospect engagement",
     "product_id": "prospect-portal",
-    "expected_verdict": ["Gap"],
+    "expected_verdict": [
+      "Gap"
+    ],
     "rationale": "No metaverse integration in Core."
+  },
+  {
+    "id": "gap-mobile-agent-crm-natural",
+    "competitor_signal": "EliseAI launches Agent — first mobile CRM for AI era",
+    "proposed_feature": "Mobile-first CRM for leasing teams with in-property tour mode, offline sync, photo capture, and SMS push-to-apply",
+    "product_id": "leasing-ai",
+    "expected_verdict": [
+      "Partial",
+      "Gap",
+      "Borderline"
+    ],
+    "known_limitation": "regression_after_stoplist_expansion_2026_05_22",
+    "rationale": "Companion fixture to `known-fn-mobile-agent-crm`. That earlier fixture documented the false-NEGATIVE caused by hyphenated marketing compounds (`mobile-first, leasing-agent, in-field`) producing 0/0/0. THIS fixture documents the inverse false-POSITIVE we hit on 2026-05-22 when the bot generates a NATURAL (un-hyphenated) candidate feature for the same signal: pre-fix verdict was Existing (score=102, files=17, apps=7) driven almost entirely by `first` (matching name/date/ordinal fields across Core) and `mobile` (matching every mobile UI mention). After expanding PMS_DOMAIN_STOP to filter `first`, the verdict drops to Partial (score=15, files=2, apps=1) — defensible because Core has CRM and contact-center foundations but no in-property mobile leasing module. This fixture's expected_verdict bans Existing (the bug we're defending against) but accepts Partial / Borderline / Gap as defensible verdicts."
+  },
+  {
+    "id": "gap-developer-portal-public-keyword",
+    "competitor_signal": "Funnel Developer Portal launched at developer.funnelleasing.com",
+    "proposed_feature": "Public OpenAPI developer portal with self-serve sandbox accounts, per-tenant API keys, and webhook subscription management",
+    "product_id": "platform",
+    "expected_verdict": [
+      "Gap",
+      "Borderline",
+      "Partial"
+    ],
+    "known_limitation": "regression_after_stoplist_expansion_2026_05_22",
+    "rationale": "Pre-fix verdict was Existing (score=1676, files=83, apps=15) driven almost entirely by `public` (every PHP class/method declaration in Core), `keys` (array keys, foreign keys), and `management` (every CManager class). The top Core anchor was CEntrataApp.class.php scoring 112 on [public, management] — pure PHP-keyword noise, zero developer-portal implementation. After expanding PMS_DOMAIN_STOP to filter these PHP-keyword and generic-dev-vocabulary terms, the verdict drops to Gap (score=10, files=1, apps=1) — correctly reflecting that Core has webhook infrastructure but no public developer portal. This fixture's expected_verdict bans Existing (the bug we're defending against) and accepts Gap / Borderline / Partial."
+  },
+  {
+    "id": "boundary-existing-leads-dashboard",
+    "competitor_signal": "Funnel introduces unified leads conversion dashboard for multifamily",
+    "proposed_feature": "Funnel-style unified leads dashboard with stage-by-stage conversion tracking and per-source attribution analytics",
+    "product_id": "leasing-ai",
+    "expected_verdict": [
+      "Existing"
+    ],
+    "rationale": "Boundary-stability fixture (added 2026-05-26). Score lands at 52/12/5 — just 12 points above the existing_score=40 threshold. Lead/conversion dashboards genuinely exist in Core (CPsLeadManager, prospect dashboards across multiple apps). The point of this fixture is to LOCK the boundary: if a future stoplist or scoring change flips this to Partial, that signals the threshold is now too tight and real Existing cases will start being missed. If it flips to Existing with a much higher score, that signals new noise is leaking in. Either flip is information."
+  },
+  {
+    "id": "existing-rent-reminders-modern",
+    "competitor_signal": "Anyone Home rolls out automated rent reminders with delivery confirmation",
+    "proposed_feature": "Automated rent payment reminders with delivery tracking, retry logic, and per-resident escalation rules",
+    "product_id": "resident-portal",
+    "expected_verdict": [
+      "Existing"
+    ],
+    "rationale": "Recency fixture (added 2026-05-26) — uses the verbose, verb-heavy bot-generated phrasing style that became common in mid-2026 drops (`automated …with…tracking,…logic, and…rules`). Score 66/17/5 — solid mid-tier Existing. Defends against a future regression where verbose modern phrasings collapse to Partial because stoplist/cap was tuned too aggressively. Real feature: Core ships automated payment reminders (Accounting/Billing apps), delivery tracking (Communication app), and resident escalation (PsLead/ResidentPortal)."
+  },
+  {
+    "id": "existing-renewal-workflow-verbose",
+    "competitor_signal": "Funnel rolls out renewals workflow automation",
+    "proposed_feature": "Automated lease renewal workflow with conditional pricing logic, e-signature integration, deposit reconciliation, and resident notification chains",
+    "product_id": "renewals",
+    "expected_verdict": [
+      "Existing"
+    ],
+    "rationale": "Recency fixture (added 2026-05-26). Heavily multi-clausal modern phrasing. Score 214/30/8 — strongly Existing. Top file anchor is CRenewalQuotesController matching [renewals, renewal, deposit]. Core demonstrably ships the entire feature (Renewals app with quote generation, e-signature integration via Application/ESignature, deposit reconciliation in Accounting, notification chains in Communication). Defends against a future regression where verbose multi-clausal Existing cases collapse below threshold."
+  },
+  {
+    "id": "elise-agent-variance-rich",
+    "competitor_signal": "EliseAI launches Agent — first mobile CRM",
+    "proposed_feature": "Mobile-first AI-native leasing CRM for in-property agents with tour tracking, prospect interaction logging, instant mobile responses, voice notes, and offline sync",
+    "product_id": "leasing-ai",
+    "expected_verdict": [
+      "Partial",
+      "Borderline",
+      "Gap"
+    ],
+    "rationale": "Variance fixture (added 2026-05-26). Companion to gap-mobile-agent-crm-natural. Same competitor signal, RICHER phrasing — more verbs, more compound terms, more vocabulary surface area. Score 25/5/4 — Partial. The point is to lock the INVARIANT: regardless of how richly the bot phrases the EliseAI Agent feature, the verdict MUST land in {Partial, Borderline, Gap} — never Existing. This is the structural defense against the 2026-05-21 demo failure where richer phrasings creeped over the Existing threshold."
+  },
+  {
+    "id": "elise-agent-variance-marketing",
+    "competitor_signal": "EliseAI launches Agent — first mobile CRM",
+    "proposed_feature": "Mobile leasing CRM for AI-era agent operations",
+    "product_id": "leasing-ai",
+    "expected_verdict": [
+      "Borderline",
+      "Partial",
+      "Gap"
+    ],
+    "rationale": "Variance fixture (added 2026-05-26). Companion to gap-mobile-agent-crm-natural and elise-agent-variance-rich. Same competitor signal, MARKETING/SHORT phrasing — fewer terms, lower scoring surface. Score 13/3/2 — Borderline (just below confident_partial_min=15). Same invariant as elise-agent-variance-rich: any reasonable phrasing of the EliseAI Agent signal must NOT flip to Existing. Together, the three Elise variance fixtures lock in verdict stability across the full phrasing range."
   }
 ]
