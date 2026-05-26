@@ -75,11 +75,12 @@ process.exit((ageMin < 15 && latestHash !== priorHash) ? 0 : 1);
 '
 ```
 
-**Decision tree:**
+**Decision tree (four branches):**
 
 - **Hash match + recent** → STOP, but **never stop silently**. Use the `AskQuestion` tool to present the manager with clickable options (see "Phase 0 stop UX" below). Wait for their response before doing anything else.
 - **Hash differs + drop is <15 min old** AND user did **not** say "force" / "fresh" / `--force` → skip Phases 1–2. Announce: "Latest drop `<id>` is `<fmtAge>` old (likely from CI) and has new content. Skipping collect, jumping to Phase 3." Then proceed to Phase 3.
-- **Drop is ≥15 min old** OR **missing** OR user requested a fresh collect → proceed to Phase 1.
+- **Hash differs + drop is ≥15 min old + latest is the only unread drop** (i.e., the latest drop has content that has never been interpreted because its content already differed from the prior cycle's source-drop) → surface via `AskQuestion` with two options: *"Skip Phases 1–2, interpret what's there (recommended — this drop has unread new content)"* / *"Force a fresh collect (Phases 1–5)."* Never auto-proceed to Phase 1 in this case; the latest drop probably already carries the intel the manager wants and a fresh collect is likely to re-collect the same signals and skip the commit anyway. Added 2026-05-26 after the live-cycle Gap #1 surfaced this case (1.4-hour-old drop with unread new content was mis-routed to Phase 1 by the prior 3-branch tree).
+- **Drop is ≥15 min old + hash-identical to prior** OR **missing entirely** OR user requested a fresh collect → proceed to Phase 1.
 
 ### Phase 0 stop UX (clickable options)
 
@@ -357,6 +358,24 @@ node initiative-1-tracker/tracker/scripts/list-fixture-candidates.js discard <id
 **Candidates are never auto-promoted.** The pipeline saves them; the manager decides what becomes a regression fixture. Use this any time a parity verdict was *interesting* (a hard-fought Borderline manager-promotion, a surprising Existing on a feature you thought was novel, a Gap on something Core probably should have) — promote it as a fixture so the next stoplist or threshold change can't silently regress it.
 
 **No env var, no setup.** The script auto-resolves Entrata Core in this order: `--core <path>` flag → `$ENTRATA_MONO_ROOT` (legacy) → `initiative-1-tracker/tracker/.core-path` cache (auto-written on first discovery) → scan of common locations (`~/Desktop/Core Repo/entrata-core`, `~/Documents/...`, `~/Projects/...`, `~/Code/...`, `~/Core Repo/...`, `~/entrata-core`). The first time the script finds Core, it caches the path so every subsequent run is instant.
+
+#### Candidate drafting rubric (added 2026-05-26 after live-cycle Gaps #2 + #3)
+
+Parity scoring is keyword-density-sensitive — the script computes its keyword blob from `competitor_signal` + `proposed_feature` (see `core-parity-check.js` line 557). Two semantically equivalent candidates can score >100× differently depending on wording. The 2026-05-26 live cycle surfaced this concretely: the same SightMap-siteplan concept scored 3/1/1 (Gap) with lean wording and 540/87/12 (Existing) with rich wording. Neither extreme is honest; the calibrated read landed at Partial.
+
+To minimize wording-drift across cycles when drafting candidate features:
+
+1. **Use the strongest verbatim signal phrasing.** Quote the competitor's exact words where possible (e.g., "Live-PMS Siteplan" if they use it, "interactive siteplan" if they use that, "interactive map" if they use that). Don't paraphrase down to generic vocabulary that strips matchable tokens.
+2. **Name the Entrata-domain target app explicitly.** If the candidate fits inside `ProspectPortal`, `EntrataLeasingWebsite`, `Customers`, or any other Core app, name it: *"... in ProspectPortal"*, *"... module in EntrataLeasingWebsite"*. The parity scanner indexes file paths under `Applications/`, so naming the target app gives the score the right scaffold.
+3. **Include 2–3 concrete capability nouns.** "Floorplan", "unit availability", "pricing", "appointment", "guest card", "tenant", "commercial lease", "screening" — these are tokens Core actually uses. Generic words like "feature", "system", "module" alone score poorly because Core uses them too sparsely.
+4. **Don't keyword-stuff.** If the candidate goes from score 3 (lean) to score 540 (rich), you've over-corrected. Rich wording should produce a Partial-to-Existing range (15–80 typical), not a saturated >300. If you can't naturally fit a token without the candidate reading like a search query, leave it out.
+
+**When in doubt, run the lean+rich double-pass.** Draft a lean version (minimal vocabulary) and a rich version (rubric above), invoke the parity script on both as separate candidates, then compare:
+
+- **Both agree (same verdict bucket)** → use that verdict.
+- **Disagree (different bucket)** → treat the row as `Borderline` by definition and surface via the SKILL.md Borderline-resolution AskQuestion to let the manager pick Partial / Gap / Skip. Disagreement between two reasonable wordings is the bot honestly saying *"the scanner can't decide; the human resolves."*
+
+Never silently accept a verdict that contradicts an existing fixture or a known Core capability without running the second pass. The most common failure mode is a `Gap` verdict on a feature Core obviously ships (e.g., tour scheduling); that's almost always lean wording missing the vocab Core uses.
 
 The script reuses the keyword scanner in `lib/repoInsight.js` (with a parity-specific whole-word matcher) and walks every app under `${CORE_ROOT}/Applications/`. It returns one of five verdicts per candidate:
 
@@ -875,12 +894,16 @@ These are easy to do and wrong:
 7. **Force-pushing or skipping the auto-merge step.** The manager pulls `main`; if `main` is stale, the manager sees a stale drop and assumes no new activity.
 8. **Skipping Phase 0.** Without the freshness + hash check, the skill races the CI cron and may re-interpret unchanged signals.
 9. **Surfacing carryover signals as if they were new.** §4.2 onward must use the **net-new** set from the diff step, not the full dedup'd set. Repeating last drop's "main moves" wastes the manager's time.
-10. **Offering PDF export without checking prereqs.** If `pandoc` or `wkhtmltopdf` is missing, the manager must be told the install command (`brew install pandoc wkhtmltopdf`) at the moment they're asked about PDF, not after a silent failure. See Phase 4.4b.
+10. **Offering PDF export without checking prereqs.** PDF rendering on this repo's machines is currently delegated to `tracker-decks/render-to-pdf.sh`, which uses macOS headless Chrome at `/Applications/Google Chrome.app/Contents/MacOS/Google Chrome` — **pandoc / wkhtmltopdf are NOT required** (updated 2026-05-26 after live-cycle Gap #4). Before exporting at §4.4b, verify the render script exists and the Chrome binary is at that path. If the manager is on Linux/Windows or doesn't have Chrome installed at the expected location, surface that at the §4.4b approval moment, not after silent failure. The HTML-then-Chrome pipeline is the supported path today; if a portable alternative is needed across machines (pandoc, wkhtmltopdf, weasyprint), the render script must be updated to detect available tooling and route accordingly — don't silently substitute. See Phase 4.4b.
 11. **Stopping Phase 0 without surfacing options.** When the cycle stops on a hash-match (no new content), the manager must be presented with clickable `AskQuestion` options (stop / interpret last meaningful / force fresh / show agent branch). Never end the message with "stopping cycle" and nothing else, and never ask the manager to type back free-text commands like "interpret 2026-05-08T...". Drop IDs in option labels must be paired with human context (age, size). See Phase 0 stop UX.
 12. **Skipping the §4.2b Core parity scan.** The parity scan is the structural fix for the 2026-05-12 manager review (PRDs proposing features Core already shipped). It is not optional. Producing a §4.3 table without a parity verdict per Product row, or writing §4.4 PRDs for `Existing`-verdict rows, is a rule violation per `.cursor/rules/prds-must-pass-core-parity.mdc`.
 13. **Treating `Unknown` parity as `Gap`.** If `ENTRATA_MONO_ROOT` isn't set and the parity script returns `Unknown` for every row, stop and re-prompt the manager. Do not auto-proceed and do not silently treat the unverified set as if it had passed the gate.
 14. **Skipping the §4.2a Signal classification gate.** The classification gate is the structural fix for the 2026-05-13 manager review (the bot produced an engineering-shaped Customer Stories Hub PRD from a PMM signal because parity returned Partial). Always-ask `AskQuestion` is non-optional — even when every auto-suggestion is high-confidence, the manager-confirmation table is the cycle's only proof that classification ran. Producing a §4.4 PRD for any row whose final classification is not `Product / capability` is a rule violation per `.cursor/rules/prds-must-pass-signal-classification.mdc`.
 15. **Running §4.2b parity on non-Product rows.** Parity is wasted effort on signals that wouldn't produce a PRD even if Core ships nothing — PMM, Pricing, Talent, Funding, Editorial, Strategic-partnership, and Noise rows must skip §4.2b entirely. Only Product-classified rows (including `Operational → Product` promotions) pass the §4.2a filter into §4.2b.
+
+21. **Silently accepting a `Gap` parity verdict that contradicts a known Core capability.** Added 2026-05-26 after live-cycle Gap #2/#3. If the parity scanner returns Gap on something Core obviously ships (e.g., tour scheduling, lease workflow, application flow) or contradicts an existing fixture in `parity-fixtures.json`, the bot must NOT proceed to §4.4 with that verdict. Run the lean+rich double-pass per the "Candidate drafting rubric" in §4.2b. If lean+rich disagree, treat as Borderline and use the manager-resolution AskQuestion. The most common cause of false Gaps is lean wording missing Core's actual vocabulary; the second pass usually fixes it.
+
+22. **Producing a richer-vocab parity candidate that scores >300 (saturated Existing).** Added 2026-05-26. The Candidate drafting rubric exists to lift lean-wording false Gaps to honest Partial/Borderline range; rich wording producing scores in the 300–600 range means you keyword-stuffed (e.g., loaded the candidate with "floorplan, unit, pricing, prospect, leasing, available" all at once). Calibrate down: the rich pass should land in the 15–80 score range. If both lean and rich saturate (one near zero, one >300), the honest verdict is Borderline and the row goes to manager resolution.
 
 ---
 

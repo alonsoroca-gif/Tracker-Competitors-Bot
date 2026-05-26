@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>PRD — Retail/Commercial Tenant Listing on Leasing Sites</title>
+<style>
+  @page { size: Letter; margin: 0.75in; }
+  body {
+    font-family: -apple-system, "Helvetica Neue", Arial, sans-serif;
+    font-size: 11pt;
+    line-height: 1.45;
+    color: #1a1a1a;
+    max-width: 7in;
+  }
+  h1 { font-size: 18pt; margin: 0 0 4pt 0; border-bottom: 2px solid #1a1a1a; padding-bottom: 4pt; }
+  .meta { font-size: 9pt; color: #666; margin-bottom: 14pt; }
+  h2 { font-size: 12pt; margin: 14pt 0 4pt 0; color: #c0392b; }
+  ul { margin: 4pt 0 4pt 18pt; padding: 0; }
+  li { margin-bottom: 3pt; }
+  .field { margin: 6pt 0; }
+  .field-label { font-weight: 700; }
+  code { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 9.5pt; background: #f4f4f4; padding: 1pt 3pt; border-radius: 2pt; }
+  .footer { margin-top: 18pt; padding-top: 6pt; border-top: 1px solid #ccc; font-size: 8.5pt; color: #888; }
+  .pill { display: inline-block; padding: 1pt 6pt; border-radius: 8pt; font-size: 9pt; font-weight: 600; }
+  .pill-s { background: #2980b9; color: white; }
+  .pill-now { background: #27ae60; color: white; }
+</style>
+</head>
+<body>
+
+<h1>PRD: Retail/Commercial Tenant Listing Module for Mixed-Use Property Sites</h1>
+<div class="meta">
+  Drop: <code>2026-05-26T17-45-38Z</code> &middot; Tier <span class="pill pill-now">Now</span> &middot; Effort <span class="pill pill-s">S</span> &middot; Triggered by Jonah Digital "Retail Page" add-on
+</div>
+
+<h2>Problem</h2>
+<p>Jonah Digital advertises a "Retail Page" add-on for mixed-use multifamily marketing sites — same property, ground-floor retail tenants displayed alongside residential availability. As mixed-use portfolios grow, the marketing site has to carry both stories: <em>residential leasing</em> and <em>"here's the coffee shop, the restaurant, the gym downstairs"</em>. Entrata has commercial-customer infrastructure inside Core but no prospect-facing retail-tenant listing UI on the leasing-website surface. The structural reason this matters: <strong>the underlying commercial-customer + lease data is already in Entrata — we just don't expose it on the prospect-marketing pages a website-builder like Jonah is trying to fill</strong>. They have to manually maintain a separate "retail page"; we can drive it directly from the source of truth.</p>
+
+<h2>Target user</h2>
+<p>A residential prospect researching a mixed-use property (apartment + retail + restaurant + services downstairs) who wants to know what's at the property before they tour. Secondary: property marketing teams who currently maintain retail-tenant lists manually in CMS systems.</p>
+
+<h2>Originating signal classification</h2>
+<p>Product / capability (manager-confirmed via §4.2a on the 2026-05-26T17-45-38Z cycle).</p>
+
+<h2>Scope (in)</h2>
+<ul>
+  <li><strong>"Retail at this property" page template</strong> in EntrataLeasingWebsite / ProspectPortal. New page type alongside existing residential pages.</li>
+  <li><strong>Read-only API binding</strong> from commercial-customer records (existing Core data) to the leasing-website page. Tenant data flows: name, category, business hours, website URL, logo, brief description.</li>
+  <li><strong>Tenant-category filters</strong> on the page: restaurant, retail, services, fitness, etc.</li>
+  <li><strong>Optional "now leasing — commercial availability" surface</strong> for vacant commercial units (re-uses existing commercial-availability data; surfaces vacancy without a separate workflow).</li>
+  <li><strong>Property-config toggle</strong> in admin to enable/disable the retail page per property (mixed-use only).</li>
+  <li><strong>Mobile-responsive</strong>, follows existing EntrataLeasingWebsite template patterns.</li>
+</ul>
+
+<h2>Scope (out)</h2>
+<ul>
+  <li>Commercial leasing application flow — residential prospect flow only. Commercial-lease leads route to the commercial sales team via the existing pipeline.</li>
+  <li>Tenant content management UI for property managers to edit retail-tenant pages directly. v1 reads from existing commercial-customer records; editing happens through the existing commercial-customer UI in Entrata, not a new surface.</li>
+  <li>Retail-tenant reviews / ratings — defer.</li>
+  <li>Cross-property retail discovery (e.g., "all coffee shops at properties in Salt Lake County") — defer.</li>
+</ul>
+
+<h2>Success metric</h2>
+<p>Adoption: # of mixed-use properties on Entrata that enable the retail page within 6 months of launch. Target: 50% of identified mixed-use portfolio (mixed-use = properties with ≥1 commercial-customer record). Secondary: prospect engagement metric — % of sessions on mixed-use property pages that visit the retail page (no target set in v1; baseline-establishing).</p>
+
+<h2>Evidence</h2>
+<p><code>tracker-drops/2026-05-26T17-45-38Z/signals.json</code> row matching <code>competitor_id=jonah-digital</code> + <code>source_url=https://jonahdigital.com/add-ons/</code> (importance 0.84, same Add-Ons row as PRD A — covers SightMap, Retail Page, and Tour Scheduler; this PRD addresses the Retail Page line).</p>
+
+<h2>Existing Entrata implementation</h2>
+<p>Core parity check (richer-vocab pass) returned Partial — 35 score / 7 files / 3 apps. Top hit: <code>Entrata/Application/Customers/CCustomersSystemController.class.php</code>. Commercial-customer + commercial-lease infrastructure exists in Core. <strong>What does NOT exist:</strong> prospect-facing retail-listing UI on leasing websites, tenant-category filters on prospect pages, or a "retail at this property" page template. The infrastructure is owned, the prospect-facing surface is missing.</p>
+
+<h2>Delta vs Core</h2>
+<p>The prospect-facing retail-tenant page template, tenant-category filters, and the read-only API binding between existing commercial-customer data and the new leasing-website page. The commercial-customer data layer itself is reused unchanged — no new write paths, no schema changes to commercial-customer records.</p>
+
+<h2>Net-new engineering ask</h2>
+<ul>
+  <li><strong>"Retail at this property" page template</strong> in EntrataLeasingWebsite — frontend, S. Follows existing template patterns; new layout for tenant cards with category, hours, website link, logo.</li>
+  <li><strong>Read-only API binding</strong> from commercial-customer records to leasing-website page — backend, S. Internal API endpoint exposing commercial-tenant data filtered by <code>property_id</code> + <code>is_prospect_facing</code>.</li>
+  <li><strong>Tenant-category filter UI</strong> on the new page — frontend, S. Reuses existing filter primitive from residential pages.</li>
+  <li><strong>Property-config toggle</strong> to enable/disable the retail page per property — admin, S. New boolean on <code>property_config</code>; default false; only properties with ≥1 commercial-customer record see the toggle.</li>
+</ul>
+
+<h2>Effort estimate</h2>
+<p><strong>S</strong> (small). Read-only surface on top of existing commercial-customer data; no new write paths, no schema changes, no integration with new third-party systems. Single team can ship; primary work is frontend template + a read-only backend endpoint.</p>
+
+<div class="footer">
+Drop <code>2026-05-26T17-45-38Z</code> &middot; Generated by tracker-drop-cycle skill &middot; Manager-approved via §4.4b on 2026-05-26
+</div>
+
+</body>
+</html>
