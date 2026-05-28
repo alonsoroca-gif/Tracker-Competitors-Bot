@@ -1,0 +1,17 @@
+{
+  "run_id": "2026-05-28T21-21-38Z",
+  "created_at": "2026-05-28T21:21:38.451Z",
+  "new_signals_added": 0,
+  "retention_days": 7,
+  "signals_kept_after_prune": 165,
+  "signals_removed_retention": 0,
+  "source": "tracker-publish-drop.js",
+  "streams": {
+    "external": true,
+    "customer_voice": false
+  },
+  "sourcing_rules": {
+    "external": "public — Rule 1 (initiative-1-tracker/docs/DATA-SOURCING-RULES.md)",
+    "customer_voice": "internal sensitive — Rule 2 (optional; import via import-customer-voice.js)"
+  }
+}
