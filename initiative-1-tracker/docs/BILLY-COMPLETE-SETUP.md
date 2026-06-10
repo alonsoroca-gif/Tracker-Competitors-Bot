@@ -1,8 +1,25 @@
 # Billy — complete Tracker setup (start → finish)
 
-**One document.** Everything you need from first clone through daily morningbrief.  
+**One document.** Open it in Cursor and let the agent guide you.  
 **Time:** ~25–35 minutes one-time.  
 **No 5:50am schedule. No overnight laptop.**
+
+---
+
+## Part 0 — Start in Cursor (do this first)
+
+1. Clone the Tracker repo (Part 2a) if you have not already.
+2. Open the repo in **Cursor**.
+3. Open **this file** in the editor.
+4. Paste into **Cursor chat**:
+
+```
+Read initiative-1-tracker/docs/BILLY-COMPLETE-SETUP.md and guide me step-by-step through setup (Parts 1–6). Run each verification command for me. When manager:preflight passes, run npm run billy:demo and explain what I will see each morning on Product signal days.
+```
+
+Cursor uses the **billy-tracker-onboard** skill and walks you through every step — clone, workspace, verify, demo, morningbrief blocks.
+
+**You do not need to memorize commands.** The agent runs them with you.
 
 ---
 
@@ -12,10 +29,10 @@
 |-------|----------------|-------------|
 | **GitHub Actions (5:45am)** | Collects competitor signals → `tracker-drops/` | Automatic |
 | **tracker-publish (Step 0 ~8am)** | Interpret → Core parity → PRDs → vignettes → `tracker-briefs/` | Background agent when you start morningbrief |
-| **tracker-feed (~8:20)** | Shows today's brief in chat + opens viewer | End of morningbrief |
-| **Tracker Brief Viewer** | Wide table, prototypes, PRD PDFs | Browser / Simple Browser |
+| **tracker-feed (~8:20)** | Shows today's brief in chat + **auto-opens viewer** | End of morningbrief |
+| **Tracker Brief Viewer** | Full-width table, prototypes, PRD PDFs | Opens automatically via `--open` |
 
-**Parity:** Path A — local `entrata-core` clone + `git pull` each publish. No GitHub API token required for handoff.
+**Parity:** Path A — local `entrata-core` clone + `git pull` each publish. No GitHub API token required.
 
 ---
 
@@ -24,16 +41,14 @@
 | Time | What |
 |------|------|
 | 5:45am | GitHub collects signals (you do nothing) |
-| ~8:00am | Run **morningbrief** → **Step 0** starts publish in **background** |
-| 8:00–8:20 | Other morningbrief subskills (publish runs in parallel) |
-| ~8:20 | **tracker-feed** section — brief table + auto-open viewer |
-| Later | If brief wasn't ready at 8:20, **Slack DM** when it lands (if webhooks configured) |
+| ~8:00am | **morningbrief** → **Step 0** starts publish in **background** |
+| 8:00–8:20 | Other morningbrief subskills |
+| ~8:20 | **tracker-feed** — chat table + **viewer auto-opens** |
+| Later | Slack DM if brief lands after 8:20 (Alonso wires webhooks) |
 
 ---
 
 ## Part 1 — Prerequisites (2 min)
-
-Before cloning, confirm:
 
 | # | Check | If NO |
 |---|--------|-------|
@@ -41,7 +56,7 @@ Before cloning, confirm:
 | 2 | GitHub access to **`entrata/core`** | Request from IT / manager |
 | 3 | `ssh -T git@github.com` succeeds | [Add SSH key](https://docs.github.com/en/authentication/connecting-to-github-with-ssh) |
 | 4 | Node.js 18+ (`node -v`) | `brew install node` |
-| 5 | VPN (if your org requires it for GitHub) | Connect VPN |
+| 5 | VPN (if required) | Connect VPN |
 
 ---
 
@@ -68,9 +83,7 @@ git pull origin main
 ls Applications | head
 ```
 
-You should see `Admin`, `ProspectPortal`, `Leasing`, etc.
-
-**Target layout:**
+Target layout:
 
 ```
 ~/Projects/Tracker Competitors Bot/
@@ -103,9 +116,7 @@ Edit `entrata-plus-tracker.code-workspace` — set Core path to **your** clone:
 }
 ```
 
-**Cursor → File → Open Workspace from File…** → select `entrata-plus-tracker.code-workspace`.
-
-Always use this workspace for morningbrief (publish agent needs both roots).
+**Cursor → File → Open Workspace from File…** → `entrata-plus-tracker.code-workspace`.
 
 ---
 
@@ -134,29 +145,45 @@ Optional `~/.zshrc`:
 export ENTRATA_MONO_ROOT=~/Projects/entrata-core
 ```
 
-Smoke test (feed only — OK if "not ready" until first publish):
+---
+
+## Part 5 — First-run demo (Product signal day)
+
+**Run once after preflight passes.** Shows fake data — what a meaningful Product morning looks like.
 
 ```bash
-npm run brief:readiness
-npm run brief:feed
+npm run billy:demo
 ```
+
+This will:
+
+1. Print the **tracker-feed** markdown (summary + 6-column table + prototype bullets) — same shape as ~8:20 chat output.
+2. **Auto-open** the Tracker Brief Viewer with `_sample-product-day` — 2 prototypes (Jonah siteplan + EliseAI field-mode), full signals table, PRD download buttons.
+
+| Demo section | Real morning |
+|--------------|--------------|
+| Summary `2 net-new · 2 prototypes` | Heavy Product day |
+| Parity columns | Layer 2 verdicts from Core scan |
+| Prototype cards | HTML vignettes (daily) — use `/trackerstart` for full apps |
+| PMM-only days | Same table, **0 prototypes** — still review routing |
+
+**Re-run anytime:** `npm run billy:demo`
 
 ---
 
-## Part 5 — Morningbrief paste blocks
+## Part 6 — Morningbrief paste blocks
 
-Paste **both** into your morningbrief skill (or follow each run).
+Paste **both** into your morningbrief skill.
 
 ### Step 0 — Kick off publish (first action ~8:00am MT)
 
 **Before any other subskill.** Background only — do **not** wait.
 
 1. Open **entrata-plus-tracker** workspace.
-2. Start a **background Cursor agent** with:
-   - Prompt file: `initiative-1-tracker/automation/morningbrief/tracker-publish-kickoff.md`
+2. Background Cursor agent:
+   - Prompt: `initiative-1-tracker/automation/morningbrief/tracker-publish-kickoff.md`
    - Skill: **tracker-publish**
-3. Tell yourself in chat: _Tracker publish started in background._
-4. **Immediately** continue standup / portfolio / other subskills.
+3. Continue other subskills immediately.
 
 **Do not** run `/trackerstart` here.
 
@@ -164,46 +191,25 @@ Paste **both** into your morningbrief skill (or follow each run).
 
 ### Tracker section — Feed (~8:20am MT)
 
-After other subskills:
-
 ```bash
 node initiative-1-tracker/tracker/scripts/brief-readiness-check.js --json
 node initiative-1-tracker/tracker/scripts/tracker-feed-render.js --open
 ```
 
-The `--open` flag starts a local server (if needed) and opens the **Tracker Brief Viewer**.
+`--open` **auto-starts** the local server (if needed) and **opens the viewer** in your browser.
 
-**If `ok: false`:**
+**If `ok: false`:** skip section; Slack DM when ready (if wired).
 
-> **Tracker brief not ready** — publish still running. Skip tracker section. Slack DM when ready.
-
-Do **not** improvise from `tracker-drops/`.
-
-**If ready:** paste full `tracker-feed-render.js` output into chat (summary + table + prototypes).
+**If ready:** paste feed output into chat — viewer is already open.
 
 ---
 
-## Part 6 — First live morningbrief
+## Part 7 — First live morningbrief
 
-1. Open workspace @ ~8:00am.
-2. Step 0 → confirm background publish started.
-3. ~8:20 → tracker-feed + viewer opens.
-4. Monday habit: confirm `tracker-briefs/latest.json` updated.
-
----
-
-## Part 7 — Viewer (manual)
-
-```bash
-cd ~/Projects/"Tracker Competitors Bot"
-npm run brief:open-viewer --prefix initiative-1-tracker/tracker
-# or with a specific run:
-node initiative-1-tracker/tracker/scripts/open-brief-viewer.js --run _sample-product-day
-```
-
-Opens `http://127.0.0.1:8765/tracker-briefs/viewer/index.html`
-
-**Product-day QA fixture:** `?run=_sample-product-day`
+1. Workspace @ ~8:00am.
+2. Step 0 → background publish started.
+3. ~8:20 → tracker-feed + viewer auto-opens.
+4. Mondays: confirm `tracker-briefs/latest.json` updated.
 
 ---
 
@@ -211,42 +217,22 @@ Opens `http://127.0.0.1:8765/tracker-briefs/viewer/index.html`
 
 | Daily brief | Deep dive |
 |-------------|-----------|
-| HTML **vignettes** in viewer (~minutes) | **`/trackerstart`** + `create-prototype` (~hours) |
-| Same PRD + parity story | Same story, **higher-quality** full app |
+| HTML **vignettes** (~minutes) | **`/trackerstart`** + `create-prototype` (~hours) |
+| Same PRD + parity | Higher-quality full app |
 
-Daily publish uses vignettes because of **time** — not missing capability. When a signal needs a demo-quality prototype, run **`/trackerstart`** on that row in the Tracker workspace.
+Time constraint drives vignettes in daily publish. Hero signals → `/trackerstart`.
 
 ---
 
-## Part 9 — Slack notifications (optional)
+## Part 9 — Slack (Alonso wires — you receive)
 
-**No API key.** Slack uses **Incoming Webhooks** — a URL that posts to a channel when our GitHub Action or script hits it.
+**No API key.** Incoming Webhook URLs only.
 
-### Who sets this up?
+| You receive | When |
+|-------------|------|
+| Late-ready DM | Brief finished after your 8:20 section |
 
-| Person | What |
-|--------|------|
-| **Alonso (or IT)** | Creates Slack Incoming Webhooks + adds secrets to **GitHub repo** |
-| **Billy** | Does **not** need to build anything for Slack — optional convenience |
-
-### Three webhook slots
-
-| GitHub secret | Who gets notified | When |
-|---------------|-------------------|------|
-| `SLACK_WEBHOOK_URL` | Drop channel (existing) | After nightly collect push |
-| `SLACK_WEBHOOK_URL_OPERATOR` | **Alonso** (you) | 5:35am preflight, 7:45am "not ready" (normal before 8am) |
-| `SLACK_WEBHOOK_URL_BILLY` | **Billy** | Brief became ready **after** his 8:20 tracker section |
-
-If secrets are unset, workflows **skip Slack silently** — everything still works.
-
-### How Alonso creates a webhook (5 min)
-
-1. Slack → **Apps** → **Incoming Webhooks** → Add to workspace → pick channel (e.g. `#tracker-ops` for operator, DM channel for Billy).
-2. Copy webhook URL (`https://hooks.slack.com/services/...`).
-3. GitHub repo → **Settings → Secrets and variables → Actions → New repository secret**.
-4. Name exactly `SLACK_WEBHOOK_URL_OPERATOR` or `SLACK_WEBHOOK_URL_BILLY`, paste URL, save.
-
-No OAuth app, no bot token, no Billy-side code.
+**You configure nothing.** Alonso adds `SLACK_WEBHOOK_URL_BILLY` in GitHub (see `SLACK-WEBHOOK-SETUP.md`). Works without Slack — optional convenience.
 
 ---
 
@@ -254,7 +240,7 @@ No OAuth app, no bot token, no Billy-side code.
 
 ### `git pull` fails on entrata-core (`fatal: bad object HEAD`)
 
-**Billy:** start fresh — never copy a broken `.git` folder.
+Never copy a broken `.git` folder — fresh clone:
 
 ```bash
 mv ~/Projects/entrata-core ~/Projects/entrata-core.broken-$(date +%Y%m%d)
@@ -266,21 +252,15 @@ npm run verify:core && npm run test:parity && npm run manager:preflight
 
 ### `manager:preflight` fails — no workspace
 
-Copy and edit `entrata-plus-tracker.code-workspace` (Part 3).
+Part 3 — copy and edit workspace file.
 
-### Viewer 404 / blank
+### Viewer blank / 404
 
-Run server from **repo root**:
-
-```bash
-python3 -m http.server 8765
-```
-
-Open `http://localhost:8765/tracker-briefs/viewer/index.html` — not the editor file tab.
+`npm run brief:open-viewer` from repo (auto-starts server). Do not open the HTML file as an editor tab.
 
 ### Brief "not ready" at 8:20
 
-Normal on heavy Product days (~45 min). Skip section; check Slack later or re-run:
+Normal on heavy Product days. Skip section; Slack later or:
 
 ```bash
 npm run brief:feed --prefix initiative-1-tracker/tracker
@@ -289,48 +269,17 @@ npm run brief:open-viewer --prefix initiative-1-tracker/tracker
 
 ---
 
-## Appendix — For Alonso (not Billy)
-
-### Corrupt Core clone on Alonso's Mac
-
-**Symptom:** `verify:core` passes but `git pull` in entrata-core fails with `bad object HEAD`.
-
-**Why it matters:** `tracker-publish` runs `git pull` on Core each morning to refresh parity. Broken git metadata breaks that step even though files on disk still scan.
-
-**What Alonso should do (once, ~15 min):**
-
-1. Read cached path: `cat initiative-1-tracker/tracker/.core-path`
-2. Rename broken clone (backup):  
-   `mv "/Users/alonso.roca/Desktop/Core Repo/entrata-core" "/Users/alonso.roca/Desktop/Core Repo/entrata-core.broken-$(date +%Y%m%d)"`
-3. Fresh clone to the **same path** the workspace expects.
-4. Re-wire: `node scripts/core-parity-check.js --save-core <new-path>`
-5. `npm run verify:core && npm run test:parity && npm run manager:preflight`
-6. Update `entrata-plus-tracker.code-workspace` if path changed.
-
-**Billy is unaffected** if he clones fresh per Part 2b.
-
-### Optional API upgrade (later)
-
-Fine-grained GitHub token on `entrata/core` speeds Layer 1 only. Layer 2 still needs local clone. See `TRACKER-PARITY-GITHUB.md`.
-
----
-
 ## Quick reference
 
 | Command | Purpose |
 |---------|---------|
 | `npm run manager:preflight` | Gate before first publish |
-| `npm run publish:dry-run` | Scaffold test (no agent) |
-| `npm run brief:feed` | Render today's brief markdown |
-| `npm run brief:open-viewer` | Open viewer in browser |
-| `/trackerstart` | Deep dive — full prototypes |
+| `npm run billy:demo` | **First-run Product-day demo** |
+| `npm run brief:feed` | Today's brief markdown |
+| `npm run brief:open-viewer` | Open viewer (auto server) |
+| `tracker-feed-render.js --open` | Feed + auto-open (daily) |
+| `/trackerstart` | Deep dive prototypes |
 
 ---
 
-## Related (split docs — same content lives here)
-
-- `TRACKER-AUTOMATION.md` — architecture diagram
-- `TRACKER-PROTOTYPE-TIERS.md` — vignette vs create-prototype detail
-- `TRACKER-HANDOFF-PLAN.md` — Alonso build checklist
-
-**Questions:** Alonso.
+**Questions:** Alonso · **Slack setup (Alonso):** `SLACK-WEBHOOK-SETUP.md`

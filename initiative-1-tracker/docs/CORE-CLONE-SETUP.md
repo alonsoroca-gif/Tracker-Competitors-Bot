@@ -195,24 +195,27 @@ Billy continues other subskills. At the **tracker section** (~8:20), **tracker-f
 
 ## Troubleshooting — `fatal: bad object HEAD` or `unable to read tree`
 
-Your **files on disk may still work** (`verify:core` OK) while **git metadata is corrupt** — `git pull` will fail until you re-clone.
+**Symptom:** `verify:core` passes but `git pull` in entrata-core fails.
+
+**Safe state:** Files on disk still work for parity scans. Only `git pull` at publish time is broken.
+
+**Fix (one script — VPN on, stable network):**
 
 ```bash
-# 1 — Note your path (e.g. ~/Projects/entrata-core)
-cat initiative-1-tracker/tracker/.core-path
-
-# 2 — Rename broken clone (keep as backup until re-clone verified)
-mv ~/Projects/entrata-core ~/Projects/entrata-core.broken-$(date +%Y%m%d)
-
-# 3 — Fresh clone (Step 1 above)
-git clone git@github.com:entrata/core.git ~/Projects/entrata-core
-
-# 4 — Re-wire Tracker
-cd /path/to/Tracker-Competitors-Bot/initiative-1-tracker/tracker
-npm run verify:core -- --save-core ~/Projects/entrata-core
-npm run test:parity
-npm run manager:preflight
+cd initiative-1-tracker/tracker
+chmod +x scripts/reclone-core.sh
+./scripts/reclone-core.sh "/path/to/entrata-core"
 ```
+
+The script backs up the old clone, fresh-clones, re-wires `.core-path`, and runs verify + preflight.
+
+If clone fails mid-flight (`early EOF`, `Broken pipe`), your backup folder is renamed to `entrata-core.broken-*` — restore it:
+
+```bash
+mv entrata-core.broken-YYYYMMDD entrata-core
+```
+
+Then retry `./scripts/reclone-core.sh` on a stable connection.
 
 Billy should **always** start from a fresh clone — never copy a corrupted `.git` folder.
 
