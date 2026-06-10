@@ -21,6 +21,31 @@ Cursor uses the **billy-tracker-onboard** skill and walks you through every step
 
 **You do not need to memorize commands.** The agent runs them with you.
 
+### How the onboarding skill gets into Cursor (no separate install)
+
+Tracker skills **ship inside this repo** under `.cursor/skills/`:
+
+| Skill | Purpose |
+|-------|---------|
+| `billy-tracker-onboard` | This setup walkthrough |
+| `tracker-feed` | ~8:20 daily brief consumer |
+| `tracker-publish` | ~8:00 background factory |
+
+**After `git pull`**, open the **Tracker Competitors Bot** folder (or `entrata-plus-tracker` workspace) in Cursor:
+
+1. **File → Open Folder / Open Workspace** — must be this repo root (skills are project-scoped).
+2. **Reload window** once if needed: Command Palette → `Developer: Reload Window`.
+3. Confirm skills exist on disk: `.cursor/skills/billy-tracker-onboard/SKILL.md` (and `tracker-feed`, `tracker-publish`).
+4. Paste the **Part 0** prompt — Cursor loads project skills automatically; you do **not** add them from the Cursor marketplace.
+
+If the agent does not pick up the skill by name, paste explicitly:
+
+```
+Use the billy-tracker-onboard skill. Read initiative-1-tracker/docs/BILLY-COMPLETE-SETUP.md and guide me step-by-step.
+```
+
+**Personal vs project skills:** These live in the **repo**, not your global `~/.cursor/skills`. Anyone who clones the repo gets them on `main`.
+
 ---
 
 ## What you are installing

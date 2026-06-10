@@ -44,18 +44,41 @@ Not today's live brief — sample data only.
 function walkthrough() {
   return `
 ---
-### What you are looking at
+## Your ~8:20am checklist — Product signal days (every time)
 
-| Section | Real morning meaning |
-|---------|----------------------|
-| **Summary line** | Net-new count, prototype count, ready time |
-| **Signals table** | Every competitor row — classification, parity, routing |
-| **Prototypes** | HTML vignettes + PRD download links |
-| **Viewer (auto-opens)** | Full-width table + prototype cards side-by-side |
+When **product_row_count > 0**, expect this exact shape:
 
-**PMM-only days:** same table, 0 prototypes — still review routing.
+1. **Chat block** (tracker-feed pastes into morningbrief)
+   - One summary line: net-new count · prototype count · ready time
+   - **6-column table**: Competitor · Headline · Classification · Parity · Why/routing
+   - Prototype bullets with PRD paths
 
-**Next:** run real morningbrief tomorrow — Step 0 publish → tracker-feed @ ~8:20.
+2. **Browser auto-opens** — Tracker Brief Viewer
+   - Full signals table (scroll horizontally if needed)
+   - **Prototype cards** side-by-side — click to expand, download PRD PDF
+   - Same run id as summary line
+
+3. **You do not** re-run publish or open \`tracker-drops/\` manually
+
+---
+
+## PMM-only days (no Product signals)
+
+Same **table** in chat + viewer, but:
+- Summary says **0 prototypes**
+- No prototype cards — review **Why / routing** column only
+
+---
+
+## This demo vs live
+
+| | This run (\`npm run billy:demo\`) | Live morningbrief |
+|--|-----------------------------------|-------------------|
+| Data | Fixture \`_sample-product-day\` | Today's publish |
+| Trigger | You, once at setup | tracker-feed @ ~8:20 |
+| Viewer | Auto-opens now | Auto-opens via \`--open\` |
+
+**Next live step:** morningbrief Step 0 @ ~8:00 → tracker-feed @ ~8:20.
 `.trim();
 }
 

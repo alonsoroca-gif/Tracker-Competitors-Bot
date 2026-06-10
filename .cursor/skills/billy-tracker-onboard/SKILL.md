@@ -13,11 +13,21 @@ Interactive guide for **first-time setup**. Billy opens this repo in Cursor with
 
 ---
 
+## How Billy gets this skill (no marketplace install)
+
+Skills are **bundled in the repo** at `.cursor/skills/billy-tracker-onboard/`. After Billy clones and opens this repo (or `entrata-plus-tracker` workspace) in Cursor, project skills load automatically. If not, **Developer: Reload Window**.
+
+Verify path exists: `.cursor/skills/billy-tracker-onboard/SKILL.md`.
+
 ## How to run this skill
 
 Billy pastes:
 
 > Read `initiative-1-tracker/docs/BILLY-COMPLETE-SETUP.md` and guide me step-by-step through setup. Run verification commands for me. When preflight passes, run the Product-day demo and explain what I will see each morning.
+
+Or:
+
+> Use the billy-tracker-onboard skill and walk me through BILLY-COMPLETE-SETUP.md
 
 ---
 
@@ -64,11 +74,13 @@ All must PASS before continuing.
 npm run billy:demo
 ```
 
-Explain:
+Walk Billy through the **Product-day checklist** printed after the feed:
 
-- Chat output = what tracker-feed pastes at ~8:20
-- Browser auto-opens viewer with **2 prototypes** (Product day fixture)
-- PMM-only days = table only, 0 prototypes
+1. **Chat block** — summary + 6-column table + prototype bullets (same every Product morning)
+2. **Viewer auto-opens** — full table + 2 prototype cards + PRD downloads
+3. **PMM-only contrast** — same table, 0 prototypes, routing column is the focus
+
+Re-run `npm run billy:demo` anytime to rehearse. Live mornings use the same shape with today's data.
 
 ### Part 6 — Morningbrief blocks
 
