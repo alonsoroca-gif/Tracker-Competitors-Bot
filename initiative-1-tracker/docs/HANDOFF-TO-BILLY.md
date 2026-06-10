@@ -8,12 +8,12 @@ Send after `main` has the tracker-brief handoff merge.
 
 Hi Billy,
 
-Everything is on `main`. **Open one file and follow it start to finish:**
+Everything is on `main`.
 
-**[BILLY-COMPLETE-SETUP.md](./BILLY-COMPLETE-SETUP.md)**
+1. Clone + open repo in **Cursor**
+2. Open **[BILLY-COMPLETE-SETUP.md](./BILLY-COMPLETE-SETUP.md)**
+3. Paste **Part 0** prompt into chat — Cursor guides you start to finish, then runs **`npm run billy:demo`** so you see a Product-day morning with sample data
 
-That doc covers: clone Tracker + Core, workspace, verify, morningbrief paste blocks, daily rhythm, viewer, Slack (optional), and troubleshooting.
-
-No 5:50am schedule. No overnight laptop.
+No 5:50am schedule. No overnight laptop. Slack late pings wired by Alonso (optional).
 
 — Alonso
