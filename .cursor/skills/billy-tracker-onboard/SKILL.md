@@ -23,7 +23,7 @@ Verify path exists: `.cursor/skills/billy-tracker-onboard/SKILL.md`.
 
 Billy pastes:
 
-> Read `initiative-1-tracker/docs/BILLY-COMPLETE-SETUP.md` and guide me step-by-step through setup. Run verification commands for me. When preflight passes, run the Product-day demo and explain what I will see each morning.
+> Read `initiative-1-tracker/docs/BILLY-COMPLETE-SETUP.md` and guide me step-by-step through setup. Run verification commands for me. When preflight passes, run brief:install-opener and reload Cursor, then billy:demo and explain what I will see each morning.
 
 Or:
 
@@ -35,7 +35,7 @@ Or:
 
 ### Part 0 — Orient (1 min)
 
-Explain the three moving parts: GHA collect (automatic), tracker-publish @ morningbrief Step 0, tracker-feed @ ~8:20 with **auto-open viewer**.
+Explain: GHA collect (automatic), morningbrief **Step 0** preflight, **Step 1** tracker-publish (background), tracker-feed @ ~8:20 opens viewer in **Cursor Simple Browser**.
 
 ### Part 1 — Prerequisites
 
@@ -43,17 +43,11 @@ Ask Billy to confirm SSH, `entrata/core` access, Node 18+. Help fix blockers bef
 
 ### Part 2 — Clone repos
 
-Run or guide:
-
-```bash
-git clone … Tracker Competitors Bot
-git clone git@github.com:entrata/core.git entrata-core
-ls entrata-core/Applications | head
-```
+Run or guide clone Tracker + entrata-core. Verify `Applications/` exists.
 
 ### Part 3 — Workspace
 
-Help copy `entrata-plus-tracker.code-workspace.example` → `entrata-plus-tracker.code-workspace` with **his** Core path. Open workspace in Cursor.
+Copy `entrata-plus-tracker.code-workspace.example` with **his** Core path. Open workspace in Cursor.
 
 ### Part 4 — Wire + verify
 
@@ -66,29 +60,37 @@ npm run test:parity
 npm run manager:preflight
 ```
 
-All must PASS before continuing.
+All must PASS before Part 5.
 
-### Part 5 — First-run demo (required)
+### Part 5 — Cursor opener (one-time)
 
 ```bash
+cd initiative-1-tracker/tracker
+npm run brief:install-opener
+```
+
+Then **Developer: Reload Window**. Explain: no `cursor://vscode.runCommands`; bundled `entrata.tracker-brief-opener` extension.
+
+### Part 6 — First-run demo (required)
+
+```bash
+cd initiative-1-tracker/tracker
 npm run billy:demo
 ```
 
-Walk Billy through the **Product-day checklist** printed after the feed:
+Walk through:
 
 1. **Chat block** — summary + 6-column table + prototype bullets (What, ROI, Math line)
-2. **Viewer auto-opens** — full signals table + prototype cards (**skim ROI metrics only**) + PRD downloads; **Open prototype** for full math, briefs, vignette
-3. **PMM-only contrast** — same table, 0 prototypes, routing column is the focus
+2. **Viewer in Simple Browser** — responsive table + skim ROI cards + **Open prototype** for full detail
+3. **PMM-only contrast** — same table, 0 prototypes
 
-Re-run `npm run billy:demo` anytime to rehearse. Live mornings use the same shape with today's data.
+### Part 7 — Morningbrief blocks
 
-### Part 6 — Morningbrief blocks
+Point to doc Part 7: Step 0 `morningbrief:preflight`, Step 1 tracker-publish kickoff, ~8:20 tracker-feed `--open`.
 
-Point Billy to Part 5 of the doc (Step 0 kickoff + tracker section with `--open`). Confirm he saved blocks in morningbrief skill.
+### Part 8 — Done
 
-### Part 7 — Done
-
-Remind: first **live** publish happens tomorrow ~8:00 Step 0. Slack late pings work if Alonso added webhooks (optional).
+First live morningbrief: Step 0 preflight → Step 1 publish → ~8:20 feed. Slack optional.
 
 ---
 
@@ -96,10 +98,10 @@ Remind: first **live** publish happens tomorrow ~8:00 Step 0. Slack late pings w
 
 | Do | Don't |
 |----|-------|
-| Run commands in his terminal | Run `/trackerstart` during setup |
-| Use his real Core path | Assume Alonso's paths |
+| Run commands from `initiative-1-tracker/tracker` | Run from `entrata-core` cwd |
+| Run `brief:install-opener` before demo | Skip opener (auto-open fails) |
 | Run `billy:demo` before declaring done | Skip preflight |
-| Explain each demo section | Improvise from `tracker-drops/` |
+| Explain Simple Browser vs Chrome | Use `vscode.runCommands` URLs |
 
 ---
 
