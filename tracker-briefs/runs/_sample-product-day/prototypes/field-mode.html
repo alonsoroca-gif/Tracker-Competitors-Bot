@@ -3,50 +3,185 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Field-mode vignette</title>
+  <title>Field-Mode Leasing</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     html, body { height: 100%; overflow: hidden; }
     body {
-      font-family: system-ui, sans-serif;
-      background: #18181b;
+      font-family: "SF Pro Text", system-ui, sans-serif;
+      background: linear-gradient(160deg, #18181b 0%, #0f172a 100%);
+      color: #fafafa;
+      display: grid;
+      grid-template-columns: 1fr 200px;
+      font-size: 10px;
+    }
+    .app {
+      display: flex;
+      flex-direction: column;
+      padding: 10px 12px;
+      min-width: 0;
+    }
+    .statusbar {
+      display: flex;
+      justify-content: space-between;
+      font-size: 8px;
+      color: #71717a;
+      margin-bottom: 6px;
+    }
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+    .header h1 { font-size: 12px; font-weight: 700; }
+    .badge {
+      font-size: 8px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      padding: 3px 7px;
+      border-radius: 999px;
+      background: #1d4ed833;
+      border: 1px solid #3b82f666;
+      color: #93c5fd;
+    }
+    .unit-card {
+      background: #27272a;
+      border: 1px solid #3f3f46;
+      border-radius: 12px;
+      padding: 10px;
+      margin-bottom: 8px;
+      display: grid;
+      grid-template-columns: 56px 1fr;
+      gap: 8px;
+      align-items: center;
+    }
+    .thumb {
+      width: 56px; height: 56px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, #3f3f46, #52525b);
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 10px;
+      font-size: 18px;
     }
-    .phone {
-      width: 100%;
-      max-width: 280px;
-      border: 3px solid #52525b;
-      border-radius: 22px;
-      padding: 14px 12px;
-      background: #27272a;
-    }
-    .tour-title { font-size: 0.85rem; font-weight: 600; color: #fafafa; margin-bottom: 4px; }
-    .tour-meta { font-size: 0.72rem; color: #a1a1aa; margin-bottom: 10px; }
-    button {
-      display: block;
-      width: 100%;
-      margin: 6px 0;
-      padding: 10px;
-      border: none;
-      border-radius: 8px;
-      background: #3b82f6;
-      color: white;
-      font-size: 0.75rem;
+    .unit-title { font-size: 11px; font-weight: 600; }
+    .unit-meta { font-size: 9px; color: #a1a1aa; margin-top: 2px; }
+    .unit-rent { font-size: 10px; color: #4ade80; font-weight: 600; margin-top: 4px; }
+    .actions { display: flex; flex-direction: column; gap: 5px; }
+    .action {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 10px;
+      border-radius: 9px;
+      border: 1px solid #3f3f46;
+      background: #1f2937;
       text-align: left;
     }
-    button.secondary { background: #3f3f46; }
+    .action.primary { background: #1d4ed8; border-color: #2563eb; }
+    .action .icon { font-size: 14px; width: 18px; text-align: center; flex-shrink: 0; }
+    .action .label { font-size: 9px; font-weight: 600; color: #f4f4f5; }
+    .action .desc { font-size: 8px; color: #a1a1aa; margin-top: 1px; }
+    .timeline {
+      margin-top: auto;
+      padding-top: 8px;
+      border-top: 1px solid #3f3f46;
+    }
+    .timeline h2 { font-size: 8px; text-transform: uppercase; letter-spacing: 0.05em; color: #71717a; margin-bottom: 5px; }
+    .event { font-size: 8px; color: #a1a1aa; margin-bottom: 3px; }
+    .event strong { color: #d4d4d8; }
+    .rail {
+      background: #0c0c0f;
+      border-left: 1px solid #3f3f46;
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .rail h2 {
+      font-size: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: #71717a;
+    }
+    .flow-step {
+      padding: 7px;
+      border-radius: 8px;
+      background: #18181b;
+      border: 1px solid #27272a;
+    }
+    .flow-step .n { font-size: 8px; color: #3b82f6; font-weight: 700; }
+    .flow-step p { font-size: 8px; color: #d4d4d8; margin-top: 3px; line-height: 1.35; }
+    .products {
+      margin-top: auto;
+      font-size: 8px;
+      color: #52525b;
+      line-height: 1.4;
+    }
+    .products span { color: #71717a; }
   </style>
 </head>
 <body>
-  <div class="phone">
-    <div class="tour-title">Tour · Unit 204</div>
-    <div class="tour-meta">Building A · $1,845/mo</div>
-    <button>Capture photo → PMS</button>
-    <button>Push apply link</button>
-    <button class="secondary">Voice note</button>
-  </div>
+  <main class="app">
+    <div class="statusbar"><span>9:41</span><span>Entrata Field · LTE</span></div>
+    <header class="header">
+      <h1>Tour in progress</h1>
+      <span class="badge">Unit 204</span>
+    </header>
+    <article class="unit-card">
+      <div class="thumb">📷</div>
+      <div>
+        <div class="unit-title">Building A · Unit 204</div>
+        <div class="unit-meta">2 bed · Kitchen upgraded · North view</div>
+        <div class="unit-rent">$1,845/mo · live PMS rate</div>
+      </div>
+    </article>
+    <section class="actions" aria-label="In-tour actions">
+      <button type="button" class="action primary">
+        <span class="icon">📸</span>
+        <div>
+          <div class="label">Capture photo → PMS</div>
+          <div class="desc">Attaches to unit record + prospect file</div>
+        </div>
+      </button>
+      <button type="button" class="action">
+        <span class="icon">🔗</span>
+        <div>
+          <div class="label">Push apply link</div>
+          <div class="desc">SMS deep-link with this unit's live pricing</div>
+        </div>
+      </button>
+      <button type="button" class="action">
+        <span class="icon">🎙</span>
+        <div>
+          <div class="label">Voice note</div>
+          <div class="desc">Transcribed to CRM · tagged to tour</div>
+        </div>
+      </button>
+    </section>
+    <section class="timeline">
+      <h2>Just now</h2>
+      <p class="event"><strong>2:14pm</strong> — Photo saved to Unit 204 prospect file</p>
+      <p class="event"><strong>2:11pm</strong> — Tour started · geofenced to property</p>
+    </section>
+  </main>
+  <aside class="rail" aria-label="Service flow">
+    <h2>What this delivers</h2>
+    <div class="flow-step">
+      <div class="n">01 · Capture</div>
+      <p>Agent documents the unit on-site — data lands in PMS, not a personal camera roll.</p>
+    </div>
+    <div class="flow-step">
+      <div class="n">02 · Convert</div>
+      <p>Push-to-apply while interest is hot; prospect sees live rate for this unit + term.</p>
+    </div>
+    <div class="flow-step">
+      <div class="n">03 · Close loop</div>
+      <p>Notes + photos sync to leasing CRM; maintenance ticket optional from same screen.</p>
+    </div>
+    <p class="products"><span>Powered by:</span> Leasing CRM · PMS · Screening · Maintenance</p>
+  </aside>
 </body>
 </html>

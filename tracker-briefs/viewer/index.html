@@ -4,9 +4,9 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Tracker Brief Viewer</title>
-  <!-- viewer-build: 2026-06-10-roi-v4 -->
-  <link rel="stylesheet" href="roi-styles.css" />
-  <script src="roi-shared.js"></script>
+  <!-- viewer-build: 2026-06-10-roi-v8 -->
+  <link rel="stylesheet" href="roi-styles.css?v=roi-v8" />
+  <script src="roi-shared.js?v=roi-v8"></script>
   <style>
     :root {
       --bg: #0c0c0f;
@@ -149,17 +149,22 @@
     }
     .demo-hint a { color: var(--accent); font-weight: 600; }
     .proto-preview-wrap {
+      display: block;
       position: relative;
       flex-shrink: 0;
       isolation: isolate;
       z-index: 1;
       border-top: 1px solid var(--border);
       background: #0a0a0c;
+      text-decoration: none;
+      color: inherit;
+      cursor: pointer;
     }
+    .proto-preview-wrap:hover .proto-open-hint { color: var(--accent); }
     .proto-card iframe {
       display: block;
       width: 100%;
-      height: 240px;
+      height: 280px;
       border: none;
       background: #18181b;
       pointer-events: none;
@@ -170,10 +175,8 @@
       text-align: center;
       font-size: 0.75rem;
       color: var(--muted);
-      text-decoration: none;
       border-top: 1px solid var(--border);
     }
-    .proto-open-hint:hover { color: var(--accent); }
     .proto-card .links {
       padding: 12px 14px 14px;
       display: flex;
@@ -217,7 +220,7 @@
   <header>
     <h1>Tracker Brief Viewer</h1>
     <span class="meta" id="run-meta">Loading…</span>
-    <span class="meta" title="Hard-refresh if ROI cards missing">viewer roi-v4</span>
+    <span class="meta" title="Hard-refresh if ROI cards missing">viewer roi-v8</span>
     <select id="run-select" aria-label="Select run"></select>
     <button type="button" id="reload-btn">Reload</button>
   </header>
@@ -253,13 +256,13 @@
       return new URL(rel, window.location.href).href;
     }
 
-    function viewerShellUrl(shellPage, assetPath, title, extraParams, roi) {
+    function viewerShellUrl(shellPage, assetPath, title, runId, protoId) {
       const back = encodeURIComponent(window.location.href);
       const src = encodeURIComponent(assetUrl(assetPath));
       let url = `${shellPage}?src=${src}&back=${back}`;
       if (title) url += `&title=${encodeURIComponent(title)}`;
-      if (extraParams) url += `&${extraParams}`;
-      if (roi) url += `&roi=${encodeURIComponent(JSON.stringify(roi))}`;
+      if (runId) url += `&run=${encodeURIComponent(runId)}`;
+      if (protoId) url += `&id=${encodeURIComponent(protoId)}`;
       return url;
     }
 
@@ -268,7 +271,9 @@
     }
 
     async function fetchJson(path) {
-      const res = await fetch(path);
+      const url = new URL(path, window.location.href);
+      url.searchParams.set('v', typeof VIEWER_BUILD !== 'undefined' ? VIEWER_BUILD : 'roi-v8');
+      const res = await fetch(url);
       if (!res.ok) throw new Error(`${path} → ${res.status}`);
       return res.json();
     }
@@ -311,8 +316,9 @@
       return `<table><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table>`;
     }
 
-    function renderPrototypes(protos, manifest) {
+    function renderPrototypes(protos, manifest, runId) {
       const el = document.getElementById('prototypes');
+      protos = normalizePrototypes(protos);
       if (!protos.length) {
         const isPmm = (manifest?.product_row_count ?? manifest?.prototype_count ?? 0) === 0;
         el.innerHTML = `
@@ -330,9 +336,11 @@
       el.innerHTML = '';
       protos.forEach((p) => {
         const htmlPath = p.preview_path || p.html_path || '';
-        const src = assetUrl(htmlPath) + '?v=4';
-        const protoShell = viewerShellUrl('prototype.html', htmlPath, p.title, null, p.roi);
-        const prdShell = p.prd_path ? viewerShellUrl('prd.html', p.prd_path, null, 'auto=pdf') : '';
+        const src = assetUrl(htmlPath) + '?v=roi-v8';
+        const protoShell = viewerShellUrl('prototype.html', htmlPath, p.title, runId, p.id);
+        const prdShell = p.prd_path
+          ? `prd.html?src=${encodeURIComponent(assetUrl(p.prd_path))}&back=${encodeURIComponent(window.location.href)}&auto=pdf`
+          : '';
 
         const card = document.createElement('article');
         card.className = 'proto-card';
@@ -343,28 +351,49 @@
         const roiSection = document.createElement('div');
         roiSection.className = 'proto-roi-section';
         roiSection.innerHTML = '<div class="proto-roi-label">ROI snapshot</div>';
-        roiSection.insertAdjacentHTML('beforeend', renderRoiPanel(p.roi));
+        roiSection.insertAdjacentHTML('beforeend', renderRoiPanel(p.roi, { metricsOnly: true }));
 
         const previewWrap = document.createElement('div');
         previewWrap.className = 'proto-preview-wrap';
+        previewWrap.title = 'Open prototype + ROI full screen';
+        previewWrap.addEventListener('click', () => window.open(protoShell, '_blank', 'noopener'));
+        previewWrap.setAttribute('role', 'button');
+        previewWrap.setAttribute('tabindex', '0');
+        previewWrap.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            window.open(protoShell, '_blank', 'noopener');
+          }
+        });
         const iframe = document.createElement('iframe');
         iframe.src = src;
         iframe.title = p.title || 'Prototype';
         iframe.loading = 'lazy';
-        const hint = document.createElement('a');
+        iframe.setAttribute('tabindex', '-1');
+        const hint = document.createElement('span');
         hint.className = 'proto-open-hint';
-        hint.href = protoShell;
-        hint.target = '_blank';
-        hint.rel = 'noopener';
         hint.textContent = 'Open prototype + ROI full screen';
         previewWrap.appendChild(iframe);
         previewWrap.appendChild(hint);
 
         const links = document.createElement('div');
         links.className = 'links';
-        links.innerHTML = `
-          <a class="btn-proto" href="${esc(protoShell)}" target="_blank" rel="noopener">Open prototype</a>
-          ${prdShell ? `<a class="btn-prd" href="${esc(prdShell)}" target="_blank" rel="noopener">Download complete PRD now</a>` : ''}`;
+        const btnProto = document.createElement('a');
+        btnProto.className = 'btn-proto';
+        btnProto.href = protoShell;
+        btnProto.target = '_blank';
+        btnProto.rel = 'noopener';
+        btnProto.textContent = 'Open prototype';
+        links.appendChild(btnProto);
+        if (prdShell) {
+          const btnPrd = document.createElement('a');
+          btnPrd.className = 'btn-prd';
+          btnPrd.href = prdShell;
+          btnPrd.target = '_blank';
+          btnPrd.rel = 'noopener';
+          btnPrd.textContent = 'Download complete PRD now';
+          links.appendChild(btnPrd);
+        }
 
         card.append(head, roiSection, previewWrap, links);
         el.appendChild(card);
@@ -373,21 +402,29 @@
 
     async function loadRun(runId) {
       const base = `${BRIEF_PREFIX}runs/${runId}/`;
-      const [manifest, table, protos] = await Promise.all([
+      const [manifest, table, protosRaw] = await Promise.all([
         fetchJson(base + 'manifest.json'),
         fetchJson(base + 'signals-table.json'),
         fetchJson(base + 'prototypes.json').catch(() => []),
       ]);
+      const protos = normalizePrototypes(protosRaw);
 
       document.getElementById('run-meta').textContent =
         `${manifest.run_id} · ${manifest.net_new_count ?? 0} net-new · ${manifest.prototype_count ?? 0} prototypes`;
       document.getElementById('summary-text').textContent =
         manifest.summary || '(no summary)';
       document.getElementById('table-wrap').innerHTML = renderTable(table);
-      renderPrototypes(protos, manifest);
+      renderPrototypes(protos, manifest, runId);
+    }
+
+    function ensureRoiLib() {
+      if (typeof renderRoiPanel !== 'function' || typeof normalizePrototypes !== 'function') {
+        throw new Error('roi-shared.js failed to load — hard-refresh (Cmd+Shift+R).');
+      }
     }
 
     async function init() {
+      ensureRoiLib();
       try {
         const latest = await fetchJson(BRIEF_PREFIX + 'latest.json');
         const runParam = qp('run') || latest.run_id;

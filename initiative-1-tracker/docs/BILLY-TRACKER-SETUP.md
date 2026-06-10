@@ -1,5 +1,7 @@
 # Billy — Tracker setup checklist
 
+> **Handoff doc:** use **[BILLY-COMPLETE-SETUP.md](./BILLY-COMPLETE-SETUP.md)** (single walkthrough + Part 0 Cursor prompt). This file is the shorter checklist reference.
+
 Send this **once** after `tracker-feed` + `tracker-publish` skills are on `main` and GHA workflows are merged (see §0).
 
 **Estimated total time:** **25–35 minutes** one-time.

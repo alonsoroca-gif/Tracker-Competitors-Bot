@@ -55,7 +55,7 @@ Paths (relative to repo root):
 | `tracker-briefs/latest.json` | Pointer + `status` + counts |
 | `tracker-briefs/runs/<run_id>/manifest.json` | Day summary |
 | `tracker-briefs/runs/<run_id>/signals-table.json` | Billy table rows |
-| `tracker-briefs/runs/<run_id>/prototypes.json` | Vignette cards |
+| `tracker-briefs/runs/<run_id>/prototypes.json` | Vignette cards — each row: `brief`, `roi` + `roi.numbers`, paths (see `TRACKER-VIGNETTE-STANDARD.md`) |
 
 ---
 

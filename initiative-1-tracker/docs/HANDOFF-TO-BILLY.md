@@ -1,6 +1,6 @@
 # Handoff message — copy to Billy
 
-Send after `main` has the tracker-brief handoff merge.
+Send after `main` has the tracker-brief handoff merge (viewer + publish skills + `tracker-briefs/` fixture).
 
 ---
 
@@ -8,12 +8,28 @@ Send after `main` has the tracker-brief handoff merge.
 
 Hi Billy,
 
-Everything is on `main`.
+Tracker brief factory is on `main` — ready for your morningbrief.
 
-1. Clone + open repo in **Cursor**
-2. Open **[BILLY-COMPLETE-SETUP.md](./BILLY-COMPLETE-SETUP.md)**
-3. Paste **Part 0** prompt into chat — Cursor guides you start to finish, then runs **`npm run billy:demo`** so you see a Product-day morning with sample data
+**One-time setup (~30 min):**
 
-No 5:50am schedule. No overnight laptop. Slack late pings wired by Alonso (optional).
+1. Clone **Tracker Competitors Bot** + **entrata/core** (SSH access — ask if you need `entrata/core`)
+2. Open repo in **Cursor**
+3. Open **`initiative-1-tracker/docs/BILLY-COMPLETE-SETUP.md`**
+4. Paste **Part 0** into chat — the **billy-tracker-onboard** skill walks you through workspace, Core parity, and **`npm run billy:demo`** (sample Product day)
+
+**Daily rhythm (after setup):**
+
+- **~8:00** — morningbrief **Step 0** → `tracker-publish` in background (do not wait)
+- **~8:20** — **tracker-feed** → chat table + viewer auto-opens
+- **Product days** — prototype cards with skim ROI; click **Open prototype** for full math + brief + vignette
+- **PMM-only days** — same table, 0 prototypes; focus **Why / routing**
+
+No 5:50am schedule. No overnight laptop. Slack late-ready DM is optional (Alonso wires webhooks).
+
+Questions → me.
 
 — Alonso
+
+---
+
+**Alonso sends with the message:** link to repo + confirm `entrata/core` access requested if not already granted.

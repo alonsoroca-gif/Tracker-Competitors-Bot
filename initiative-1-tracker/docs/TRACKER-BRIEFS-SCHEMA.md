@@ -66,6 +66,11 @@ Array of rows — **source of truth for Billy's chat table**.
   "signal_id": 1,
   "html_path": "tracker-briefs/runs/…/prototypes/foo.html",
   "prd_path": "…",
+  "brief": {
+    "what": "One sentence — what the vignette shows",
+    "benefits": "Entrata products that benefit (e.g. Prospect Portal · Leasing CRM)",
+    "why_build": "Why we should build it — structural competitor gap"
+  },
   "roi": {
     "verdict": "pursue | watch | skip",
     "lever": "Primary dollar lever (one line)",
@@ -73,10 +78,23 @@ Array of rows — **source of truth for Billy's chat table**.
     "per_unit_annual": "~$X/unit/yr",
     "property_250": "~$X/yr",
     "portfolio_10k": "~$X/yr",
-    "confidence": "modeled | measured"
+    "confidence": "modeled | measured",
+    "numbers": {
+      "type": "modeled_approximation | benchmark_chunk | measured",
+      "formula": "Raw math one-liner",
+      "inputs": ["assumption 1", "assumption 2"],
+      "scaling": "How per-unit → 250u → 10k portfolio (chunk language)",
+      "disclaimer": "Not a client ROI guarantee unless measured"
+    },
+    "brief": {
+      "advantage": "Our structural advantage (1 sentence)",
+      "why_pursue": "Why pursue (1 sentence)"
+    }
   }
 }
 ```
+
+Full publish contract + vignette bar: [TRACKER-VIGNETTE-STANDARD.md](./TRACKER-VIGNETTE-STANDARD.md).
 
 Past briefs: each publish adds `runs/<run_id>/` (git-committed). Viewer loads `runs-index.json` (refreshed on `--mark-ready`) to switch between days. **Not** the Product OS prototype gallery — see [TRACKER-PROTOTYPE-TIERS.md](./TRACKER-PROTOTYPE-TIERS.md).
 

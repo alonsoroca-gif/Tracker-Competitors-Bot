@@ -25,7 +25,7 @@
   margin: 8px 0;
 }
 .roi-stat {
-  padding: 8px 4px;
+  padding: 8px 6px;
   border-radius: 8px;
   background: rgba(0, 0, 0, 0.25);
   border: 1px solid #2a2a32;
@@ -33,9 +33,83 @@
 }
 .roi-stat .val { display: block; font-size: 0.78rem; font-weight: 600; color: #ececf1; }
 .roi-stat .lbl { display: block; font-size: 0.6rem; color: #9b9ba7; margin-top: 4px; text-transform: uppercase; }
+.roi-stat .hint { display: block; font-size: 0.55rem; color: #71717a; margin-top: 3px; line-height: 1.3; }
 .roi-summary { margin: 8px 0 0; color: #ececf1; }
 .roi-conf { margin: 8px 0 0; font-size: 0.68rem; color: #9b9ba7; }
 .roi-empty { color: #9b9ba7; font-style: italic; margin: 0; }
+.proto-roi-skim { padding-bottom: 10px; }
+.proto-roi-skim .roi-summary,
+.proto-roi-skim .roi-conf,
+.proto-roi-skim .roi-numbers-block,
+.proto-roi-skim .roi-num-hint,
+.proto-roi-skim .brief-block { display: none; }
+
+.roi-numbers-block {
+  margin: 10px 0;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px dashed #3f3f46;
+}
+.roi-numbers-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.num-type-pill {
+  font-size: 0.62rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid #52525b;
+  color: #d4d4d8;
+}
+.num-type-modeled-approximation { border-color: #6366f188; color: #a5b4fc; background: rgba(99, 102, 241, 0.12); }
+.num-type-benchmark-chunk { border-color: #f59e0b66; color: #fcd34d; background: rgba(245, 158, 11, 0.1); }
+.num-type-measured { border-color: #22c55e66; color: #86efac; background: rgba(34, 197, 94, 0.1); }
+.roi-formula { margin: 0 0 8px; font-size: 0.78rem; color: #e4e4e7; line-height: 1.5; }
+.roi-inputs {
+  margin: 0 0 8px;
+  padding-left: 1.1rem;
+  font-size: 0.74rem;
+  color: #a1a1aa;
+}
+.roi-inputs li { margin-bottom: 4px; }
+.roi-scaling, .roi-disclaimer { margin: 0 0 6px; font-size: 0.72rem; color: #9b9ba7; line-height: 1.45; }
+.roi-disclaimer { margin-bottom: 0; font-style: italic; }
+.roi-num-hint { margin: 8px 0 0; font-size: 0.68rem; color: #9b9ba7; line-height: 1.4; }
+
+.brief-block {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid #2a2a3244;
+}
+.brief-line {
+  margin: 0 0 6px;
+  font-size: 0.8rem;
+  line-height: 1.5;
+  color: #d4d4d8;
+}
+.brief-line:last-child { margin-bottom: 0; }
+.brief-label {
+  font-weight: 600;
+  color: #9b9ba7;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  margin-right: 4px;
+}
+.proto-brief-panel {
+  padding: 14px 16px;
+  border-radius: 10px;
+  border: 1px solid #2a2a32;
+  background: #16161a;
+}
+
 @media (max-width: 700px) {
   .roi-stats { grid-template-columns: 1fr; }
 }

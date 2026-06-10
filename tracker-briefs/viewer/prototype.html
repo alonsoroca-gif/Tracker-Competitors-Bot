@@ -4,14 +4,16 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Prototype — Tracker Brief</title>
-  <link rel="stylesheet" href="roi-styles.css" />
+  <link rel="stylesheet" href="roi-styles.css?v=roi-v8" />
   <style>
     :root {
       --bg: #0c0c0f;
       --panel: #16161a;
       --text: #ececf1;
+      --muted: #9b9ba7;
       --accent: #5b8def;
       --border: #2a2a32;
+      --proto-h: 340px;
     }
     * { box-sizing: border-box; }
     body { margin: 0; font-family: system-ui, sans-serif; background: var(--bg); color: var(--text); }
@@ -34,38 +36,46 @@
     }
     .btn-back:hover { border-color: var(--accent); color: var(--accent); }
     .title { font-size: 0.95rem; font-weight: 600; flex: 1; }
-    .layout {
-      display: grid;
-      grid-template-columns: minmax(280px, 340px) 1fr;
-      min-height: calc(100vh - 53px);
+    .page {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
     }
-    @media (max-width: 900px) {
-      .layout { grid-template-columns: 1fr; }
-    }
-    .roi-column {
-      padding: 16px;
-      border-right: 1px solid var(--border);
-      background: var(--panel);
-      overflow-y: auto;
-    }
-    .roi-column h2 {
+    .section-label {
       font-size: 0.7rem;
+      font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 0.06em;
-      color: #9b9ba7;
-      margin: 0 0 12px;
+      color: var(--muted);
+      margin: 0 0 8px;
     }
-    .frame-wrap { background: #fff; min-height: 400px; }
+    .proto-stage {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      background: #0a0a0c;
+      flex-shrink: 0;
+    }
+    .proto-stage-label {
+      padding: 8px 14px;
+      font-size: 0.72rem;
+      color: var(--muted);
+      border-bottom: 1px solid var(--border);
+      background: var(--panel);
+    }
+    .frame-wrap {
+      height: var(--proto-h);
+      background: #0a0a0c;
+    }
     iframe {
       display: block;
       width: 100%;
-      height: calc(100vh - 53px);
-      min-height: 400px;
+      height: var(--proto-h);
       border: none;
-    }
-    @media (max-width: 900px) {
-      iframe { height: 50vh; }
-      .roi-column { border-right: none; border-bottom: 1px solid var(--border); }
+      background: #18181b;
     }
     .err { padding: 24px; text-align: center; color: #f87171; }
   </style>
@@ -75,37 +85,59 @@
     <a class="btn-back" id="back-link" href="index.html">← Back to Tracker Brief</a>
     <span class="title" id="proto-title"></span>
   </header>
-  <div class="layout">
-    <aside class="roi-column">
-      <h2>ROI snapshot</h2>
-      <div id="roi-panel"></div>
-    </aside>
-    <div class="frame-wrap">
-      <iframe id="frame" title="Prototype"></iframe>
-    </div>
-  </div>
+  <main class="page" id="page">
+    <section id="roi-section">
+      <h2 class="section-label">ROI snapshot</h2>
+      <div id="roi-panel"><p class="roi-empty">Loading ROI…</p></div>
+    </section>
+    <section id="brief-section">
+      <h2 class="section-label">Prototype brief</h2>
+      <div id="proto-brief"><p class="roi-empty">Loading brief…</p></div>
+    </section>
+    <section class="proto-stage" aria-label="Prototype vignette">
+      <div class="proto-stage-label">Prototype preview</div>
+      <div class="frame-wrap">
+        <iframe id="frame" title="Prototype vignette"></iframe>
+      </div>
+    </section>
+  </main>
   <p class="err" id="err" hidden></p>
-  <script src="roi-shared.js"></script>
+  <script src="roi-shared.js?v=roi-v8"></script>
   <script>
     const params = new URLSearchParams(location.search);
     const src = params.get('src');
     const back = params.get('back');
     const title = params.get('title') || 'Prototype';
-    const roi = parseRoiParam(params.get('roi'));
+    const runId = params.get('run');
+    const protoId = params.get('id');
 
     document.getElementById('proto-title').textContent = title;
     if (back) document.getElementById('back-link').href = back;
 
-    document.getElementById('roi-panel').innerHTML = renderRoiPanel(roi);
+    async function loadContext() {
+      let proto = null;
+      if (runId && protoId) {
+        try {
+          const protos = await fetchPrototypesForRun(runId);
+          proto = findProtoById(protos, protoId);
+        } catch {
+          /* fall through */
+        }
+      }
+      const roi = proto?.roi ?? parseRoiParam(params.get('roi'));
+      document.getElementById('roi-panel').innerHTML = renderRoiPanel(roi, { includeBrief: true });
+      document.getElementById('proto-brief').innerHTML = renderProtoBrief(proto || { title });
+    }
 
     if (!src) {
-      document.querySelector('.layout').hidden = true;
+      document.getElementById('page').hidden = true;
       const err = document.getElementById('err');
       err.hidden = false;
       err.textContent = 'Missing prototype URL.';
     } else {
       const sep = src.includes('?') ? '&' : '?';
-      document.getElementById('frame').src = src + sep + 'v=4';
+      document.getElementById('frame').src = src + sep + 'v=roi-v8';
+      loadContext();
     }
   </script>
 </body>

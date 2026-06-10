@@ -115,20 +115,27 @@ Non-Product rows: `parity: "—"`.
 
 ## Phase 4 — PRDs + prototypes (Product / Tier — Now only)
 
-For each Tier — Now Product row:
+For each Tier — Now Product row, produce **one complete `prototypes.json` entry** per `initiative-1-tracker/docs/TRACKER-VIGNETTE-STANDARD.md` (fixture: `_sample-product-day`).
 
-1. **PRD** — use `tracker-drop-cycle` §4.4 template (Problem, Target user, Existing Entrata implementation, Delta vs Core, Scope, Net-new engineering ask). Write to `tracker-briefs/runs/<run_id>/prds/<slug>.md`
-2. **HTML vignette** (Tier 1 prototype) → `tracker-briefs/runs/<run_id>/prototypes/<slug>.html` — viewer-embeddable static HTML, not `create-prototype`
-3. **Short ROI** — invoke **roi-analyst** skill for a TL;DR only (not full 7-section report). One primary lever; per-unit + 250-unit + 10k-unit scale; `verdict`: pursue | watch | skip. Store in `prototypes.json` → `roi` object (see `TRACKER-BRIEFS-SCHEMA.md`).
-4. Register in `prototypes.json`
+1. **PRD** — `tracker-drop-cycle` §4.4 → `tracker-briefs/runs/<run_id>/prds/<slug>.md`
+2. **ROI (roi-analyst TL;DR)** — not the full 7-section report. Required fields:
+   - `verdict`, `lever`, `summary`, `per_unit_annual`, `property_250`, `portfolio_10k`, `confidence`
+   - **`roi.numbers`** — `type` (`modeled_approximation` default), `formula`, `inputs[]`, `scaling`, `disclaimer` (must state approximation/chunk vs measured)
+   - **`roi.brief`** — `advantage`, `why_pursue` (one sentence each)
+3. **Prototype brief** — top-level `brief`: `what`, `benefits` (Entrata products), `why_build`
+4. **HTML vignette** — `prototypes/<slug>.html` per vignette standard:
+   - App chrome + primary interaction + service flow (not three orphan buttons)
+   - Shows what the **service/interaction** delivers; ~340px-tall iframe-safe layout
+   - No duplicate ROI/title inside HTML (viewer shell carries context)
+5. **Register** — append row to `prototypes.json` with all paths
 
 Skip when `product_row_count === 0`.
 
 ### Prototype tier — not `create-prototype` here
 
-**This phase does not invoke `create-prototype`.** Reason: morning publish must finish in ~12–45 min and commit static artifacts to `tracker-briefs/` for the viewer. `create-prototype` (React app, dev server, Product OS workspace) lives in **`/trackerstart`** Phase 5 — same signal, **better visual quality**, ~1–3 h per row.
+**This phase does not invoke `create-prototype`.** Tier 1 vignettes are **sophisticated static HTML**, not `/trackerstart` depth. `create-prototype` lives in **`/trackerstart`** Phase 5 when a signal needs full Product OS quality (~1–3 h/row).
 
-See `initiative-1-tracker/docs/TRACKER-PROTOTYPE-TIERS.md`.
+See `initiative-1-tracker/docs/TRACKER-PROTOTYPE-TIERS.md` and `TRACKER-VIGNETTE-STANDARD.md`.
 
 ---
 

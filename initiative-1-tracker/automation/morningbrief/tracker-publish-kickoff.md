@@ -4,7 +4,7 @@
 
 **Skill:** `.cursor/skills/tracker-publish/SKILL.md`
 
-**Setup:** `BILLY-TRACKER-SETUP.md` + `CORE-CLONE-SETUP.md`
+**Setup:** `BILLY-COMPLETE-SETUP.md` + `CORE-CLONE-SETUP.md`
 
 ---
 
