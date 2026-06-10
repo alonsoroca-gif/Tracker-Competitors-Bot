@@ -119,7 +119,40 @@
       padding: 12px 14px;
       flex-direction: column;
       align-items: flex-start;
+      gap: 8px;
     }
+    .proto-roi {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 8px;
+      font-size: 0.78rem;
+      line-height: 1.45;
+      border: 1px solid var(--border);
+      background: rgba(91, 141, 239, 0.06);
+    }
+    .proto-roi.roi-pursue { border-color: #22c55e55; background: rgba(34, 197, 94, 0.08); }
+    .proto-roi.roi-watch { border-color: #f59e0b55; background: rgba(245, 158, 11, 0.08); }
+    .proto-roi .roi-head {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+    .roi-badge {
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      padding: 2px 8px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+    }
+    .roi-pursue .roi-badge { color: #4ade80; border-color: #22c55e66; }
+    .roi-watch .roi-badge { color: #fbbf24; border-color: #f59e0b66; }
+    .roi-lever { color: var(--muted); font-size: 0.72rem; }
+    .roi-scale { color: var(--accent); font-size: 0.72rem; margin-top: 6px; }
+    .roi-conf { color: var(--muted); font-size: 0.68rem; }
     .proto-preview {
       position: relative;
       cursor: pointer;
@@ -286,6 +319,23 @@
       return `<table><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table>`;
     }
 
+    function renderRoiBlock(roi) {
+      if (!roi || !roi.summary) return '';
+      const verdict = (roi.verdict || 'modeled').toLowerCase();
+      const cls = verdict === 'pursue' ? 'roi-pursue' : verdict === 'watch' ? 'roi-watch' : 'roi-neutral';
+      const scale = [roi.per_unit_annual, roi.property_250, roi.portfolio_10k].filter(Boolean).join(' · ');
+      return `
+        <div class="proto-roi ${cls}">
+          <div class="roi-head">
+            <span class="roi-badge">${esc(roi.verdict || 'ROI')}</span>
+            <span class="roi-lever">${esc(roi.lever || '')}</span>
+          </div>
+          <div>${esc(roi.summary)}</div>
+          ${scale ? `<div class="roi-scale">${esc(scale)}</div>` : ''}
+          <div class="roi-conf">${esc(roi.confidence || 'modeled')} · roi-analyst TL;DR</div>
+        </div>`;
+    }
+
     function renderPrototypes(protos) {
       const el = document.getElementById('prototypes');
       if (!protos.length) {
@@ -304,8 +354,11 @@
         return `
           <article class="proto-card">
             <header>
-              <strong>${esc(p.title)}</strong>
-              <span class="meta">${esc(p.competitor || p.competitor_id)}</span>
+              <div>
+                <strong>${esc(p.title)}</strong>
+                <span class="meta">${esc(p.competitor || p.competitor_id)}</span>
+              </div>
+              ${renderRoiBlock(p.roi)}
             </header>
             <a class="proto-preview" href="${esc(protoShell)}" target="_blank" rel="noopener" title="Open prototype full screen">
               <iframe src="${esc(src)}" title="${esc(p.title)}" loading="lazy"></iframe>
@@ -340,9 +393,30 @@
         const latest = await fetchJson(BRIEF_PREFIX + 'latest.json');
         const runParam = qp('run') || latest.run_id;
         const select = document.getElementById('run-select');
-        select.innerHTML = `<option value="${esc(runParam)}">${esc(runParam)}</option>`;
+        let runs = [];
+        try {
+          const idx = await fetchJson(BRIEF_PREFIX + 'runs-index.json');
+          runs = idx.runs || [];
+        } catch {
+          runs = [{ run_id: runParam }];
+        }
+        if (!runs.some((r) => r.run_id === runParam)) {
+          runs.unshift({ run_id: runParam, net_new_count: latest.net_new_count, prototype_count: latest.prototype_count });
+        }
+        select.innerHTML = runs.map((r) => {
+          const label = r.fixture ? `${r.run_id} (demo)` : r.run_id;
+          const meta = `${r.net_new_count ?? '?'} net-new · ${r.prototype_count ?? 0} proto`;
+          return `<option value="${esc(r.run_id)}"${r.run_id === runParam ? ' selected' : ''}>${esc(label)} — ${esc(meta)}</option>`;
+        }).join('');
+        select.onchange = () => {
+          const id = select.value;
+          const url = new URL(location.href);
+          url.searchParams.set('run', id);
+          history.replaceState(null, '', url);
+          loadRun(id);
+        };
         await loadRun(runParam);
-        document.getElementById('reload-btn').onclick = () => loadRun(runParam);
+        document.getElementById('reload-btn').onclick = () => loadRun(select.value || runParam);
       } catch (err) {
         document.getElementById('summary-text').innerHTML =
           `<span class="err">Failed to load brief: ${esc(err.message)}. Start <code>python3 -m http.server 8765</code> from repo root, then Simple Browser → <code>http://localhost:8765/tracker-briefs/viewer/index.html</code> (not the editor tab).</span>`;

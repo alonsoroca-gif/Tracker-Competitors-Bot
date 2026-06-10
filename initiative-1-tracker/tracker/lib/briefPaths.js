@@ -11,6 +11,7 @@ const repoRoot = path.join(initiativeRoot, '..');
 const briefsRoot = path.join(repoRoot, 'tracker-briefs');
 const runsRoot = path.join(briefsRoot, 'runs');
 const latestPath = path.join(briefsRoot, 'latest.json');
+const runsIndexPath = path.join(briefsRoot, 'runs-index.json');
 const dropsRoot = path.join(repoRoot, 'tracker-drops');
 
 function readJson(filePath, fallback = null) {
@@ -79,6 +80,46 @@ function loadDropSignals(runId) {
   return readJson(path.join(dropsRoot, runId, 'signals.json'), []);
 }
 
+function listBriefRunIds() {
+  try {
+    return fs
+      .readdirSync(runsRoot)
+      .filter((f) => {
+        if (f.startsWith('_')) return true;
+        return /^\d{4}-\d{2}-\d{2}T/.test(f);
+      })
+      .filter((f) => fs.existsSync(path.join(runsRoot, f, 'manifest.json')))
+      .sort()
+      .reverse();
+  } catch {
+    return [];
+  }
+}
+
+/** Refresh runs-index.json for viewer run dropdown (past briefs). */
+function refreshRunsIndex() {
+  const runs = listBriefRunIds().map((runId) => {
+    const m = loadRunManifest(runId) || {};
+    return {
+      run_id: runId,
+      published_at: m.published_at || null,
+      day_type: m.day_type || null,
+      net_new_count: m.net_new_count ?? 0,
+      prototype_count: m.prototype_count ?? 0,
+      summary: m.summary || null,
+      fixture: Boolean(m.source === 'fixture-product-day' || runId.startsWith('_')),
+    };
+  });
+  writeJson(runsIndexPath, { updated_at: new Date().toISOString(), runs });
+  return runs;
+}
+
+function loadRunsIndex() {
+  const idx = readJson(runsIndexPath);
+  if (idx?.runs?.length) return idx;
+  return { runs: refreshRunsIndex() };
+}
+
 module.exports = {
   repoRoot,
   briefsRoot,
@@ -97,4 +138,8 @@ module.exports = {
   listDropIds,
   priorDropId,
   loadDropSignals,
+  runsIndexPath,
+  listBriefRunIds,
+  refreshRunsIndex,
+  loadRunsIndex,
 };

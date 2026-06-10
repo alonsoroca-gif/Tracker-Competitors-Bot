@@ -2,6 +2,8 @@
  * Format tracker-briefs for Billy (chat table + summary). Max 6 columns in chat.
  */
 
+const { formatRoiLine } = require('./briefRoi.js');
+
 const COMPETITOR_NAMES = {
   eliseai: 'EliseAI',
   'funnel-leasing': 'Funnel Leasing',
@@ -66,6 +68,7 @@ function formatPrototypeCards(prototypes) {
   const lines = ['### Prototypes', ''];
   for (const p of prototypes) {
     lines.push(`- **${p.title}** (${p.competitor || p.competitor_id}) — \`${p.preview_path || p.html_path}\``);
+    if (p.roi) lines.push(`  - ROI: ${formatRoiLine(p.roi)}`);
     if (p.prd_path) lines.push(`  - PRD: \`${p.prd_path}\``);
   }
   lines.push('');

@@ -7,6 +7,7 @@ Published output lives under `tracker-briefs/`. **tracker-feed** reads only this
 ```
 tracker-briefs/
   latest.json                 # pointer + readiness
+  runs-index.json             # past runs for viewer dropdown
   viewer/
     index.html                # Simple Browser — full table + prototypes
   runs/
@@ -64,9 +65,20 @@ Array of rows — **source of truth for Billy's chat table**.
   "competitor_id": "…",
   "signal_id": 1,
   "html_path": "tracker-briefs/runs/…/prototypes/foo.html",
-  "prd_path": "…"
+  "prd_path": "…",
+  "roi": {
+    "verdict": "pursue | watch | skip",
+    "lever": "Primary dollar lever (one line)",
+    "summary": "roi-analyst TL;DR — 1-2 sentences",
+    "per_unit_annual": "~$X/unit/yr",
+    "property_250": "~$X/yr",
+    "portfolio_10k": "~$X/yr",
+    "confidence": "modeled | measured"
+  }
 }
 ```
+
+Past briefs: each publish adds `runs/<run_id>/` (git-committed). Viewer loads `runs-index.json` (refreshed on `--mark-ready`) to switch between days. **Not** the Product OS prototype gallery — see [TRACKER-PROTOTYPE-TIERS.md](./TRACKER-PROTOTYPE-TIERS.md).
 
 ## Scripts
 

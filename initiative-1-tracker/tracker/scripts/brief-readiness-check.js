@@ -16,6 +16,7 @@ const {
   loadRunManifest,
   loadSignalsTable,
   writeJson,
+  refreshRunsIndex,
 } = require('../lib/briefPaths.js');
 
 function parseArgs(argv) {
@@ -67,6 +68,7 @@ function main() {
       ready_at: new Date().toISOString(),
     };
     writeJson(latestPath, updated);
+    refreshRunsIndex();
     process.stdout.write(`brief-readiness-check: marked ready — ${latest.run_id}\n`);
     process.exit(0);
   }

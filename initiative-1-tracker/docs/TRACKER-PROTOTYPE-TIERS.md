@@ -55,6 +55,25 @@ Tier 1 publish does **not** invoke `create-prototype` — not because the subski
 
 ---
 
+## Tracker Brief Viewer vs Product OS workspace
+
+| | **Tracker Brief Viewer** | **Product OS** (`localhost:5174/prototypes`) |
+|--|--------------------------|-----------------------------------------------|
+| **Purpose** | Billy's **daily brief** — that morning's signals + vignettes + ROI | Your **prototype lab** — full apps, design critique, branch history |
+| **Storage** | `tracker-briefs/runs/<run_id>/` — one folder per publish day, git on `main` | `prototypes/` in PM workspace — auto-discovered, branch-scoped |
+| **Past work** | **Run dropdown** in viewer (`runs-index.json`) — every committed brief day | Cards persist per prototype folder; switch branch to see variants |
+| **Who** | Billy @ ~8:20 (auto-open) | You on `/trackerstart` deep dives |
+
+**Why not only Product OS for Billy?**
+
+1. **Time** — morning publish must commit static HTML + JSON Billy can open without a dev server.
+2. **Separation** — daily competitive intel ≠ long-lived PM prototypes; mixing them clutters Product OS.
+3. **Git handoff** — `tracker-briefs/` pushes to GitHub; Billy `git pull`s the brief, not your PM workspace.
+
+**Convergence path (optional later):** Tier 2 `/trackerstart` can symlink or copy a hero prototype into Product OS **and** link from the brief card (`product_os_path`). Not required for handoff.
+
+---
+
 ## Related
 
 - [TRACKER-AUTOMATION.md](./TRACKER-AUTOMATION.md)

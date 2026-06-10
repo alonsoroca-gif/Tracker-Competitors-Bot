@@ -1,0 +1,23 @@
+{
+  "updated_at": "2026-06-10T17:32:06.354Z",
+  "runs": [
+    {
+      "run_id": "_sample-product-day",
+      "published_at": "2026-06-02T07:40:00.000Z",
+      "day_type": "product",
+      "net_new_count": 2,
+      "prototype_count": 2,
+      "summary": "Sample Product day for viewer QA — not wired to latest.json.",
+      "fixture": true
+    },
+    {
+      "run_id": "2026-06-02T00-10-59Z",
+      "published_at": "2026-06-02T07:42:00.000Z",
+      "day_type": "pmm_only",
+      "net_new_count": 1,
+      "prototype_count": 0,
+      "summary": "1 net-new PMM signal (Funnel FeaturedCustomers social proof). 0 Product rows — no prototypes or parity gate this morning.",
+      "fixture": false
+    }
+  ]
+}
