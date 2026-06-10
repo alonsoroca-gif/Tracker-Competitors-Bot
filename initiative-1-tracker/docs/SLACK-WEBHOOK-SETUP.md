@@ -6,11 +6,9 @@
 
 ## Secrets to add (GitHub repo)
 
-| Secret name | Audience | When it fires |
-|-------------|----------|---------------|
-| `SLACK_WEBHOOK_URL_OPERATOR` | You (Alonso) | 5:35am preflight · 7:45am not-ready · 8:15am still-not-ready |
-| `SLACK_WEBHOOK_URL_BILLY` | Billy | 8:15am brief ready **after** his 8:20 section |
-| `SLACK_WEBHOOK_URL` | Drop channel (existing) | After nightly collect push |
+- `SLACK_WEBHOOK_URL_OPERATOR` — You (Alonso) — 5:35am preflight · 7:45am not-ready · 8:15am still-not-ready
+- `SLACK_WEBHOOK_URL_BILLY` — Billy — 8:15am brief ready after his 8:20 section
+- `SLACK_WEBHOOK_URL` — Drop channel (existing) — after nightly collect push
 
 Workflows **skip silently** if a secret is missing.
 

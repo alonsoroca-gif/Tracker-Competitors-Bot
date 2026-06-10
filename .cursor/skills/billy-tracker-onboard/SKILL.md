@@ -76,8 +76,8 @@ npm run billy:demo
 
 Walk Billy through the **Product-day checklist** printed after the feed:
 
-1. **Chat block** — summary + 6-column table + prototype bullets (same every Product morning)
-2. **Viewer auto-opens** — full table + 2 prototype cards + PRD downloads
+1. **Chat block** — summary + 6-column table + prototype bullets (What, ROI, Math line)
+2. **Viewer auto-opens** — full signals table + prototype cards (**skim ROI metrics only**) + PRD downloads; **Open prototype** for full math, briefs, vignette
 3. **PMM-only contrast** — same table, 0 prototypes, routing column is the focus
 
 Re-run `npm run billy:demo` anytime to rehearse. Live mornings use the same shape with today's data.

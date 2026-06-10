@@ -48,8 +48,8 @@ Paste the full `tracker-feed-render.js` output into chat:
 
 - Summary line (net-new, prototypes, ready time)
 - **6-column signals table** (all classifications)
-- Prototype bullets (if any)
-- Viewer opens automatically via `--open` (or `npm run brief:open-viewer`)
+- Prototype bullets (if any) — What, ROI verdict + scale, formula one-liner
+- Viewer opens automatically via `--open` — skim ROI on cards; **Open prototype** for full detail
 
 ### Non-Product days
 

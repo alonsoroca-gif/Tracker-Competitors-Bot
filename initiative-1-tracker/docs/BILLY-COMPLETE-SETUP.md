@@ -55,7 +55,7 @@ Use the billy-tracker-onboard skill. Read initiative-1-tracker/docs/BILLY-COMPLE
 | **GitHub Actions (5:45am)** | Collects competitor signals → `tracker-drops/` | Automatic |
 | **tracker-publish (Step 0 ~8am)** | Interpret → Core parity → PRDs → vignettes → `tracker-briefs/` | Background agent when you start morningbrief |
 | **tracker-feed (~8:20)** | Shows today's brief in chat + **auto-opens viewer** | End of morningbrief |
-| **Tracker Brief Viewer** | Full-width table, prototypes, PRD PDFs | Opens automatically via `--open` |
+| **Tracker Brief Viewer** | Full signals table · prototype cards (skim ROI) · PRD PDFs · full detail on **Open prototype** | Opens automatically via `--open` |
 
 **Parity:** Path A — local `entrata-core` clone + `git pull` each publish. No GitHub API token required.
 
@@ -182,14 +182,23 @@ npm run billy:demo
 
 This will:
 
-1. Print the **tracker-feed** markdown (summary + 6-column table + prototype bullets) — same shape as ~8:20 chat output.
-2. **Auto-open** the Tracker Brief Viewer with `_sample-product-day` — 2 prototypes (Jonah siteplan + EliseAI field-mode), full signals table, PRD download buttons.
+1. Print the **tracker-feed** markdown (summary + 6-column table + prototype bullets with ROI + math one-liner) — same shape as ~8:20 chat output.
+2. **Auto-open** the Tracker Brief Viewer with `_sample-product-day` — 2 prototypes, full signals table, PRD download buttons.
+
+**Viewer layout (what you skim each morning):**
+
+| Screen | What Billy sees |
+|--------|-----------------|
+| **Main grid** | Per prototype: title, competitor, **key ROI metrics only** (PURSUE + 3 stat boxes), vignette preview, Open prototype / PRD |
+| **Open prototype** | Full ROI (formula, inputs, scaling, edge, why pursue) + prototype brief + richer vignette UI |
+
+Detail stays behind **Open prototype** so the main screen stays scannable when there are 2–3 signals.
 
 | Demo section | Real morning |
 |--------------|--------------|
 | Summary `2 net-new · 2 prototypes` | Heavy Product day |
 | Parity columns | Layer 2 verdicts from Core scan |
-| Prototype cards | HTML vignettes (daily) — use `/trackerstart` for full apps |
+| Prototype cards | Tier 1 vignettes — `/trackerstart` for full Product OS apps |
 | PMM-only days | Same table, **0 prototypes** — still review routing |
 
 **Re-run anytime:** `npm run billy:demo`

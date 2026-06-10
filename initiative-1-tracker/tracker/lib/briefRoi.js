@@ -2,6 +2,12 @@
  * Short ROI block for tracker-brief prototypes (roi-analyst TL;DR shape).
  */
 
+const NUMBER_TYPE_LABELS = {
+  modeled_approximation: 'modeled approx',
+  benchmark_chunk: 'benchmark chunk',
+  measured: 'measured',
+};
+
 function formatRoiLine(roi) {
   if (!roi || !roi.summary) return '';
   const parts = [];
@@ -12,6 +18,8 @@ function formatRoiLine(roi) {
     .filter(Boolean)
     .join(' · ');
   if (scale) parts.push(`(${scale})`);
+  const numType = roi.numbers?.type || (roi.confidence === 'measured' ? 'measured' : 'modeled_approximation');
+  parts.push(`[${NUMBER_TYPE_LABELS[numType] || numType}]`);
   return parts.join(' ');
 }
 

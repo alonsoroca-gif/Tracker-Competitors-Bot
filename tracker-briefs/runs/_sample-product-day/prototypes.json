@@ -8,6 +8,11 @@
     "html_path": "tracker-briefs/runs/_sample-product-day/prototypes/siteplan.html",
     "preview_path": "tracker-briefs/runs/_sample-product-day/prototypes/siteplan.html",
     "prd_path": "tracker-briefs/runs/_sample-product-day/prds/siteplan-prd.md",
+    "brief": {
+      "what": "Interactive property siteplan with unit pins wired to live Entrata PMS rent and availability — not a static PDF or third-party embed.",
+      "benefits": "Prospect Portal · Leasing Websites · Open API pricing feed",
+      "why_build": "Counters Jonah/Engrain SightMap-style embeds with the one thing they structurally cannot ship: pricing that updates when the PMS updates."
+    },
     "roi": {
       "verdict": "pursue",
       "lever": "Conversion / vacancy days",
@@ -15,7 +20,22 @@
       "per_unit_annual": "~$22/unit/yr NOI",
       "property_250": "~$5.5K/yr",
       "portfolio_10k": "~$220K/yr",
-      "confidence": "modeled"
+      "confidence": "modeled",
+      "numbers": {
+        "type": "modeled_approximation",
+        "formula": "(Δ apply-start rate × avg monthly rent × vacancy days avoided per start) ÷ units",
+        "inputs": [
+          "+0.5–1.0% lift on siteplan sessions that reach apply (roi-analyst midpoint)",
+          "$1,800 blended avg rent · 3 vacancy days avoided per incremental start",
+          "Vacancy-day cost ≈ daily rent (industry norm — not client-specific)"
+        ],
+        "scaling": "Per-unit annual → ×250 for single-property chunk → ×10,000 for portfolio chunk. Portfolio figure is a directional scale, not a forecast.",
+        "disclaimer": "Modeled approximation for prioritization — not measured client ROI or a finance sign-off number."
+      },
+      "brief": {
+        "advantage": "Jonah/Engrain ship static or partner feeds; Entrata pins read the same live rent engine that powers leasing — no middleware lag.",
+        "why_pursue": "High-intent shoppers self-serve on the map; every day of stale pricing is a lost tour slot and extra vacancy days."
+      }
     }
   },
   {
@@ -27,6 +47,11 @@
     "html_path": "tracker-briefs/runs/_sample-product-day/prototypes/field-mode.html",
     "preview_path": "tracker-briefs/runs/_sample-product-day/prototypes/field-mode.html",
     "prd_path": "tracker-briefs/runs/_sample-product-day/prds/field-mode-prd.md",
+    "brief": {
+      "what": "Mobile in-tour workflow for leasing agents — capture photos, voice notes, and push-to-apply links tied to the unit record in Entrata PMS.",
+      "benefits": "Leasing CRM · Prospect Portal · Screening · Maintenance (unit-tied tickets)",
+      "why_build": "EliseAI's Agent CRM stops at chat; this is what happens on the property floor with PMS, screening, and maintenance in one path."
+    },
     "roi": {
       "verdict": "pursue",
       "lever": "Leasing labor capacity",
@@ -34,7 +59,22 @@
       "per_unit_annual": "~$11/unit/yr capacity",
       "property_250": "~$2.8K/yr",
       "portfolio_10k": "~$110K/yr",
-      "confidence": "modeled"
+      "confidence": "modeled",
+      "numbers": {
+        "type": "modeled_approximation",
+        "formula": "(agent hours saved per unit per month × loaded leasing labor rate × 12) ÷ units",
+        "inputs": [
+          "~0.3 agent hrs/unit/mo saved on post-tour follow-up (photo + apply link + voice note vs desk work)",
+          "$32/hr loaded leasing labor (benchmark chunk — varies by market)",
+          "Assumes 1 agent covers ~80 units; savings compound at portfolio scale"
+        ],
+        "scaling": "Per-unit capacity value → ×250 property → ×10,000 portfolio. Capacity dollars, not new rent — frees agents to close more tours.",
+        "disclaimer": "Modeled approximation from labor-capacity benchmarks — not a time-motion study or payroll audit."
+      },
+      "brief": {
+        "advantage": "EliseAI owns the conversation layer, not the PMS — they cannot attach photos to unit records, push live apply pricing, or spawn maintenance tickets in one tap.",
+        "why_pursue": "Tour-to-apply drop-off is highest in the first hour after a walk; field capture closes that gap before the agent gets back to the desk."
+      }
     }
   }
 ]

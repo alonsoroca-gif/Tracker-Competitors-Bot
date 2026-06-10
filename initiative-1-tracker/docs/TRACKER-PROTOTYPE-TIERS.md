@@ -26,7 +26,7 @@ Both tiers answer:
 - What does Core already ship (parity)?
 - What should Entrata build or chase?
 
-**Tier 1** gives Billy a **skim-ready brief**: chat table, PRD PDF, **quick visual vignette** in the Tracker Brief Viewer.
+**Tier 1** gives Billy a **skim-ready brief**: chat table, PRD PDF, **sophisticated static vignette** (ROI + brief + interaction UI) in the Tracker Brief Viewer. Quality bar: [TRACKER-VIGNETTE-STANDARD.md](./TRACKER-VIGNETTE-STANDARD.md).
 
 **Tier 2** gives you a **production-style prototype** (design system, dev server, critique, video) for leadership or eng conversations.
 

@@ -68,7 +68,9 @@ function formatPrototypeCards(prototypes) {
   const lines = ['### Prototypes', ''];
   for (const p of prototypes) {
     lines.push(`- **${p.title}** (${p.competitor || p.competitor_id}) — \`${p.preview_path || p.html_path}\``);
+    if (p.brief?.what) lines.push(`  - What: ${truncate(p.brief.what, 120)}`);
     if (p.roi) lines.push(`  - ROI: ${formatRoiLine(p.roi)}`);
+    if (p.roi?.numbers?.formula) lines.push(`  - Math: ${truncate(p.roi.numbers.formula, 90)}`);
     if (p.prd_path) lines.push(`  - PRD: \`${p.prd_path}\``);
   }
   lines.push('');
