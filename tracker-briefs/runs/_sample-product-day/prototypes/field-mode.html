@@ -3,98 +3,50 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Field-Mode Leasing — sample vignette</title>
+  <title>Field-mode vignette</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    html, body { height: 100%; }
+    html, body { height: 100%; overflow: hidden; }
     body {
       font-family: system-ui, sans-serif;
-      background: linear-gradient(180deg, #18181b 0%, #09090b 100%);
-      color: #fafafa;
+      background: #18181b;
       display: flex;
-      flex-direction: column;
       align-items: center;
       justify-content: center;
-      min-height: 100%;
-      padding: clamp(12px, 3vw, 24px);
-    }
-    .wrap { width: 100%; max-width: 420px; }
-    h1 { font-size: clamp(1rem, 2.5vw, 1.2rem); margin-bottom: 4px; }
-    .sub { font-size: 0.8rem; color: #a1a1aa; margin-bottom: 16px; }
-    .phone {
-      border: 3px solid #52525b;
-      border-radius: 28px;
-      padding: 20px 16px;
-      background: #27272a;
-      box-shadow: 0 20px 40px #00000066;
-    }
-    .status {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 0.75rem;
-      color: #22c55e;
-      margin-bottom: 12px;
-    }
-    .status::before {
-      content: '';
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: #22c55e;
-    }
-    .tour-title { font-size: 1rem; font-weight: 600; margin-bottom: 4px; }
-    .tour-meta { font-size: 0.8rem; color: #a1a1aa; margin-bottom: 16px; }
-    button {
-      display: flex;
-      align-items: center;
-      width: 100%;
-      margin: 8px 0;
-      padding: 14px 16px;
-      border: none;
-      border-radius: 10px;
-      background: linear-gradient(135deg, #3b82f6, #2563eb);
-      color: white;
-      font-size: 0.9rem;
-      font-weight: 500;
-      text-align: left;
-      box-shadow: 0 4px 12px #3b82f644;
-    }
-    button.secondary {
-      background: #3f3f46;
-      box-shadow: none;
-    }
-    .offline {
-      margin-top: 14px;
       padding: 10px;
+    }
+    .phone {
+      width: 100%;
+      max-width: 280px;
+      border: 3px solid #52525b;
+      border-radius: 22px;
+      padding: 14px 12px;
+      background: #27272a;
+    }
+    .tour-title { font-size: 0.85rem; font-weight: 600; color: #fafafa; margin-bottom: 4px; }
+    .tour-meta { font-size: 0.72rem; color: #a1a1aa; margin-bottom: 10px; }
+    button {
+      display: block;
+      width: 100%;
+      margin: 6px 0;
+      padding: 10px;
+      border: none;
       border-radius: 8px;
-      background: #18181b;
+      background: #3b82f6;
+      color: white;
       font-size: 0.75rem;
-      color: #a1a1aa;
-      text-align: center;
+      text-align: left;
     }
-    .roi-strip {
-      margin-bottom: 12px; padding: 10px 12px; border-radius: 8px;
-      background: rgba(34, 197, 94, 0.15); border: 1px solid #22c55e66;
-      font-size: 0.75rem; line-height: 1.4;
-    }
-    .roi-strip strong { color: #4ade80; }
+    button.secondary { background: #3f3f46; }
   </style>
 </head>
 <body>
-  <div class="wrap">
-    <div class="roi-strip"><strong>PURSUE</strong> · Leasing labor capacity · ~$11/unit/yr (250u ~$2.8K · 10k ~$110K) — modeled</div>
-    <h1>Field-Mode Leasing</h1>
-    <p class="sub">Entrata counter — in-tour agent on mobile, PMS-backed</p>
-    <div class="phone">
-      <div class="status">Online · synced to PMS</div>
-      <div class="tour-title">Tour in progress</div>
-      <div class="tour-meta">Building A · Unit 204 · 2BR · $1,845/mo</div>
-      <button>📷 Capture unit photo → PMS record</button>
-      <button>🔗 Push apply link (live pricing)</button>
-      <button class="secondary">🎤 Voice note → prospect file</button>
-      <div class="offline">Offline queue: 0 pending · IndexedDB sync</div>
-    </div>
+  <div class="phone">
+    <div class="tour-title">Tour · Unit 204</div>
+    <div class="tour-meta">Building A · $1,845/mo</div>
+    <button>Capture photo → PMS</button>
+    <button>Push apply link</button>
+    <button class="secondary">Voice note</button>
   </div>
 </body>
 </html>
