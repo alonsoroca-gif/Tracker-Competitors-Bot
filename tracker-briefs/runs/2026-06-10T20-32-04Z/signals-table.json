@@ -1,0 +1,53 @@
+[
+  {
+    "id": 1,
+    "competitor_id": "jonah-digital",
+    "competitor": "Jonah Digital Agency",
+    "headline": "Multifamily Website Add-Ons | JONAH®",
+    "classification": "Product",
+    "classification_detail": "prospect-portal",
+    "parity": "Existing",
+    "parity_l1": "Existing",
+    "parity_l2": "Existing",
+    "routing": "Won't chase",
+    "why_routing": "Core ships Engrain SightMap widget (CEngrainSightMapWidget) with live unit rent from PMS plus native PropertySitePlan — Jonah's add-on page is agency packaging of the same embed class, not a platform gap.",
+    "tier": "Won't chase",
+    "source_url": "https://jonahdigital.com/add-ons/",
+    "prototype_path": null,
+    "prd_path": null
+  },
+  {
+    "id": 2,
+    "competitor_id": "jonah-digital",
+    "competitor": "Jonah Digital Agency",
+    "headline": "Apartment Websites for Multifamily | JONAH®",
+    "classification": "PMM",
+    "classification_detail": "social-proof",
+    "parity": "—",
+    "parity_l1": null,
+    "parity_l2": null,
+    "routing": "Won't chase",
+    "why_routing": "Homepage testimonial carousel and customer logos — channel-building social proof, not an engineering PRD.",
+    "tier": "Won't chase",
+    "source_url": "https://jonahdigital.com/",
+    "prototype_path": null,
+    "prd_path": null
+  },
+  {
+    "id": 3,
+    "competitor_id": "jonah-digital",
+    "competitor": "Jonah Digital Agency",
+    "headline": "Articles | JONAH®",
+    "classification": "PMM",
+    "classification_detail": "editorial-cadence",
+    "parity": "—",
+    "parity_l1": null,
+    "parity_l2": null,
+    "routing": "Won't chase",
+    "why_routing": "Editorial index (FTC transparency, AI search, Engrain partnership) — positioning and thought leadership; fee-transparency topics already ship in Core accounting/pricing controllers.",
+    "tier": "Won't chase",
+    "source_url": "https://jonahdigital.com/articles/",
+    "prototype_path": null,
+    "prd_path": null
+  }
+]

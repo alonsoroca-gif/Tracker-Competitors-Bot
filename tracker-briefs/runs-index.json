@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-06-10T17:32:06.354Z",
+  "updated_at": "2026-06-10T22:00:52.592Z",
   "runs": [
     {
       "run_id": "_sample-product-day",
@@ -9,6 +9,15 @@
       "prototype_count": 2,
       "summary": "Sample Product day for viewer QA — not wired to latest.json.",
       "fixture": true
+    },
+    {
+      "run_id": "2026-06-10T20-32-04Z",
+      "published_at": "2026-06-10T22:05:00.000Z",
+      "day_type": "pmm_only",
+      "net_new_count": 3,
+      "prototype_count": 0,
+      "summary": "3 net-new Jonah Digital URLs (first appearance this week). 1 Product row downgraded to Won't chase after Layer 2 Core parity — Engrain SightMap + live unit rent already in ProspectPortal. 2 PMM editorial/social-proof rows. 0 Tier-Now prototypes.",
+      "fixture": false
     },
     {
       "run_id": "2026-06-02T00-10-59Z",
