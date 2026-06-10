@@ -1,0 +1,64 @@
+{
+  "id": "candidate-2026-06-02T20-38-30-admin-delete-manual-fees",
+  "competitor_signal": "Anyone Home: Admin users can now delete manually added property fees from Settings > Quotes > Fee Management via the Action column; integration-synced fees are protected from deletion; Disabled vs Deleted distinction",
+  "proposed_feature": "Admin-role action to delete manually-added property fees from Fee Management UI, with integration-synced fees protected; distinct Disabled (kept visible, inactive) vs Deleted (removed) lifecycle",
+  "product_id": "accounting",
+  "expected_verdict": [
+    "Existing"
+  ],
+  "rationale": "Auto-saved candidate from production run at 2026-06-02T20:38:30.351Z. Manager review required before promotion to parity-fixtures.json. Confirm the expected_verdict set (consider broadening to [Partial, Borderline, Gap] for variance-stability fixtures) and replace this rationale with a real reason for inclusion.",
+  "_observed": {
+    "verdict": "Existing",
+    "total_score": 3516,
+    "files_with_hits": 331,
+    "apps_with_hits": 22,
+    "grounding_terms": [
+      "anyone",
+      "delete",
+      "manually",
+      "added",
+      "fees",
+      "quotes",
+      "action",
+      "column",
+      "integration-synced",
+      "protected",
+      "deletion",
+      "disabled",
+      "deleted",
+      "distinction",
+      "admin-role",
+      "manually-added",
+      "distinct",
+      "kept"
+    ],
+    "top_files": [
+      {
+        "score": 15,
+        "relativePath": "Application/CPsAdminApp.class.php",
+        "matched_terms": [
+          "protected",
+          "disabled",
+          "action"
+        ]
+      },
+      {
+        "score": 15,
+        "relativePath": "Application/DialPlan/CNewDialplanDirectory.class.php",
+        "matched_terms": [
+          "protected",
+          "action"
+        ]
+      },
+      {
+        "score": 15,
+        "relativePath": "Application/DialPlan/CDialPlanDirective.class.php",
+        "matched_terms": [
+          "protected",
+          "action"
+        ]
+      }
+    ],
+    "captured_at": "2026-06-02T20:38:30.351Z"
+  }
+}

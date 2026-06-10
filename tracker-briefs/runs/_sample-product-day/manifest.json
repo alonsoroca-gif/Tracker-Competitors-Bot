@@ -1,0 +1,11 @@
+{
+  "run_id": "_sample-product-day",
+  "drop_run_id": "sample",
+  "published_at": "2026-06-02T07:40:00.000Z",
+  "source": "fixture-product-day",
+  "day_type": "product",
+  "net_new_count": 2,
+  "product_row_count": 2,
+  "prototype_count": 2,
+  "summary": "Sample Product day for viewer QA — not wired to latest.json."
+}

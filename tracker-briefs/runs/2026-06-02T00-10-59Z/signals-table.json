@@ -1,0 +1,19 @@
+[
+  {
+    "id": 1,
+    "competitor_id": "funnel-leasing",
+    "competitor": "Funnel Leasing",
+    "headline": "26 Funnel Leasing Customer Reviews & References",
+    "classification": "PMM",
+    "classification_detail": "channel-building",
+    "parity": "—",
+    "parity_l1": null,
+    "parity_l2": null,
+    "routing": "Won't chase",
+    "why_routing": "FeaturedCustomers social-proof page — signal-only, no product gap. PMM may reference for displacement pitches; not an engineering PRD.",
+    "tier": "Won't chase",
+    "source_url": "https://www.featuredcustomers.com/vendor/funnel-leasing",
+    "prototype_path": null,
+    "prd_path": null
+  }
+]

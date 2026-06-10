@@ -1,0 +1,90 @@
+# Brief readiness @ 7:45am MT (not ready = expected) + late Billy ping @ 8:15am MT.
+# Publish runs when Billy starts morningbrief ~8:00 — NOT overnight.
+# See initiative-1-tracker/docs/TRACKER-AUTOMATION.md
+
+name: Tracker brief readiness
+
+on:
+  workflow_dispatch:
+  schedule:
+    # MDT (Mar–Nov): 7:45am MT ≈ 13:45 UTC · 8:15am MT ≈ 14:15 UTC
+    # MST (Nov–Mar): shifts 1h earlier locally — adjust cron seasonally if needed.
+    - cron: '45 13 * * 1-5'   # 7:45am MDT — pre-morningbrief status (not ready OK)
+    - cron: '15 14 * * 1-5'   # 8:15am MDT — late-ready Billy ping
+
+permissions:
+  contents: read
+
+concurrency:
+  group: tracker-brief-readiness
+  cancel-in-progress: false
+
+jobs:
+  readiness:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 1
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Readiness check
+        id: check
+        working-directory: initiative-1-tracker/tracker
+        run: |
+          node scripts/brief-readiness-check.js --json > readiness.json
+          cat readiness.json
+          if node -e "const j=require('./readiness.json'); process.exit(j.ok?0:2)"; then
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+          fi
+        continue-on-error: true
+
+      - name: Slack — not ready @ deadline (operator)
+        if: (github.event.schedule == '45 13 * * 1-5' || github.event_name == 'workflow_dispatch') && steps.check.outputs.ready != 'true'
+        env:
+          SLACK_WEBHOOK_URL_OPERATOR: ${{ secrets.SLACK_WEBHOOK_URL_OPERATOR }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: |
+          if [ -z "$SLACK_WEBHOOK_URL_OPERATOR" ]; then
+            echo "SLACK_WEBHOOK_URL_OPERATOR not set; skip."
+            exit 0
+          fi
+          node initiative-1-tracker/tracker/scripts/slack-brief-notify.js --mode not-ready
+
+      - name: Slack — ready on time (operator, optional)
+        if: github.event.schedule == '45 13 * * 1-5' && steps.check.outputs.ready == 'true'
+        env:
+          SLACK_WEBHOOK_URL_OPERATOR: ${{ secrets.SLACK_WEBHOOK_URL_OPERATOR }}
+        run: |
+          if [ -z "$SLACK_WEBHOOK_URL_OPERATOR" ]; then exit 0; fi
+          node initiative-1-tracker/tracker/scripts/slack-brief-notify.js --mode ready-ok
+
+      - name: Slack — late ready (Billy)
+        if: github.event.schedule == '15 14 * * 1-5' && steps.check.outputs.ready == 'true'
+        env:
+          SLACK_WEBHOOK_URL_BILLY: ${{ secrets.SLACK_WEBHOOK_URL_BILLY }}
+        run: |
+          if [ -z "$SLACK_WEBHOOK_URL_BILLY" ]; then
+            echo "SLACK_WEBHOOK_URL_BILLY not set; skip Billy late ping."
+            exit 0
+          fi
+          node initiative-1-tracker/tracker/scripts/slack-brief-notify.js --mode ready-late
+
+      - name: Slack — still not ready @ 8:15 (operator)
+        if: github.event.schedule == '15 14 * * 1-5' && steps.check.outputs.ready != 'true'
+        env:
+          SLACK_WEBHOOK_URL_OPERATOR: ${{ secrets.SLACK_WEBHOOK_URL_OPERATOR }}
+        run: |
+          if [ -z "$SLACK_WEBHOOK_URL_OPERATOR" ]; then exit 0; fi
+          node initiative-1-tracker/tracker/scripts/slack-brief-notify.js --mode not-ready
+
+      - name: Log expected not-ready @ 7:45 (no job failure)
+        if: github.event.schedule == '45 13 * * 1-5' && steps.check.outputs.ready != 'true'
+        run: |
+          echo "Brief not ready @ 7:45am MT — expected. Publish starts with morningbrief ~8:00."

@@ -1,0 +1,67 @@
+{
+  "id": "candidate-2026-06-02T20-38-30-service-request-pet-filter",
+  "competitor_signal": "Anyone Home: Service Request Details report Pet filter is now a multi-select dropdown defaulting to all options, allowing maintenance teams to filter service requests by multiple pet types in one view",
+  "proposed_feature": "Multi-select pet-type filter on Service Request Details / maintenance work-order reports with select-all default",
+  "product_id": "facilities",
+  "expected_verdict": [
+    "Existing"
+  ],
+  "rationale": "Auto-saved candidate from production run at 2026-06-02T20:38:30.351Z. Manager review required before promotion to parity-fixtures.json. Confirm the expected_verdict set (consider broadening to [Partial, Borderline, Gap] for variance-stability fixtures) and replace this rationale with a real reason for inclusion.",
+  "_observed": {
+    "verdict": "Existing",
+    "total_score": 1095,
+    "files_with_hits": 126,
+    "apps_with_hits": 16,
+    "grounding_terms": [
+      "anyone",
+      "details",
+      "report",
+      "filter",
+      "multi-select",
+      "dropdown",
+      "defaulting",
+      "options",
+      "allowing",
+      "maintenance",
+      "teams",
+      "multiple",
+      "pet-type",
+      "work-order",
+      "reports",
+      "select-all"
+    ],
+    "top_files": [
+      {
+        "score": 15,
+        "relativePath": "Application/Reports/CLeasingCenterTvDisplayDirective.class.php",
+        "matched_terms": [
+          "report",
+          "reports"
+        ]
+      },
+      {
+        "score": 15,
+        "relativePath": "Application/AssignApplicationModules.php",
+        "matched_terms": [
+          "reports",
+          "teams",
+          "filter",
+          "report",
+          "details"
+        ]
+      },
+      {
+        "score": 15,
+        "relativePath": "Application/Reports/CClientAdminReport.class.php",
+        "matched_terms": [
+          "reports",
+          "report",
+          "filter",
+          "details",
+          "options"
+        ]
+      }
+    ],
+    "captured_at": "2026-06-02T20:38:30.351Z"
+  }
+}

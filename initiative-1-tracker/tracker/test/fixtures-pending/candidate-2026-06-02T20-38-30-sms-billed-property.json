@@ -1,0 +1,62 @@
+{
+  "id": "candidate-2026-06-02T20-38-30-sms-billed-property",
+  "competitor_signal": "Anyone Home: SMS Billed Property field on agent contact records, editable by Admin in Settings > Manage Staff > SMS Settings; tracks which property is billed for each agent-assigned SMS phone number",
+  "proposed_feature": "Per-agent SMS phone-number billing attribution: configurable billed-property field on user/staff records, editable by Admin role, surfaced on contact record and reflected in property-level SMS billing/reports",
+  "product_id": "prospect-portal",
+  "expected_verdict": [
+    "Existing"
+  ],
+  "rationale": "Auto-saved candidate from production run at 2026-06-02T20:38:30.350Z. Manager review required before promotion to parity-fixtures.json. Confirm the expected_verdict set (consider broadening to [Partial, Borderline, Gap] for variance-stability fixtures) and replace this rationale with a real reason for inclusion.",
+  "_observed": {
+    "verdict": "Existing",
+    "total_score": 182,
+    "files_with_hits": 36,
+    "apps_with_hits": 11,
+    "grounding_terms": [
+      "anyone",
+      "billed",
+      "field",
+      "contact",
+      "editable",
+      "manage",
+      "staff",
+      "tracks",
+      "agent-assigned",
+      "per-agent",
+      "phone-number",
+      "billing",
+      "attribution",
+      "configurable",
+      "billed-property",
+      "role"
+    ],
+    "top_files": [
+      {
+        "score": 14,
+        "relativePath": "Application/Calendar/CEntrataCalendarV2Controller.class.php",
+        "matched_terms": [
+          "staff",
+          "field"
+        ]
+      },
+      {
+        "score": 11,
+        "relativePath": "Services/SelfServicePortal/CContractSignedDocumentService.php",
+        "matched_terms": [
+          "billing",
+          "field"
+        ]
+      },
+      {
+        "score": 10,
+        "relativePath": "Application/Payments/CPublishPaymentCenterSystem.class.php",
+        "matched_terms": [
+          "contact",
+          "billing",
+          "field"
+        ]
+      }
+    ],
+    "captured_at": "2026-06-02T20:38:30.350Z"
+  }
+}

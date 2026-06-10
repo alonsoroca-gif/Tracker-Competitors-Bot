@@ -1,0 +1,66 @@
+{
+  "id": "candidate-2026-06-02T20-38-30-quote-design-refresh",
+  "competitor_signal": "Anyone Home: Quote design refresh shipped across Embedded Quotes, Flyer Quotes, Community Fee Guide, and Property Policies Page layouts; property information now in header, refreshed footer styling per latest brand designs",
+  "proposed_feature": "Tenant/prospect quote document templating with property-info header and configurable footer styles, applied across embedded quote, flyer-format quote, fee guide, and property policies layouts",
+  "product_id": "prospect-portal",
+  "expected_verdict": [
+    "Existing"
+  ],
+  "rationale": "Auto-saved candidate from production run at 2026-06-02T20:38:30.351Z. Manager review required before promotion to parity-fixtures.json. Confirm the expected_verdict set (consider broadening to [Partial, Borderline, Gap] for variance-stability fixtures) and replace this rationale with a real reason for inclusion.",
+  "_observed": {
+    "verdict": "Existing",
+    "total_score": 255,
+    "files_with_hits": 43,
+    "apps_with_hits": 12,
+    "grounding_terms": [
+      "anyone",
+      "quote",
+      "design",
+      "refresh",
+      "shipped",
+      "across",
+      "embedded",
+      "quotes",
+      "flyer",
+      "community",
+      "guide",
+      "policies",
+      "layouts",
+      "information",
+      "refreshed",
+      "styling",
+      "latest",
+      "brand",
+      "designs"
+    ],
+    "top_files": [
+      {
+        "score": 15,
+        "relativePath": "Application/AssignApplicationModules.php",
+        "matched_terms": [
+          "community",
+          "policies",
+          "quotes",
+          "design"
+        ]
+      },
+      {
+        "score": 15,
+        "relativePath": "Application/ReportsNew/CReportNewCompanyReportsController.class.php",
+        "matched_terms": [
+          "latest",
+          "information"
+        ]
+      },
+      {
+        "score": 15,
+        "relativePath": "Application/Calendar/CEntrataCalendarV2CommunityController.class.php",
+        "matched_terms": [
+          "community",
+          "across"
+        ]
+      }
+    ],
+    "captured_at": "2026-06-02T20:38:30.351Z"
+  }
+}

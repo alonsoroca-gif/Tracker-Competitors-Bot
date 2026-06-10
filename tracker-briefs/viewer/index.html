@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Tracker Brief Viewer</title>
+  <style>
+    :root {
+      --bg: #0c0c0f;
+      --panel: #16161a;
+      --text: #ececf1;
+      --muted: #9b9ba7;
+      --accent: #5b8def;
+      --border: #2a2a32;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "SF Pro Text", system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.45;
+    }
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      background: rgba(12, 12, 15, 0.92);
+      backdrop-filter: blur(8px);
+      border-bottom: 1px solid var(--border);
+      padding: 12px 20px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+    }
+    header h1 { font-size: 1rem; margin: 0; font-weight: 600; }
+    header .meta { color: var(--muted); font-size: 0.85rem; }
+    select, button {
+      background: var(--panel);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 12px;
+      font-size: 0.85rem;
+    }
+    button { cursor: pointer; }
+    button:hover { border-color: var(--accent); }
+    main {
+      width: 100%;
+      max-width: none;
+      margin: 0;
+      padding: clamp(16px, 2.5vw, 32px);
+    }
+    section { margin-bottom: clamp(24px, 4vw, 40px); }
+    h2 { font-size: clamp(1rem, 1.2vw, 1.15rem); margin: 0 0 12px; }
+    #table-wrap {
+      width: 100%;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--panel);
+    }
+    table {
+      width: max-content;
+      min-width: 100%;
+      border-collapse: collapse;
+      font-size: clamp(0.8rem, 0.9vw, 0.9rem);
+    }
+    th, td {
+      border: 1px solid var(--border);
+      padding: 10px 12px;
+      text-align: left;
+      vertical-align: top;
+      line-height: 1.4;
+      white-space: normal;
+      word-break: break-word;
+    }
+    th { background: var(--panel); color: var(--muted); font-weight: 500; }
+    /* Keep narrow columns compact; let headline / routing breathe */
+    th:nth-child(1), td:nth-child(1) { min-width: 2.5rem; white-space: nowrap; }
+    th:nth-child(2), td:nth-child(2) { min-width: 7rem; }
+    th:nth-child(3), td:nth-child(3) { min-width: 14rem; max-width: 28rem; }
+    th:nth-child(4), td:nth-child(4),
+    th:nth-child(5), td:nth-child(5) { min-width: 8rem; white-space: nowrap; }
+    th:nth-child(6), td:nth-child(6),
+    th:nth-child(7), td:nth-child(7),
+    th:nth-child(8), td:nth-child(8) { min-width: 6.5rem; white-space: nowrap; }
+    th:nth-child(9), td:nth-child(9) { min-width: 16rem; max-width: 32rem; }
+    th:nth-child(10), td:nth-child(10) { min-width: 10rem; max-width: 18rem; }
+    .proto-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(min(100%, 380px), 1fr));
+      gap: clamp(16px, 2vw, 24px);
+    }
+    .proto-card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    .proto-card header {
+      position: static;
+      border: none;
+      padding: 12px 14px;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+    .proto-preview {
+      position: relative;
+      cursor: pointer;
+      display: block;
+      text-decoration: none;
+      color: inherit;
+    }
+    .proto-preview:hover .proto-open-hint { opacity: 1; }
+    .proto-card iframe {
+      width: 100%;
+      height: clamp(320px, 42vh, 520px);
+      border: none;
+      background: #fff;
+      pointer-events: none;
+    }
+    .proto-open-hint {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      padding: 10px 14px;
+      background: linear-gradient(transparent, rgba(12, 12, 15, 0.92));
+      color: var(--text);
+      font-size: 0.8rem;
+      opacity: 0.85;
+      text-align: center;
+    }
+    .proto-card .links {
+      padding: 12px 14px 14px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      justify-content: center;
+    }
+    .btn-proto, .btn-prd {
+      display: inline-block;
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-size: 0.82rem;
+      font-weight: 500;
+      text-decoration: none;
+      border: 1px solid var(--border);
+      cursor: pointer;
+      background: var(--panel);
+      color: var(--text);
+    }
+    .btn-proto:hover, .btn-prd:hover {
+      border-color: var(--accent);
+      background: rgba(91, 141, 239, 0.12);
+    }
+    .btn-prd {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+    .empty { color: var(--muted); font-style: italic; }
+    .err { color: #f87171; padding: 12px; background: #1a1010; border-radius: 8px; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Tracker Brief Viewer</h1>
+    <span class="meta" id="run-meta">Loading…</span>
+    <select id="run-select" aria-label="Select run"></select>
+    <button type="button" id="reload-btn">Reload</button>
+  </header>
+  <main>
+    <section id="summary-section">
+      <h2>Summary</h2>
+      <p id="summary-text" class="meta">—</p>
+    </section>
+    <section id="prototypes-section">
+      <h2>Prototypes</h2>
+      <div id="prototypes" class="proto-grid"></div>
+    </section>
+    <section id="table-section">
+      <h2>Signals (full table)</h2>
+      <div id="table-wrap"></div>
+    </section>
+  </main>
+  <script>
+    // viewer/ is one level below tracker-briefs/ — data + runs live under ../
+    const BRIEF_PREFIX = '../';
+
+    /** Paths in JSON are repo-relative (tracker-briefs/runs/...); resolve for viewer/. */
+    function assetUrl(storedPath) {
+      if (!storedPath) return '';
+      const p = String(storedPath).replace(/^tracker-briefs\//, '');
+      return BRIEF_PREFIX + p;
+    }
+
+    /** Full localhost URL for opening prototype / PRD in a new tab. */
+    function absoluteAssetUrl(storedPath) {
+      const rel = assetUrl(storedPath);
+      if (!rel) return '';
+      return new URL(rel, window.location.href).href;
+    }
+
+    function viewerShellUrl(shellPage, assetPath, title, extraParams) {
+      const back = encodeURIComponent(window.location.href);
+      const src = encodeURIComponent(assetUrl(assetPath));
+      let url = `${shellPage}?src=${src}&back=${back}`;
+      if (title) url += `&title=${encodeURIComponent(title)}`;
+      if (extraParams) url += `&${extraParams}`;
+      return url;
+    }
+
+    function qp(name) {
+      return new URLSearchParams(location.search).get(name);
+    }
+
+    async function fetchJson(path) {
+      const res = await fetch(path);
+      if (!res.ok) throw new Error(`${path} → ${res.status}`);
+      return res.json();
+    }
+
+    function esc(s) {
+      return String(s ?? '—').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
+    function renderTable(rows) {
+      if (!rows.length) {
+        return '<p class="empty">No signal rows.</p>';
+      }
+      const cols = [
+        ['id', '#'],
+        ['competitor', 'Competitor'],
+        ['headline', 'Headline'],
+        ['classification', 'Classification'],
+        ['classification_detail', 'Detail'],
+        ['parity_l2', 'Parity (L2)'],
+        ['parity_l1', 'Parity (L1)'],
+        ['routing', 'Routing'],
+        ['why_routing', 'Why / routing'],
+        ['source_url', 'Source'],
+      ];
+      const head = cols.map(([, label]) => `<th>${esc(label)}</th>`).join('');
+      const body = rows.map((r) => {
+        const cells = cols.map(([key]) => {
+          let v = r[key];
+          if (key === 'classification' && r.classification_detail) {
+            v = `${r.classification} / ${r.classification_detail}`;
+          }
+          if (key === 'classification_detail') return '';
+          if (key === 'source_url' && v) {
+            return `<td><a href="${esc(v)}" target="_blank" rel="noopener">${esc(v)}</a></td>`;
+          }
+          return `<td>${esc(v)}</td>`;
+        }).filter(Boolean).join('');
+        return `<tr>${cells}</tr>`;
+      }).join('');
+      return `<table><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table>`;
+    }
+
+    function renderPrototypes(protos) {
+      const el = document.getElementById('prototypes');
+      if (!protos.length) {
+        el.innerHTML = '<p class="empty">No prototypes this run (PMM-only or non-Product day).</p>';
+        return;
+      }
+      el.innerHTML = protos.map((p) => {
+        const htmlPath = p.preview_path || p.html_path || '';
+        const src = assetUrl(htmlPath);
+        const protoShell = viewerShellUrl('prototype.html', htmlPath, p.title);
+        const prdShell = p.prd_path ? viewerShellUrl('prd.html', p.prd_path, null, 'auto=pdf') : '';
+        return `
+          <article class="proto-card">
+            <header>
+              <strong>${esc(p.title)}</strong>
+              <span class="meta">${esc(p.competitor || p.competitor_id)}</span>
+            </header>
+            <a class="proto-preview" href="${esc(protoShell)}" target="_blank" rel="noopener" title="Open prototype full screen">
+              <iframe src="${esc(src)}" title="${esc(p.title)}" loading="lazy"></iframe>
+              <span class="proto-open-hint">Click to open prototype full screen</span>
+            </a>
+            <div class="links">
+              <a class="btn-proto" href="${esc(protoShell)}" target="_blank" rel="noopener">Open prototype</a>
+              ${prdShell ? `<a class="btn-prd" href="${esc(prdShell)}" target="_blank" rel="noopener">Download complete PRD now</a>` : ''}
+            </div>
+          </article>`;
+      }).join('');
+    }
+
+    async function loadRun(runId) {
+      const base = `${BRIEF_PREFIX}runs/${runId}/`;
+      const [manifest, table, protos] = await Promise.all([
+        fetchJson(base + 'manifest.json'),
+        fetchJson(base + 'signals-table.json'),
+        fetchJson(base + 'prototypes.json').catch(() => []),
+      ]);
+
+      document.getElementById('run-meta').textContent =
+        `${manifest.run_id} · ${manifest.net_new_count ?? 0} net-new · ${manifest.prototype_count ?? 0} prototypes`;
+      document.getElementById('summary-text').textContent =
+        manifest.summary || '(no summary)';
+      document.getElementById('table-wrap').innerHTML = renderTable(table);
+      renderPrototypes(protos);
+    }
+
+    async function init() {
+      try {
+        const latest = await fetchJson(BRIEF_PREFIX + 'latest.json');
+        const runParam = qp('run') || latest.run_id;
+        const select = document.getElementById('run-select');
+        select.innerHTML = `<option value="${esc(runParam)}">${esc(runParam)}</option>`;
+        await loadRun(runParam);
+        document.getElementById('reload-btn').onclick = () => loadRun(runParam);
+      } catch (err) {
+        document.getElementById('summary-text').innerHTML =
+          `<span class="err">Failed to load brief: ${esc(err.message)}. Start <code>python3 -m http.server 8765</code> from repo root, then Simple Browser → <code>http://localhost:8765/tracker-briefs/viewer/index.html</code> (not the editor tab).</span>`;
+      }
+    }
+
+    init();
+  </script>
+</body>
+</html>

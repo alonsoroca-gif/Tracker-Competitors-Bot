@@ -6,7 +6,7 @@
     },
     {
       "name": "Entrata Core Repo",
-      "path": "/ABSOLUTE/PATH/TO/Core Repo"
+      "path": "/ABSOLUTE/PATH/TO/entrata-core"
     }
   ],
   "settings": {}

@@ -1,0 +1,43 @@
+# Operator preflight before morningbrief publish kickoff (~8:00am MT).
+# See initiative-1-tracker/docs/TRACKER-AUTOMATION.md
+
+name: Tracker publish preflight
+
+on:
+  workflow_dispatch:
+  schedule:
+    # 5:35am MDT ≈ 11:35 UTC (before publish)
+    - cron: '35 11 * * 1-5'
+    # ~6:05pm MDT after 5pm collect ≈ 00:05 UTC next calendar day
+    - cron: '5 0 * * 2-6'
+
+permissions:
+  contents: read
+
+jobs:
+  preflight:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 1
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Preflight
+        working-directory: initiative-1-tracker/tracker
+        run: node scripts/publish-preflight.js
+
+      - name: Slack — operator preflight
+        env:
+          SLACK_WEBHOOK_URL_OPERATOR: ${{ secrets.SLACK_WEBHOOK_URL_OPERATOR }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: |
+          if [ -z "$SLACK_WEBHOOK_URL_OPERATOR" ]; then
+            echo "SLACK_WEBHOOK_URL_OPERATOR not set; skip Slack."
+            exit 0
+          fi
+          node initiative-1-tracker/tracker/scripts/slack-brief-notify.js --mode preflight

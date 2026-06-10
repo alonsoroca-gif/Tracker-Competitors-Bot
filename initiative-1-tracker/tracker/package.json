@@ -11,7 +11,19 @@
     "drop": "node scripts/publish-drop.js",
     "slack-notify": "node scripts/slack-drop-notify.js",
     "test": "node test/run.js && node test/parity-check.test.js",
-    "test:parity": "node test/parity-check.test.js"
+    "test:parity": "node test/parity-check.test.js",
+    "test:parity-github": "node test/parity-github.test.js",
+    "verify:core": "node scripts/verify-core-setup.js",
+    "manager:preflight": "node scripts/manager-core-preflight.js",
+    "verify:github-core": "node scripts/verify-github-core-access.js",
+    "parity:github": "node scripts/core-parity-check.js --github --stdin",
+    "preflight:publish": "node scripts/publish-preflight.js",
+    "brief:readiness": "node scripts/brief-readiness-check.js",
+    "brief:feed": "node scripts/tracker-feed-render.js",
+    "test:brief": "node test/brief-feed.test.js",
+    "publish:dry-run": "node scripts/tracker-publish-dry-run.js",
+    "slack:brief-preflight": "node scripts/slack-brief-notify.js --mode preflight",
+    "slack:brief-not-ready": "node scripts/slack-brief-notify.js --mode not-ready"
   },
   "dependencies": {
     "cheerio": "^1.0.0",

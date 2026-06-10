@@ -1,0 +1,12 @@
+{
+  "run_id": "2026-06-02T00-10-59Z",
+  "drop_run_id": "2026-06-02T00-10-59Z",
+  "published_at": "2026-06-02T07:42:00.000Z",
+  "source": "tracker-publish-fixture",
+  "day_type": "pmm_only",
+  "net_new_count": 1,
+  "product_row_count": 0,
+  "prototype_count": 0,
+  "interpretation_pointer": "2026-06-02T00-10-59Z",
+  "summary": "1 net-new PMM signal (Funnel FeaturedCustomers social proof). 0 Product rows — no prototypes or parity gate this morning."
+}
