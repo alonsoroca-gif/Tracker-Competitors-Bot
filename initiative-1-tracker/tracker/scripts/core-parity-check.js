@@ -363,6 +363,8 @@ function parseArgs(argv) {
     else if (a === '--confident-partial-min') args.thresholds.confident_partial_min = Number(argv[++i]);
     else if (a === '--max-file-score') args.thresholds.max_file_score = Number(argv[++i]);
     else if (a === '--save-candidate') args.saveCandidate = argv[++i];
+    else if (a === '--github') args.github = true;
+    else if (a === '--print-code-scan-prompts') args.printCodeScanPrompts = true;
     else if (a === '--help' || a === '-h') {
       printHelpAndExit();
     }
@@ -527,13 +529,14 @@ function scopeAppsForProduct(productId, applicationsDir, allApps, scopeByProduct
   if (!scopeByProduct || !productId) return allApps;
   const inventory = getAppInventory(productId);
   if (!inventory || !inventory.configured) return allApps;
-  const scoped = inventory.artifacts
-    .map((a) => a.repo_root)
-    .filter(Boolean)
-    .map((p) => ({ name: path.basename(p), abs: p }))
-    .filter((a) => fs.existsSync(a.abs));
-  if (!scoped.length) return allApps;
-  return scoped;
+  const wanted = new Set(
+    inventory.artifacts
+      .map((a) => path.basename(String(a.repo_root || '')))
+      .filter(Boolean),
+  );
+  if (!wanted.size) return allApps;
+  const matched = allApps.filter((app) => wanted.has(app.name));
+  return matched.length ? matched : allApps;
 }
 
 function filterDomainNoise(termList) {
@@ -727,32 +730,117 @@ function checkOne(feature, applicationsDir, allApps, thresholds) {
   };
 }
 
-function toMarkdownTable(results, features) {
+function toMarkdownTable(results, features, opts = {}) {
   const byId = new Map(features.map((f) => [f.id, f]));
+  const gh = opts.source === 'github';
   const rows = [
-    '| # | Proposed feature | Parity | Score / files / apps | Top Core anchor |',
-    '|---|---|---|---|---|',
+    gh
+      ? '| # | Proposed feature | L1 (GitHub) | Score / files / apps | Top Core anchor | Layer 2 |'
+      : '| # | Proposed feature | Parity | Score / files / apps | Top Core anchor |',
+    gh ? '|---|---|---|---|---|---|' : '|---|---|---|---|---|',
   ];
   for (const r of results) {
     const f = byId.get(r.id) || {};
     const top = r.top_files[0];
-    const anchor = top ? `\`${top.app}/${top.relativePath}\`` : '_(no Core match)_';
+    const anchor = top
+      ? top.github_url
+        ? `[${top.app}/${top.relativePath}](${top.github_url})`
+        : `\`${top.app}/${top.relativePath}\``
+      : '_(no Core match)_';
     const counts = `${r.total_score} / ${r.files_with_hits} / ${r.apps_with_hits}`;
-    rows.push(`| ${r.id} | ${(f.proposed_feature || '').replace(/\|/g, '\\|').slice(0, 70)} | **${r.parity}** | ${counts} | ${anchor} |`);
+    if (gh) {
+      rows.push(
+        `| ${r.id} | ${(f.proposed_feature || '').replace(/\|/g, '\\|').slice(0, 55)} | **${r.parity}** | ${counts} | ${anchor} | agent Core search |`,
+      );
+    } else {
+      rows.push(
+        `| ${r.id} | ${(f.proposed_feature || '').replace(/\|/g, '\\|').slice(0, 70)} | **${r.parity}** | ${counts} | ${anchor} |`,
+      );
+    }
   }
   rows.push('');
   rows.push(
-    '_Verdict legend: ' +
-      '**Existing** = score ≥ 40 AND ≥ 4 files (likely already shipped) · ' +
-      '**Partial** = score ≥ 15 AND ≥ 2 files (foundation exists, scope likely incomplete) · ' +
-      '**Borderline** = single-file dominance OR score 8–14 OR Existing-grade score with thin file breadth (manager review before tiering) · ' +
-      '**Gap** = score < 8 (no meaningful Core presence)._',
+    gh
+      ? '_Layer 1 @ GitHub `main`: tree list + keyword scan. Layer 2 required for final tier._'
+      : '_Verdict legend: **Existing** ≥40 + ≥4 files · **Partial** ≥15 + ≥2 · **Borderline** uncertain · **Gap** <8._',
   );
   return rows.join('\n');
 }
 
+async function mainGitHub(args) {
+  const { runGitHubParityBatch } = require(path.join(trackerRoot, 'lib', 'parityGitHubScan.js'));
+
+  const features = readInput(args);
+  if (!features) {
+    process.stderr.write('core-parity-check: no input. Pass --in <file>, --stdin, or --self-test.\n');
+    process.exit(1);
+  }
+
+  try {
+    const { results } = await runGitHubParityBatch(features, {
+      scopeByProduct: args.scopeByProduct,
+      thresholds: args.thresholds,
+    });
+
+    process.stderr.write(
+      `core-parity-check: GitHub Layer 1 complete for ${results.length} row(s) @ main. ` +
+        `Layer 2 (agent) required for Product rows — see feature_audit.code_scan_prompt.\n`,
+    );
+
+    if (args.saveCandidate) saveCandidates(features, results, args.saveCandidate);
+
+    if (args.printCodeScanPrompts) {
+      const blocks = [];
+      for (const r of results) {
+        if (r.feature_audit?.code_scan_prompt) {
+          blocks.push(r.feature_audit.code_scan_prompt);
+          blocks.push('');
+        }
+      }
+      process.stdout.write(blocks.join('\n'));
+      process.exit(0);
+    }
+
+    if (args.format === 'markdown') {
+      let out = toMarkdownTable(results, features, { source: 'github' }) + '\n';
+      const prompts = formatCodeScanPromptsSection(results);
+      if (prompts) out += '\n' + prompts + '\n';
+      process.stdout.write(out);
+    } else {
+      process.stdout.write(JSON.stringify(results, null, 2) + '\n');
+    }
+  } catch (err) {
+    process.stderr.write(`core-parity-check: GitHub mode failed — ${err.message}\n`);
+    process.stderr.write(
+      'Fix: set ENTRATA_CORE_GITHUB_TOKEN, owner in config/entrata-core-github.json, ' +
+        'then node scripts/verify-github-core-access.js\n',
+    );
+    process.exit(2);
+  }
+}
+
+function formatCodeScanPromptsSection(results) {
+  const blocks = [];
+  for (const r of results) {
+    const audit = r.feature_audit;
+    if (!audit?.code_scan_prompt) continue;
+    blocks.push(audit.code_scan_prompt);
+    blocks.push('');
+  }
+  if (!blocks.length) return '';
+  return ['### Layer 2 — agent Core search prompts', '', ...blocks].join('\n');
+}
+
 function main() {
   const args = parseArgs(process.argv);
+
+  if (args.github) {
+    mainGitHub(args).catch((err) => {
+      process.stderr.write(`core-parity-check: ${err.message}\n`);
+      process.exit(1);
+    });
+    return;
+  }
 
   if (args.saveCore) {
     const apps = validCoreRoot(args.saveCore);
@@ -889,4 +977,16 @@ if (require.main === module) {
   }
 }
 
-module.exports = { checkOne, verdictFor, resolveCoreRoot, DEFAULT_THRESHOLDS };
+module.exports = {
+  checkOne,
+  verdictFor,
+  resolveCoreRoot,
+  DEFAULT_THRESHOLDS,
+  buildTermMatchers,
+  scoreFile,
+  termsForFeature: terms,
+  scopeAppsForProduct,
+  listAppDirs,
+  filterDomainNoise,
+  toMarkdownTable,
+};

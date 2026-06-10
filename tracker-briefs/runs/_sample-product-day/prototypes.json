@@ -1,0 +1,22 @@
+[
+  {
+    "id": "siteplan",
+    "title": "Live-PMS Siteplan",
+    "competitor_id": "jonah",
+    "competitor": "Jonah",
+    "signal_id": 1,
+    "html_path": "tracker-briefs/runs/_sample-product-day/prototypes/siteplan.html",
+    "preview_path": "tracker-briefs/runs/_sample-product-day/prototypes/siteplan.html",
+    "prd_path": "tracker-briefs/runs/_sample-product-day/prds/siteplan-prd.md"
+  },
+  {
+    "id": "field-mode",
+    "title": "Field-Mode Leasing",
+    "competitor_id": "eliseai",
+    "competitor": "EliseAI",
+    "signal_id": 2,
+    "html_path": "tracker-briefs/runs/_sample-product-day/prototypes/field-mode.html",
+    "preview_path": "tracker-briefs/runs/_sample-product-day/prototypes/field-mode.html",
+    "prd_path": "tracker-briefs/runs/_sample-product-day/prds/field-mode-prd.md"
+  }
+]

@@ -1,0 +1,12 @@
+{
+  "status": "ready",
+  "run_id": "2026-06-02T00-10-59Z",
+  "ready_at": "2026-06-02T07:45:00.000Z",
+  "deadline_mt": "07:45",
+  "viewer_path": "tracker-briefs/viewer/index.html",
+  "run_dir": "tracker-briefs/runs/2026-06-02T00-10-59Z",
+  "prototype_count": 0,
+  "net_new_count": 1,
+  "product_row_count": 0,
+  "source": "fixture-pmm-day"
+}

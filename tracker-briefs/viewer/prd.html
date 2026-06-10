@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>PRD — Tracker Brief</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" crossorigin="anonymous"></script>
+  <style>
+    :root {
+      --bg: #0c0c0f;
+      --panel: #16161a;
+      --text: #ececf1;
+      --muted: #9b9ba7;
+      --accent: #5b8def;
+      --border: #2a2a32;
+      --ok: #4ade80;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "SF Pro Text", system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.55;
+    }
+    .toolbar {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 20px;
+      background: rgba(12, 12, 15, 0.95);
+      border-bottom: 1px solid var(--border);
+    }
+    .btn-back, .btn-pdf {
+      display: inline-block;
+      padding: 8px 16px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--panel);
+      color: var(--text);
+      text-decoration: none;
+      font-size: 0.9rem;
+      font-weight: 500;
+      cursor: pointer;
+      font-family: inherit;
+    }
+    .btn-pdf {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+    .btn-back:hover, .btn-pdf:hover {
+      background: rgba(91, 141, 239, 0.12);
+    }
+    .status {
+      width: 100%;
+      text-align: center;
+      font-size: 0.82rem;
+      color: var(--ok);
+      min-height: 1.2em;
+    }
+    main {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 32px 24px 48px;
+    }
+    #content h1 { font-size: 1.5rem; margin-top: 0; }
+    #content h2 { font-size: 1.15rem; margin-top: 1.5rem; }
+    #content h3 { font-size: 1rem; }
+    #content p, #content li { color: var(--text); }
+    #content ul { padding-left: 1.25rem; }
+    #content code {
+      background: var(--panel);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 0.9em;
+    }
+    .loading, .err { text-align: center; padding: 48px 24px; color: var(--muted); }
+    .err { color: #f87171; }
+  </style>
+</head>
+<body>
+  <div class="toolbar">
+    <a class="btn-back" id="back-link" href="index.html">← Back to Tracker Brief</a>
+    <button type="button" class="btn-pdf" id="pdf-btn">Download complete PRD now</button>
+    <p class="status" id="status" aria-live="polite"></p>
+  </div>
+  <main>
+    <div id="content" class="loading">Loading PRD…</div>
+  </main>
+  <script>
+    const params = new URLSearchParams(location.search);
+    const src = params.get('src');
+    const back = params.get('back');
+    const autoPdf = params.get('auto') === 'pdf';
+
+    let loadedMd = '';
+
+    if (back) document.getElementById('back-link').href = back;
+
+    function pdfFilename() {
+      const base = (src || 'prd.md').split('/').pop() || 'prd.md';
+      return base.replace(/\.md$/i, '') + '.pdf';
+    }
+
+    function mdToPlainBlocks(md) {
+      const lines = md.replace(/\r\n/g, '\n').split('\n');
+      const blocks = [];
+      for (const line of lines) {
+        const t = line.trim();
+        if (!t) {
+          blocks.push({ text: '', size: 8, bold: false, gap: true });
+          continue;
+        }
+        if (/^### (.+)/.test(t)) {
+          blocks.push({ text: RegExp.$1, size: 12, bold: true });
+        } else if (/^## (.+)/.test(t)) {
+          blocks.push({ text: RegExp.$1, size: 14, bold: true });
+        } else if (/^# (.+)/.test(t)) {
+          blocks.push({ text: RegExp.$1, size: 18, bold: true });
+        } else if (/^[-*] (.+)/.test(t)) {
+          const item = RegExp.$1.replace(/\*\*(.+?)\*\*/g, '$1').replace(/`([^`]+)`/g, '$1');
+          blocks.push({ text: `• ${item}`, size: 11, bold: false });
+        } else {
+          const p = t.replace(/\*\*(.+?)\*\*/g, '$1').replace(/`([^`]+)`/g, '$1');
+          blocks.push({ text: p, size: 11, bold: false });
+        }
+      }
+      return blocks;
+    }
+
+    function downloadPdf() {
+      if (!loadedMd || !window.jspdf) {
+        setStatus('PDF not ready — wait for PRD to load.', true);
+        return;
+      }
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF({ unit: 'pt', format: 'letter' });
+      const margin = 48;
+      const pageH = doc.internal.pageSize.getHeight();
+      const maxW = doc.internal.pageSize.getWidth() - margin * 2;
+      let y = margin;
+
+      for (const block of mdToPlainBlocks(loadedMd)) {
+        if (block.gap) {
+          y += 8;
+          continue;
+        }
+        if (!block.text) continue;
+        doc.setFontSize(block.size);
+        doc.setFont('helvetica', block.bold ? 'bold' : 'normal');
+        const wrapped = doc.splitTextToSize(block.text, maxW);
+        const lineH = block.size * 1.35;
+        for (const line of wrapped) {
+          if (y > pageH - margin) {
+            doc.addPage();
+            y = margin;
+          }
+          doc.text(line, margin, y);
+          y += lineH;
+        }
+        y += 4;
+      }
+
+      const name = pdfFilename();
+      doc.save(name);
+      setStatus(`Downloaded ${name}`);
+    }
+
+    function setStatus(msg, isErr) {
+      const el = document.getElementById('status');
+      el.textContent = msg;
+      el.style.color = isErr ? '#f87171' : 'var(--ok)';
+    }
+
+    document.getElementById('pdf-btn').addEventListener('click', downloadPdf);
+
+    function mdToHtml(md) {
+      const lines = md.replace(/\r\n/g, '\n').split('\n');
+      const out = [];
+      let inList = false;
+
+      function closeList() {
+        if (inList) { out.push('</ul>'); inList = false; }
+      }
+
+      for (const line of lines) {
+        if (/^### (.+)/.test(line)) {
+          closeList();
+          out.push(`<h3>${RegExp.$1}</h3>`);
+        } else if (/^## (.+)/.test(line)) {
+          closeList();
+          out.push(`<h2>${RegExp.$1}</h2>`);
+        } else if (/^# (.+)/.test(line)) {
+          closeList();
+          out.push(`<h1>${RegExp.$1}</h1>`);
+        } else if (/^[-*] (.+)/.test(line)) {
+          if (!inList) { out.push('<ul>'); inList = true; }
+          let item = RegExp.$1
+            .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+            .replace(/`([^`]+)`/g, '<code>$1</code>');
+          out.push(`<li>${item}</li>`);
+        } else if (line.trim() === '') {
+          closeList();
+        } else {
+          closeList();
+          let p = line
+            .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+            .replace(/`([^`]+)`/g, '<code>$1</code>');
+          out.push(`<p>${p}</p>`);
+        }
+      }
+      closeList();
+      return out.join('\n');
+    }
+
+    async function load() {
+      const el = document.getElementById('content');
+      if (!src) {
+        el.className = 'err';
+        el.textContent = 'Missing PRD path.';
+        return;
+      }
+      try {
+        const res = await fetch(src);
+        if (!res.ok) throw new Error(`${res.status}`);
+        loadedMd = await res.text();
+        el.className = '';
+        el.innerHTML = mdToHtml(loadedMd);
+        document.title = (loadedMd.match(/^#\s+(.+)/m) || [])[1] || 'PRD — Tracker Brief';
+
+        if (autoPdf) {
+          setStatus('Preparing PDF…');
+          setTimeout(() => downloadPdf(), 300);
+        }
+      } catch (e) {
+        el.className = 'err';
+        el.textContent = `Failed to load PRD: ${e.message}`;
+      }
+    }
+
+    load();
+  </script>
+</body>
+</html>

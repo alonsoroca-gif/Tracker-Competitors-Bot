@@ -1,0 +1,9 @@
+{
+  "_comment": "Live entrata-core on GitHub — parity reads ref=main (no local clone). Set owner/repo for your org. Token: ENTRATA_CORE_GITHUB_TOKEN or GITHUB_TOKEN.",
+  "owner": "entrata",
+  "repo": "core",
+  "default_ref": "main",
+  "applications_path": "Applications",
+  "api_base": "https://api.github.com",
+  "html_url_template": "https://github.com/{owner}/{repo}/blob/{ref}/{path}"
+}

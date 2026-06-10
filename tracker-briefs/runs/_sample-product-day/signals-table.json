@@ -1,0 +1,36 @@
+[
+  {
+    "id": 1,
+    "competitor_id": "jonah",
+    "competitor": "Jonah",
+    "headline": "Interactive siteplan with unit-level availability",
+    "classification": "Product",
+    "classification_detail": "prospect-portal",
+    "parity": "Partial",
+    "parity_l1": "Borderline",
+    "parity_l2": "Partial",
+    "routing": "Tier — Now",
+    "why_routing": "Core has siteplan modules; delta is live PMS pricing on map units.",
+    "tier": "Now",
+    "source_url": "https://example.com/jonah-siteplan",
+    "prototype_path": "tracker-briefs/runs/_sample-product-day/prototypes/siteplan.html",
+    "prd_path": "tracker-briefs/runs/_sample-product-day/prds/siteplan-prd.md"
+  },
+  {
+    "id": 2,
+    "competitor_id": "eliseai",
+    "competitor": "EliseAI",
+    "headline": "Mobile-first leasing CRM for agents",
+    "classification": "Product",
+    "classification_detail": "leasing-crm",
+    "parity": "Partial",
+    "parity_l1": "Partial",
+    "parity_l2": "Partial",
+    "routing": "Tier — Now",
+    "why_routing": "CRM exists in Core; gap is field-mode in-tour workflow tied to PMS.",
+    "tier": "Now",
+    "source_url": "https://example.com/elise-mobile-crm",
+    "prototype_path": "tracker-briefs/runs/_sample-product-day/prototypes/field-mode.html",
+    "prd_path": "tracker-briefs/runs/_sample-product-day/prds/field-mode-prd.md"
+  }
+]

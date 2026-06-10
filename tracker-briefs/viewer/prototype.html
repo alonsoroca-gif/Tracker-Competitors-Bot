@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Prototype — Tracker Brief</title>
+  <style>
+    :root {
+      --bg: #0c0c0f;
+      --panel: #16161a;
+      --text: #ececf1;
+      --accent: #5b8def;
+      --border: #2a2a32;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: system-ui, sans-serif; background: var(--bg); color: var(--text); }
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 20px;
+      background: rgba(12, 12, 15, 0.95);
+      border-bottom: 1px solid var(--border);
+    }
+    .btn-back {
+      display: inline-block;
+      padding: 8px 16px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--panel);
+      color: var(--text);
+      text-decoration: none;
+      font-size: 0.9rem;
+      font-weight: 500;
+    }
+    .btn-back:hover { border-color: var(--accent); color: var(--accent); }
+    .title { font-size: 0.9rem; color: #9b9ba7; }
+    iframe {
+      display: block;
+      width: 100%;
+      height: calc(100vh - 53px);
+      border: none;
+      background: #fff;
+    }
+    .err { padding: 24px; text-align: center; color: #f87171; }
+  </style>
+</head>
+<body>
+  <header>
+    <a class="btn-back" id="back-link" href="index.html">← Back to Tracker Brief</a>
+    <span class="title" id="proto-title"></span>
+  </header>
+  <iframe id="frame" title="Prototype"></iframe>
+  <p class="err" id="err" hidden></p>
+  <script>
+    const params = new URLSearchParams(location.search);
+    const src = params.get('src');
+    const back = params.get('back');
+    const title = params.get('title') || 'Prototype';
+
+    document.getElementById('proto-title').textContent = title;
+    const backEl = document.getElementById('back-link');
+    if (back) backEl.href = back;
+
+    if (!src) {
+      document.getElementById('frame').hidden = true;
+      const err = document.getElementById('err');
+      err.hidden = false;
+      err.textContent = 'Missing prototype URL.';
+    } else {
+      document.getElementById('frame').src = src;
+    }
+  </script>
+</body>
+</html>

@@ -21,7 +21,7 @@ Tracker drop cycle:
 - [ ] Phase 1 — Run drop (collect + write tracker-drops/<id>/)
 - [ ] Phase 2 — Push (agent/P1.1 → auto-merge into main if non-empty)
 - [ ] Phase 3 — Pull (git pull origin main)
-- [ ] Phase 4 — Interpret in chat (eight blocks, non-skippable; 4.2a is the classification gate, 4.2b is the parity gate)
+- [ ] Phase 4 — Interpret in chat (nine blocks, non-skippable; 4.1b is the carryover-spotlight, 4.2a is the classification gate, 4.2b is the parity gate, 4.7 advances the interpretation pointer)
 - [ ] Phase 5 — Subskill chain (feature-spec → grade → prototype → critique → transcript → video for each Tier-Now PRD)
 ```
 
@@ -181,22 +181,22 @@ Then read `tracker-drops/.latest-drop-id` to get the active run-id, and confirm 
 
 **Critical:** Output goes to **chat only**. Do not write `INTERPRETATION.md` or any other file. The repo has a legacy `INTERPRETATION.md` pattern in `tracker-drops/2026-05-04T19-37-46Z/` — **ignore it** unless the user explicitly says "save the interpretation".
 
-Before producing the six blocks, do **two** preprocessing steps on `signals.json`:
+Before producing the nine blocks, do **two** preprocessing steps on `signals.json`:
 
-1. **Dedupe** by `(competitor_id, source_url)` — keep the row with the highest `importance`. The publish-drop pipeline stores one row per (URL, collect-cycle), so most URLs appear 10–20× in a 7-day window.
-2. **Diff against the prior drop** — only surface signals whose evidence changed. If the same `(competitor_id, source_url)` appeared in the previous drop with a byte-identical `evidence_snippet`, **drop it from the interpretation** (it's already been reported on). Annotate carryover signals as `[unchanged since <prior-drop-id>]` only if the user explicitly asks "show me everything."
+1. **Dedupe** by `(competitor_id, source_url)` — keep the row with the highest `importance`. The publish-drop pipeline stores one row per (URL, collect-cycle), so most URLs appear 10–20× in a 7-day window. (Background: the row-fan-out in `runCollectAll.js` tags every scrape with each Entrata `product_id`, which inflates the row count by ~11× without adding signal — see Anti-pattern #27 if a manager asks "why are there 198 rows for 17 URLs?").
+2. **Diff against the interpretation base** — only surface signals whose evidence changed since the **last drop the manager closed Phase 4 on**. The base is resolved by `scripts/interpretation-pointer.js base`, which prefers `tracker-drops/.last-interpreted-drop-id` (per-machine pointer, gitignored) and falls back to strict `drops[idx-1]` only on first run. If the same `(competitor_id, source_url, snippet hash)` triple appeared at the base, **drop it from the interpretation** (it's already been reported on). Annotate carryover signals as `[unchanged since <base-id>]` only if the user explicitly asks "show me everything."
+
+**Why the pointer matters:** the cron writes drops 3×/weekday, but human interpretation is intermittent. If the manager skips 5 cron cycles, strict `drops[idx-1]` would only show them 1 cycle's worth of changes — everything that landed during the skipped cycles is suppressed as carryover. The pointer-based base shows the manager **everything that arrived since they last looked**, regardless of how many cron drops happened in between. Coverage rule: `coverage = idx(latest) − idx(pointer)` drops; the larger this is, the more the pointer is doing for you. The §4.1b carryover spotlight remains the safety net for high-importance signals from before the pointer.
 
 Combined dedupe + diff one-liner (run from `<repo-root>`):
 
 ```bash
+BASE=$(node initiative-1-tracker/tracker/scripts/interpretation-pointer.js base 2>/dev/null || true)
 node -e '
 const fs = require("fs");
-const path = require("path");
 const crypto = require("crypto");
 const id = fs.readFileSync("tracker-drops/.latest-drop-id", "utf8").trim();
-const drops = fs.readdirSync("tracker-drops").filter(f => f.match(/^\d{4}-/)).sort();
-const idx = drops.indexOf(id);
-const prior = idx > 0 ? drops[idx - 1] : null;
+const base = (process.env.BASE || "").trim() || null;
 const dedup = (rows) => {
   const m = new Map();
   for (const r of rows) {
@@ -208,10 +208,10 @@ const dedup = (rows) => {
 };
 const ev = (r) => crypto.createHash("md5").update(r.evidence_snippet || "").digest("hex");
 const latest = dedup(JSON.parse(fs.readFileSync(`tracker-drops/${id}/signals.json`)));
-const priorEvs = prior ? new Map(dedup(JSON.parse(fs.readFileSync(`tracker-drops/${prior}/signals.json`))).map(r => [`${r.competitor_id}::${r.source_url}`, ev(r)])) : new Map();
-const netNew = latest.filter(r => priorEvs.get(`${r.competitor_id}::${r.source_url}`) !== ev(r));
+const baseEvs = base ? new Map(dedup(JSON.parse(fs.readFileSync(`tracker-drops/${base}/signals.json`))).map(r => [`${r.competitor_id}::${r.source_url}`, ev(r)])) : new Map();
+const netNew = latest.filter(r => baseEvs.get(`${r.competitor_id}::${r.source_url}`) !== ev(r));
 console.log(`Latest drop: ${id} — ${latest.length} unique URLs`);
-console.log(`Prior drop:  ${prior || "(none)"} — diff base`);
+console.log(`Diff base  : ${base || "(none — first run)"}`);
 console.log(`Net-new (use these for §4.2 onward): ${netNew.length}`);
 console.log(`Carryover (do not surface unless asked): ${latest.length - netNew.length}`);
 const by = (k) => Object.entries(netNew.reduce((a,r)=>{const v=k(r)||"<none>";a[v]=(a[v]||0)+1;return a;},{})).sort((a,b)=>b[1]-a[1]);
@@ -220,9 +220,9 @@ console.log("NET-NEW BY SOURCE:");      for (const [k,v] of by(r=>r.source))    
 '
 ```
 
-Use the **net-new** set (not the full dedup'd set) for §4.2 onward. If net-new is empty (`0`), stop the cycle and report: "Latest drop has no content changes vs. prior drop `<prior-id>`. Nothing new to interpret."
+Use the **net-new** set (not the full dedup'd set) for §4.2 onward. If net-new is empty (`0`) **and** the §4.1b carryover spotlight is also empty, stop the cycle and report: "Latest drop has no content changes vs. interpretation base `<base-id>`, and no high-importance carryover in window. Nothing new to interpret." If net-new is empty but spotlight has rows, **continue** — the spotlight rows are the cycle's deliverable.
 
-Then produce these **eight** blocks **in this order**. Every block is required — if you cannot produce one, say so explicitly and explain why. Blocks 4.2a (signal classification) and 4.2b (Core parity scan) are the two structural gates that decide which §4.3 rows even get a PRD. They run in order: classification first ("is this a Product signal at all?"), then parity ("if it is, does Core already ship it?").
+Then produce these **nine** blocks **in this order**. Every block is required — if you cannot produce one, say so explicitly and explain why. Block 4.1b (carryover spotlight) is the missed-cycle backstop, and blocks 4.2a (signal classification) and 4.2b (Core parity scan) are the two structural gates that decide which §4.3 rows even get a PRD. They run in order: spotlight first ("did we suppress anything by only diffing vs prior?"), then classification ("is this a Product signal at all?"), then parity ("if it is, does Core already ship it?").
 
 ### 4.1 Drop health
 
@@ -236,6 +236,80 @@ Lanes table. One row per `source` lane present in the drop. Keep it narrow (4 co
 ```
 
 Status values: `✅` working / `⚠️` partial (selectors return shallow content) / `❌` broken / `❓` silent (zero rows in window — verify next run).
+
+### 4.1b Carryover spotlight (hard-required to invoke; trigger-gated to print)
+
+**Why this exists:** The Phase 4 dedupe + diff (step 1 of this Phase) compares `latest` → `interpretation base` only. With the §4.7 pointer, that base is normally "the last drop the manager closed Phase 4 on" — which means in steady-state daily mode the diff already shows everything new and the spotlight has nothing to add. But three failure modes still warrant a re-surface pass: weekend / holiday / vacation accumulation, sick-day gaps, and first-run-after-clone (no pointer yet). The spotlight is the safety net for exactly those cases. The 2026-06-02 manager review surfaced this — Anyone Home shipped a substantial release (`9 June 2026 Release`, importance 0.82) on 2026-05-29 that had been carried forward for 6 cycles unread.
+
+**Invocation contract:** the bot **must** run the script every cycle. The script itself **decides** whether to print the full table or a one-line "skipped — pointer up-to-date" note. Do not manually skip the script invocation — that breaks the audit trail and silently disables the safety net (anti-pattern #25).
+
+**How:** Run the spotlight script from `<repo-root>`:
+
+```bash
+node initiative-1-tracker/tracker/scripts/carryover-spotlight.js
+```
+
+**Trigger logic (added 2026-06-08; supersedes the prior unconditional fire):**
+
+The script evaluates four triggers in order and fires the full output if any one is true:
+
+| # | Trigger | Default threshold | What it covers |
+|---|---|---|---|
+| 1 | **First run** | always (no flag) | Fresh clone, fresh laptop, pointer file absent. The spotlight is the only "what's been happening?" panel. |
+| 2 | **Calendar gap** | `--gap-days 2` | `dateOf(latest drop) − dateOf(pointer drop) ≥ 2` UTC calendar days. Captures Friday→Monday weekends, Thursday→Monday holidays, vacation, sick days. Excludes daily Mon→Tue runs. |
+| 3 | **High coverage** | `--coverage-threshold 6` | `idx(latest) − idx(pointer) ≥ 6` drops. Backstop for cron-burst cases where calendar math undercounts (clock skew, multiple drops landed in one day while AFK). |
+| 4 | **Forced** | `--force` / `--always` | Manual audit / debug — always fires regardless. |
+
+If **none** fire, the script prints a single-line skip message:
+
+```
+§4.1b Spotlight: skipped — pointer up-to-date (calendar-gap=1d, coverage=3-drops). No accumulation since you last looked.
+```
+
+**Paste this skip line into chat verbatim as block 4.1b** — it is the spotlight in steady-state, not a missing block. If a trigger does fire, the output begins with a `Spotlight fired (...)` header showing which trigger and its values, followed by the markdown table.
+
+**Behavior in steady-state daily-automation mode:** when the parent skill (e.g. a future `morningbrief` invocation that runs `/trackerstart` every morning) advances the pointer correctly via §4.7, calendar-gap is typically 0 or 1 and coverage is typically 1–3. The spotlight skips silently. It only re-engages when the daily run breaks — which is exactly the safety net design.
+
+**Default content filters (unchanged from initial implementation):**
+
+- Window: last **7 days** (matches drop retention)
+- Floor: importance **≥ 0.70**
+- Lanes excluded: `features_page`, `articles_index`, `careers` (stable boilerplate)
+- Output: top **5** candidates, sorted by importance DESC then by age
+- "First seen" semantics: earliest drop ever where this `(competitor_id, source_url, evidence_snippet hash)` triple appeared. A signal whose hash existed before the 7-day window is **stale**, not spotlight material — filtered out.
+
+**Paste the full markdown output verbatim into chat.** Do not edit the table; if rows look wrong, fix the script (or the importance scoring upstream), don't curate by hand (anti-pattern #26).
+
+**How spotlight rows feed the rest of Phase 4:**
+
+- Spotlight rows join the `§4.2 main moves` candidate set alongside net-new diff rows. Both are subject to the §4.2a classification gate and (if Product) §4.2b parity gate.
+- Annotate spotlight rows in §4.2 with `[carryover · first seen <drop-id>]` after the citation chip.
+- If a spotlight row was already classified + processed in a prior cycle, the manager can downgrade it via the §4.2a `AskQuestion` (`Noise / data quality` with note "already-actioned"). Do not silently drop spotlight rows on the bot's own initiative.
+
+**Tunable flags (full set):**
+
+| Flag | Default | When to override |
+|---|---|---|
+| `--min-importance <0..1>` | `0.7` | Lower to `0.5` once a quarter to audit lower-confidence carryover; raise to `0.85` only if the chat overflows |
+| `--window-days <N>` | `7` | Match a longer collect window if `publish-drop` retention changes |
+| `--top <N>` | `5` | Raise to `10` for a quarterly review; never exceed `15` (chat width) |
+| `--include-net-new` | off | Combined view (carryover + net-new); spotlight defaults to carryover-only since net-new lives in §4.2 |
+| `--gap-days <N>` | `2` | Daily-only mode: raise to `7` to suppress until weekly review; tighter `1` to fire on every calendar rollover (noisy) |
+| `--coverage-threshold <N>` | `6` | Aligns roughly with Friday→Monday cron accumulation (3 drops/weekday × 2 days) |
+| `--force` / `--always` | off | Manual audit ("show me everything regardless"); useful for first-time onboarding walk-throughs |
+| `--json` | off | Machine-readable output for downstream tooling (Slack digest, future morningbrief subskill) |
+| `--drop-id <id>` | latest | Re-run against an older drop without touching `.latest-drop-id` |
+
+**Empty-but-fired vs skipped — two different outcomes:**
+
+- **Skipped** (no trigger fired): one-line message, no analysis run. Pointer is up-to-date; daily diff already covered everything. Continue to §4.2.
+- **Fired but 0 rows** (trigger fired, but no carryover above threshold): full header line + `_No carryover signals…_` italic line. The cycle had a real gap to cover but no high-importance signals accumulated. Continue to §4.2.
+
+Both are first-class outcomes — neither is a skill bug.
+
+**Automation note (hands-off coverage if the manager skips cycles entirely):**
+
+The spotlight script's `--json` output is designed to feed a future GitHub Action that posts the top-5 to `#competitive-intel` Slack daily, so the team has continuous coverage even when nobody runs `/trackerstart`. Not yet wired; tracked separately. Until then, the trigger-gated spotlight on every `/trackerstart` invocation is the safety net.
 
 ### 4.2 Main moves
 
@@ -636,6 +710,28 @@ A 3-row table grouping §4.3 rows by tier:
 | Won't chase | 4 | <why signal-only> |
 ```
 
+### 4.7 Mark drop as interpreted (hard-required — closes the cycle)
+
+After §4.6 prints, write the current drop ID to the interpretation pointer so the **next** `/trackerstart` knows where to start the diff. This is the structural fix for the missed-cycle blind spot — without it, the strict `drops[idx-1]` fallback re-creates the suppression.
+
+```bash
+node initiative-1-tracker/tracker/scripts/interpretation-pointer.js mark "$(cat tracker-drops/.latest-drop-id)"
+```
+
+The pointer file (`tracker-drops/.last-interpreted-drop-id`) is gitignored and per-machine — that's intentional. Each manager's pointer reflects what *they* have read, not what their teammates have read. Two managers running `/trackerstart` on the same machine share a pointer; on different machines they diverge correctly.
+
+**Print the post-mark status** in chat as the last line of Phase 4, so the manager has visible proof the pointer advanced:
+
+```bash
+node initiative-1-tracker/tracker/scripts/interpretation-pointer.js status
+```
+
+If §4.4b PDF export was attempted but failed (Chrome timeout, headless permission bubble timed out, etc.), still mark the drop as interpreted — the PDF is a deliverable, not the cycle's gate. The manager can re-render manually via `tracker-decks/render-to-pdf.sh` and the pointer doesn't need to wait for that.
+
+If the manager rejected every PRD via §4.4b `discard`, still mark the drop as interpreted — they saw the signals and chose not to act on them. That's a complete cycle, not a failed one.
+
+The **only** reason not to mark would be the manager explicitly aborting the cycle mid-Phase-4 (e.g., they realize they need to re-run with different parameters). In that case, leave the pointer unchanged and the next `/trackerstart` will re-pick-up where this one left off.
+
 ---
 
 ## Phase 5 — Subskill chain (per Tier-Now PRD)
@@ -905,6 +1001,18 @@ These are easy to do and wrong:
 
 22. **Producing a richer-vocab parity candidate that scores >300 (saturated Existing).** Added 2026-05-26. The Candidate drafting rubric exists to lift lean-wording false Gaps to honest Partial/Borderline range; rich wording producing scores in the 300–600 range means you keyword-stuffed (e.g., loaded the candidate with "floorplan, unit, pricing, prospect, leasing, available" all at once). Calibrate down: the rich pass should land in the 15–80 score range. If both lean and rich saturate (one near zero, one >300), the honest verdict is Borderline and the row goes to manager resolution.
 
+23. **Using Layer 1 keyword verdict as final tier.** Layer 1 (`core-parity-check.js`) is an anchor generator and a Layer-2-prompt generator, not the gate. The §4.3 tier and §4.4 PRD scope MUST cite the Layer 2 final verdict per Product row. When L1 says Existing on keyword density and L2 finds the relevant module isn't actually there, L2 wins.
+
+24. **Skipping Phase 0b.** Running §4.2b without `verify-core-setup.js` passing is a setup failure. Stop before parity; do not proceed with ungrounded PRDs.
+
+25. **Skipping §4.1b carryover spotlight when net-new is empty.** Added 2026-06-02 after the manager review surfaced the Anyone Home `9 June 2026 Release` had been carryover-suppressed for 6 cycles (importance 0.82). The spotlight is non-skippable — the whole point is to catch cases where the strict net-new diff is empty *and* there are still high-importance signals from earlier in the window. An empty net-new diff plus an empty spotlight is fine; an empty net-new diff with a populated spotlight is exactly what the spotlight exists to surface.
+
+26. **Curating spotlight rows by hand.** Added 2026-06-02. If the spotlight script returns rows that look like noise (stable home pages, low-signal lanes), fix the script's filter or the upstream importance scoring — do not silently drop rows from the chat output. The spotlight's value is its determinism; hand-curating breaks the contract.
+
+27. **Skipping §4.7 mark-interpreted.** Added 2026-06-02. The interpretation pointer is the structural fix for the missed-cycle blind spot — Phase 4's net-new diff is "vs last drop the manager actually closed" only because §4.7 advances the pointer. If you skip §4.7, the next `/trackerstart` falls back to strict `drops[idx-1]` and the spotlight is the only safety net (which is filter-restricted to importance ≥ 0.7 and excludes some lanes). §4.7 must run on every cycle that produced any §4.x output, even when net-new and spotlight are both empty (the manager confirming they read this drop is itself the signal worth marking).
+
+28. **Confusing fan-out with parity comparison.** Added 2026-06-02 after the manager review. The `runCollectAll.js` fan-out (which tags each scrape with all 11 Entrata `product_id`s) is a metadata-tagging mechanism — it inflates `signals.json` row count by ~11× per URL but adds no signal and runs no comparison. The actual "do we already ship this?" comparison is **§4.2b Core parity**, which is a totally separate two-layer step. If a manager asks "why are there 198 rows in signals.json when I'm seeing 1 net-new?" — the answer is fan-out (~17 URLs × ~11 product copies + leftovers), not parity.
+
 ---
 
 ## Repo conventions reference
@@ -914,6 +1022,8 @@ These are easy to do and wrong:
 | Repo URL | `https://github.com/alonsoroca-gif/Tracker-Competitors-Bot.git` |
 | Tracker scripts dir | `initiative-1-tracker/tracker/scripts/` |
 | Drop publisher | `scripts/publish-drop.js` (also wired as `npm run drop`) |
+| Carryover spotlight (§4.1b) | `initiative-1-tracker/tracker/scripts/carryover-spotlight.js` — surfaces high-importance carryover the strict diff would suppress |
+| Interpretation pointer (§4.7) | `initiative-1-tracker/tracker/scripts/interpretation-pointer.js` — base/mark/status subcommands; pointer file `tracker-drops/.last-interpreted-drop-id` (gitignored) |
 | Core parity check | `initiative-1-tracker/tracker/scripts/core-parity-check.js` (Phase 4.2b gate) |
 | Core path resolution | `--core` flag → `$ENTRATA_MONO_ROOT` → `tracker/.core-path` cache → auto-scan of `~/Desktop/Core Repo/entrata-core` etc. First successful resolution is cached. |
 | Core path cache (gitignored) | `initiative-1-tracker/tracker/.core-path` (one-time write per machine) |
