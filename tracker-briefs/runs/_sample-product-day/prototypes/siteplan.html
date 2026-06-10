@@ -3,52 +3,37 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Live-PMS Siteplan — sample vignette</title>
+  <title>Siteplan vignette</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    html, body { height: 100%; }
+    html, body { height: 100%; overflow: hidden; }
     body {
       font-family: system-ui, sans-serif;
-      background: linear-gradient(160deg, #0c1222 0%, #162033 50%, #0f172a 100%);
-      color: #e2e8f0;
+      background: linear-gradient(135deg, #1e3a5f, #0f172a);
+      padding: 10px;
       display: flex;
-      flex-direction: column;
-      min-height: 100%;
-      padding: clamp(12px, 3vw, 24px);
-    }
-    header { margin-bottom: 12px; }
-    h1 { font-size: clamp(1rem, 2.5vw, 1.25rem); font-weight: 600; }
-    .sub { font-size: 0.8rem; color: #94a3b8; margin-top: 4px; }
-    .map-wrap {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      min-height: 0;
+      align-items: stretch;
     }
     .map {
       flex: 1;
-      min-height: 200px;
-      background:
-        radial-gradient(circle at 30% 40%, #1e4d7a44 0%, transparent 50%),
-        radial-gradient(circle at 70% 60%, #22c55e22 0%, transparent 40%),
-        linear-gradient(135deg, #1e3a5f, #0f172a);
-      border-radius: 12px;
+      border-radius: 10px;
       border: 1px solid #334155;
       position: relative;
-      padding: 16px;
+      min-height: 180px;
+      background:
+        radial-gradient(circle at 30% 40%, #1e4d7a44 0%, transparent 50%),
+        #0f172a;
     }
     .building {
       position: absolute;
       border: 2px dashed #475569;
-      border-radius: 8px;
-      background: #1e293b66;
-      font-size: 0.65rem;
+      border-radius: 6px;
+      font-size: 0.6rem;
       color: #64748b;
-      padding: 4px 8px;
+      padding: 3px 6px;
     }
-    .b-a { top: 12%; left: 8%; width: 42%; height: 38%; }
-    .b-b { top: 18%; right: 8%; width: 38%; height: 32%; }
-    .b-c { bottom: 12%; left: 20%; width: 55%; height: 28%; }
+    .b-a { top: 10%; left: 6%; width: 40%; height: 36%; }
+    .b-b { top: 14%; right: 6%; width: 36%; height: 30%; }
     .units {
       position: absolute;
       inset: 0;
@@ -56,58 +41,28 @@
       flex-wrap: wrap;
       align-content: center;
       justify-content: center;
-      gap: 8px;
-      padding: 24px;
+      gap: 6px;
+      padding: 16px;
     }
     .unit {
-      padding: 10px 14px;
+      padding: 8px 10px;
       background: #22c55e28;
       border: 1px solid #22c55e;
-      border-radius: 8px;
-      font-size: clamp(0.7rem, 1.8vw, 0.85rem);
-      font-weight: 500;
-      box-shadow: 0 4px 12px #00000044;
+      border-radius: 6px;
+      font-size: 0.72rem;
+      color: #e2e8f0;
     }
     .unit.hot { background: #f59e0b33; border-color: #f59e0b; }
-    .legend {
-      display: flex;
-      gap: 16px;
-      margin-top: 10px;
-      font-size: 0.75rem;
-      color: #94a3b8;
-    }
-    .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 4px; }
-    .dot.avail { background: #22c55e; }
-    .dot.hold { background: #f59e0b; }
-    .roi-strip {
-      margin-bottom: 12px; padding: 10px 12px; border-radius: 8px;
-      background: rgba(34, 197, 94, 0.15); border: 1px solid #22c55e66;
-      font-size: 0.75rem; line-height: 1.4;
-    }
-    .roi-strip strong { color: #4ade80; }
   </style>
 </head>
 <body>
-  <div class="roi-strip"><strong>PURSUE</strong> · Conversion / vacancy days · ~$22/unit/yr NOI (250u ~$5.5K · 10k ~$220K) — modeled</div>
-  <header>
-    <h1>Live-PMS Siteplan</h1>
-    <p class="sub">Entrata counter — unit pins + live rent from PMS (not static PDF)</p>
-  </header>
-  <div class="map-wrap">
-    <div class="map">
-      <span class="building b-a">Building A</span>
-      <span class="building b-b">Building B</span>
-      <span class="building b-c">Building C</span>
-      <div class="units">
-        <span class="unit hot">204 · $1,845 · avail</span>
-        <span class="unit">305 · $1,920</span>
-        <span class="unit">112 · $1,710</span>
-        <span class="unit">418 · $2,050</span>
-      </div>
-    </div>
-    <div class="legend">
-      <span><span class="dot avail"></span>Available — live PMS</span>
-      <span><span class="dot hold"></span>On hold</span>
+  <div class="map">
+    <span class="building b-a">Bldg A</span>
+    <span class="building b-b">Bldg B</span>
+    <div class="units">
+      <span class="unit hot">204 · $1,845</span>
+      <span class="unit">305 · $1,920</span>
+      <span class="unit">112 · $1,710</span>
     </div>
   </div>
 </body>

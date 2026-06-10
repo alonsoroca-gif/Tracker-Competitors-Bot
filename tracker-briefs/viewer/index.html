@@ -4,7 +4,9 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Tracker Brief Viewer</title>
-  <!-- viewer-build: 2026-06-10-roi-v3 -->
+  <!-- viewer-build: 2026-06-10-roi-v4 -->
+  <link rel="stylesheet" href="roi-styles.css" />
+  <script src="roi-shared.js"></script>
   <style>
     :root {
       --bg: #0c0c0f;
@@ -123,9 +125,11 @@
       gap: 8px;
     }
     .proto-roi-section {
-      padding: 0 14px 10px;
+      padding: 0 14px 12px;
       flex-shrink: 0;
       width: 100%;
+      position: relative;
+      z-index: 2;
     }
     .proto-roi-label {
       font-size: 0.7rem;
@@ -134,47 +138,6 @@
       text-transform: uppercase;
       color: var(--muted);
       margin-bottom: 8px;
-    }
-    .proto-roi {
-      width: 100%;
-      padding: 12px 14px;
-      border-radius: 10px;
-      font-size: 0.84rem;
-      line-height: 1.45;
-      border: 1px solid var(--border);
-      background: rgba(91, 141, 239, 0.1);
-      flex-shrink: 0;
-    }
-    .roi-stats {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 8px;
-      margin: 10px 0 8px;
-    }
-    .roi-stat {
-      padding: 8px 6px;
-      border-radius: 8px;
-      background: rgba(0, 0, 0, 0.25);
-      border: 1px solid var(--border);
-      text-align: center;
-    }
-    .roi-stat .val {
-      display: block;
-      font-size: 0.8rem;
-      font-weight: 600;
-      color: var(--text);
-      line-height: 1.2;
-    }
-    .roi-stat .lbl {
-      display: block;
-      font-size: 0.62rem;
-      color: var(--muted);
-      margin-top: 4px;
-      text-transform: uppercase;
-      letter-spacing: 0.03em;
-    }
-    @media (max-width: 700px) {
-      .roi-stats { grid-template-columns: 1fr; }
     }
     .demo-hint {
       padding: 12px 16px;
@@ -185,61 +148,32 @@
       font-size: 0.88rem;
     }
     .demo-hint a { color: var(--accent); font-weight: 600; }
-    .proto-roi.roi-pursue { border-color: #22c55e55; background: rgba(34, 197, 94, 0.08); }
-    .proto-roi.roi-watch { border-color: #f59e0b55; background: rgba(245, 158, 11, 0.08); }
-    .proto-roi .roi-head {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      align-items: center;
-      margin-bottom: 6px;
-    }
-    .roi-badge {
-      font-size: 0.68rem;
-      font-weight: 700;
-      letter-spacing: 0.04em;
-      text-transform: uppercase;
-      padding: 2px 8px;
-      border-radius: 999px;
-      border: 1px solid var(--border);
-    }
-    .roi-pursue .roi-badge { color: #4ade80; border-color: #22c55e66; }
-    .roi-watch .roi-badge { color: #fbbf24; border-color: #f59e0b66; }
-    .roi-lever { color: var(--muted); font-size: 0.72rem; }
-    .roi-scale { color: var(--accent); font-size: 0.72rem; margin-top: 6px; }
-    .roi-conf { color: var(--muted); font-size: 0.68rem; }
-    .proto-preview {
+    .proto-preview-wrap {
       position: relative;
-      cursor: pointer;
-      display: flex;
-      flex: 1;
-      flex-direction: column;
-      text-decoration: none;
-      color: inherit;
-      min-height: 0;
+      flex-shrink: 0;
+      isolation: isolate;
+      z-index: 1;
+      border-top: 1px solid var(--border);
+      background: #0a0a0c;
     }
-    .proto-preview:hover .proto-open-hint { opacity: 1; }
     .proto-card iframe {
+      display: block;
       width: 100%;
-      flex: 0 0 auto;
-      height: clamp(220px, 32vh, 340px);
-      min-height: 220px;
+      height: 240px;
       border: none;
-      background: #fff;
+      background: #18181b;
       pointer-events: none;
     }
     .proto-open-hint {
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      padding: 10px 14px;
-      background: linear-gradient(transparent, rgba(12, 12, 15, 0.92));
-      color: var(--text);
-      font-size: 0.8rem;
-      opacity: 0.85;
+      display: block;
+      padding: 8px 14px;
       text-align: center;
+      font-size: 0.75rem;
+      color: var(--muted);
+      text-decoration: none;
+      border-top: 1px solid var(--border);
     }
+    .proto-open-hint:hover { color: var(--accent); }
     .proto-card .links {
       padding: 12px 14px 14px;
       display: flex;
@@ -283,7 +217,7 @@
   <header>
     <h1>Tracker Brief Viewer</h1>
     <span class="meta" id="run-meta">Loading…</span>
-    <span class="meta" title="Hard-refresh if ROI cards missing">viewer roi-v3</span>
+    <span class="meta" title="Hard-refresh if ROI cards missing">viewer roi-v4</span>
     <select id="run-select" aria-label="Select run"></select>
     <button type="button" id="reload-btn">Reload</button>
   </header>
@@ -319,12 +253,13 @@
       return new URL(rel, window.location.href).href;
     }
 
-    function viewerShellUrl(shellPage, assetPath, title, extraParams) {
+    function viewerShellUrl(shellPage, assetPath, title, extraParams, roi) {
       const back = encodeURIComponent(window.location.href);
       const src = encodeURIComponent(assetUrl(assetPath));
       let url = `${shellPage}?src=${src}&back=${back}`;
       if (title) url += `&title=${encodeURIComponent(title)}`;
       if (extraParams) url += `&${extraParams}`;
+      if (roi) url += `&roi=${encodeURIComponent(JSON.stringify(roi))}`;
       return url;
     }
 
@@ -376,32 +311,6 @@
       return `<table><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table>`;
     }
 
-    function renderRoiBlock(roi) {
-      if (!roi) return '';
-      const verdict = (roi.verdict || 'modeled').toLowerCase();
-      const cls = verdict === 'pursue' ? 'roi-pursue' : verdict === 'watch' ? 'roi-watch' : 'roi-neutral';
-      const stats = [
-        ['Per unit', roi.per_unit_annual],
-        ['250 units', roi.property_250],
-        ['10k portfolio', roi.portfolio_10k],
-      ].filter(([, v]) => v);
-      const statsHtml = stats.length
-        ? `<div class="roi-stats">${stats.map(([lbl, val]) =>
-            `<div class="roi-stat"><span class="val">${esc(val)}</span><span class="lbl">${esc(lbl)}</span></div>`
-          ).join('')}</div>`
-        : '';
-      return `
-        <div class="proto-roi ${cls}">
-          <div class="roi-head">
-            <span class="roi-badge">${esc((roi.verdict || 'ROI').toUpperCase())}</span>
-            <span class="roi-lever">${esc(roi.lever || 'ROI lever')}</span>
-          </div>
-          ${statsHtml}
-          <div>${esc(roi.summary || 'ROI summary pending publish.')}</div>
-          <div class="roi-conf">${esc(roi.confidence || 'modeled')} · roi-analyst</div>
-        </div>`;
-    }
-
     function renderPrototypes(protos, manifest) {
       const el = document.getElementById('prototypes');
       if (!protos.length) {
@@ -418,31 +327,48 @@
       if (protos.length >= 1 && protos.length <= 3) {
         el.classList.add(`proto-grid--${protos.length}`);
       }
-      el.innerHTML = protos.map((p) => {
+      el.innerHTML = '';
+      protos.forEach((p) => {
         const htmlPath = p.preview_path || p.html_path || '';
-        const src = assetUrl(htmlPath);
-        const protoShell = viewerShellUrl('prototype.html', htmlPath, p.title);
+        const src = assetUrl(htmlPath) + '?v=4';
+        const protoShell = viewerShellUrl('prototype.html', htmlPath, p.title, null, p.roi);
         const prdShell = p.prd_path ? viewerShellUrl('prd.html', p.prd_path, null, 'auto=pdf') : '';
-        return `
-          <article class="proto-card">
-            <header>
-              <strong>${esc(p.title)}</strong>
-              <span class="meta">${esc(p.competitor || p.competitor_id)}</span>
-            </header>
-            <div class="proto-roi-section">
-              <div class="proto-roi-label">ROI snapshot</div>
-              ${renderRoiBlock(p.roi)}
-            </div>
-            <a class="proto-preview" href="${esc(protoShell)}" target="_blank" rel="noopener" title="Open prototype full screen">
-              <iframe src="${esc(src)}?v=3" title="${esc(p.title)}" loading="lazy"></iframe>
-              <span class="proto-open-hint">Click to open prototype full screen</span>
-            </a>
-            <div class="links">
-              <a class="btn-proto" href="${esc(protoShell)}" target="_blank" rel="noopener">Open prototype</a>
-              ${prdShell ? `<a class="btn-prd" href="${esc(prdShell)}" target="_blank" rel="noopener">Download complete PRD now</a>` : ''}
-            </div>
-          </article>`;
-      }).join('');
+
+        const card = document.createElement('article');
+        card.className = 'proto-card';
+
+        const head = document.createElement('header');
+        head.innerHTML = `<strong>${esc(p.title)}</strong><span class="meta">${esc(p.competitor || p.competitor_id)}</span>`;
+
+        const roiSection = document.createElement('div');
+        roiSection.className = 'proto-roi-section';
+        roiSection.innerHTML = '<div class="proto-roi-label">ROI snapshot</div>';
+        roiSection.insertAdjacentHTML('beforeend', renderRoiPanel(p.roi));
+
+        const previewWrap = document.createElement('div');
+        previewWrap.className = 'proto-preview-wrap';
+        const iframe = document.createElement('iframe');
+        iframe.src = src;
+        iframe.title = p.title || 'Prototype';
+        iframe.loading = 'lazy';
+        const hint = document.createElement('a');
+        hint.className = 'proto-open-hint';
+        hint.href = protoShell;
+        hint.target = '_blank';
+        hint.rel = 'noopener';
+        hint.textContent = 'Open prototype + ROI full screen';
+        previewWrap.appendChild(iframe);
+        previewWrap.appendChild(hint);
+
+        const links = document.createElement('div');
+        links.className = 'links';
+        links.innerHTML = `
+          <a class="btn-proto" href="${esc(protoShell)}" target="_blank" rel="noopener">Open prototype</a>
+          ${prdShell ? `<a class="btn-prd" href="${esc(prdShell)}" target="_blank" rel="noopener">Download complete PRD now</a>` : ''}`;
+
+        card.append(head, roiSection, previewWrap, links);
+        el.appendChild(card);
+      });
     }
 
     async function loadRun(runId) {
