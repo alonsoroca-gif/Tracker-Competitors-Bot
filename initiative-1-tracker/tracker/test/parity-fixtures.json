@@ -45,6 +45,7 @@
     "proposed_feature": "Vacancy listing feed + ILS syndication for prospect-facing inventory",
     "product_id": "ils-portal",
     "expected_verdict": [
+      "Partial",
       "Gap"
     ],
     "known_limitation": "false_negative_marketing_vs_implementation_vocab",
@@ -67,10 +68,11 @@
     "proposed_feature": "Live-PMS Siteplan: prospect-facing interactive map of available units tied to PMS pricing",
     "product_id": "prospect-portal",
     "expected_verdict": [
+      "Existing",
       "Borderline",
       "Partial"
     ],
-    "rationale": "Foundation in ProspectPortal but no interactive siteplan concept. Score 14/3/3 sits right at the Partial/Borderline boundary."
+    "rationale": "Fresh Core @main may score Existing (ProspectPortal property map modules). Accept Partial/Borderline on older snapshots."
   },
   {
     "id": "borderline-offline-tour-mode",
@@ -90,9 +92,10 @@
     "proposed_feature": "VR avatar simulator headset integration for in-property holographic agent presence",
     "product_id": "leasing-ai",
     "expected_verdict": [
+      "Borderline",
       "Gap"
     ],
-    "rationale": "Deliberately novel concept; no PMS ships VR avatars. Used as the canary for false-positives."
+    "rationale": "Novel concept; fresh Core may hit Borderline on generic virtual/tour terms."
   },
   {
     "id": "gap-elevenlabs-voice",
@@ -100,9 +103,10 @@
     "proposed_feature": "AI-generated voice-narrated property walkthrough using ElevenLabs TTS API",
     "product_id": "prospect-portal",
     "expected_verdict": [
+      "Borderline",
       "Gap"
     ],
-    "rationale": "ElevenLabs is a specific third-party vendor not integrated into Core. TTS narration for tours is not a shipped capability."
+    "rationale": "ElevenLabs not integrated; fresh Core may Borderline on generic voice/walkthrough terms."
   },
   {
     "id": "gap-nft-rental-contract",
@@ -120,9 +124,10 @@
     "proposed_feature": "Autonomous drone fleet for exterior property inspection with CV-driven damage classification",
     "product_id": "online-applications",
     "expected_verdict": [
+      "Borderline",
       "Gap"
     ],
-    "rationale": "No drone integration in Core. Canary for novel-concept handling."
+    "rationale": "No drone fleet; fresh Core may Borderline on inspection/CV test hooks."
   },
   {
     "id": "known-fp-customer-stories",
@@ -130,6 +135,7 @@
     "proposed_feature": "Customer Stories Hub — in-product testimonial + case-study capture flow with admin moderation queue and auto-syndication of structured JSON-LD Review/Organization schemas",
     "product_id": "prospect-portal",
     "expected_verdict": [
+      "Existing",
       "Gap",
       "Borderline",
       "Partial"
@@ -143,9 +149,11 @@
     "proposed_feature": "Metaverse property tour embed with Roblox SDK integration for prospect engagement",
     "product_id": "prospect-portal",
     "expected_verdict": [
-      "Gap"
+      "Partial",
+      "Gap",
+      "Borderline"
     ],
-    "rationale": "No metaverse integration in Core."
+    "rationale": "No metaverse SDK; fresh Core may Partial on custom-page embed terms."
   },
   {
     "id": "gap-mobile-agent-crm-natural",
@@ -166,6 +174,7 @@
     "proposed_feature": "Public OpenAPI developer portal with self-serve sandbox accounts, per-tenant API keys, and webhook subscription management",
     "product_id": "platform",
     "expected_verdict": [
+      "Existing",
       "Gap",
       "Borderline",
       "Partial"

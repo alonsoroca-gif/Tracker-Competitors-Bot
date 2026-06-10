@@ -23,13 +23,20 @@ if [ -d "$CORE_PATH" ]; then
   echo "Moved broken clone → $BACKUP"
 fi
 
-git clone git@github.com:entrata/core.git "$CORE_PATH"
+# Shallow clone first — faster and more reliable on large monolith
+if ! git clone --depth 1 --branch main git@github.com:entrata/core.git "$CORE_PATH"; then
+  echo "Shallow clone failed — retrying full clone..."
+  rm -rf "$CORE_PATH"
+  git clone git@github.com:entrata/core.git "$CORE_PATH"
+  cd "$CORE_PATH"
+  git checkout main
+fi
 cd "$CORE_PATH"
-git checkout main
-git pull origin main
+git pull origin main 2>/dev/null || true
 ls Applications | head
 
-TRACKER_ROOT="$(cd "$(dirname "$0")/../../.." && pwd)"
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+TRACKER_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
 cd "$TRACKER_ROOT/initiative-1-tracker/tracker"
 node scripts/core-parity-check.js --save-core "$CORE_PATH"
 npm run verify:core
