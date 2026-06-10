@@ -150,11 +150,14 @@ Edit `entrata-plus-tracker.code-workspace` — set Core path to **your** clone:
 ```bash
 cd ~/Projects/"Tracker Competitors Bot"/initiative-1-tracker/tracker
 npm install
+npm run brief:install-opener
 node scripts/core-parity-check.js --save-core ~/Projects/entrata-core
 npm run verify:core
 npm run test:parity
 npm run manager:preflight
 ```
+
+**One-time Cursor step:** `brief:install-opener` installs a local extension so `tracker-feed --open` opens the viewer in **Cursor Simple Browser** (not Chrome). Then **Developer: Reload Window** in Cursor.
 
 **Must see:**
 
@@ -230,7 +233,7 @@ node initiative-1-tracker/tracker/scripts/brief-readiness-check.js --json
 node initiative-1-tracker/tracker/scripts/tracker-feed-render.js --open
 ```
 
-`--open` **auto-starts** the local server (if needed) and **opens the viewer** in your browser.
+`--open` **auto-starts** the local server (if needed) and **opens the viewer in Cursor Simple Browser** (in-editor tab). Use `open-brief-viewer.js --external` only if you want Chrome/Safari.
 
 **If `ok: false`:** skip section; Slack DM when ready (if wired).
 
@@ -310,8 +313,10 @@ npm run brief:open-viewer --prefix initiative-1-tracker/tracker
 | `npm run manager:preflight` | Gate before first publish |
 | `npm run billy:demo` | **First-run Product-day demo** |
 | `npm run brief:feed` | Today's brief markdown |
-| `npm run brief:open-viewer` | Open viewer (auto server) |
+| `npm run brief:install-opener` | **One-time** — Simple Browser auto-open |
+| `npm run brief:open-viewer` | Open viewer in Cursor Simple Browser |
 | `tracker-feed-render.js --open` | Feed + auto-open (daily) |
+| `npm run morningbrief:preflight` | Verify skills + kickoff files exist |
 | `/trackerstart` | Deep dive prototypes |
 
 ---

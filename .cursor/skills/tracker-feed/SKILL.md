@@ -94,7 +94,15 @@ After chat output, run:
 node initiative-1-tracker/tracker/scripts/open-brief-viewer.js --run <run_id>
 ```
 
-Or use `tracker-feed-render.js --open` which renders + opens in one step. Falls back to Simple Browser URL if auto-open fails.
+Or use `tracker-feed-render.js --open` which renders + opens in one step. **Default:** Cursor Simple Browser tab (in-editor). Use `--external` on `open-brief-viewer.js` for Chrome/Safari.
+
+**One-time setup (Cursor):** `cursor://vscode.runCommands` is not supported — Cursor tries to install a fake extension. Run once:
+
+```bash
+npm run brief:install-opener --prefix initiative-1-tracker/tracker
+```
+
+Then reload Cursor. After that, `--open` uses the local `entrata.tracker-brief-opener` extension.
 
 ---
 

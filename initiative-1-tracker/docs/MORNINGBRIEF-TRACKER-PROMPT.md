@@ -49,7 +49,9 @@ Paste the full `tracker-feed-render.js` output into chat:
 - Summary line (net-new, prototypes, ready time)
 - **6-column signals table** (all classifications)
 - Prototype bullets (if any) — What, ROI verdict + scale, formula one-liner
-- Viewer opens automatically via `--open` — skim ROI on cards; **Open prototype** for full detail
+- Viewer opens in **Cursor Simple Browser** via `--open` — skim ROI on cards; **Open prototype** for full detail
+
+**One-time:** `npm run brief:install-opener --prefix initiative-1-tracker/tracker` then reload Cursor (`cursor://vscode.runCommands` does not work in Cursor).
 
 ### Non-Product days
 

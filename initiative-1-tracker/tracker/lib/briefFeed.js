@@ -74,7 +74,7 @@ function formatPrototypeCards(prototypes) {
     if (p.prd_path) lines.push(`  - PRD: \`${p.prd_path}\``);
   }
   lines.push('');
-  lines.push('_Viewer: `npm run brief:open-viewer` or Simple Browser → `tracker-briefs/viewer/index.html`_');
+  lines.push('_Viewer: opens in **Cursor Simple Browser** via `npm run brief:open-viewer`_');
   return lines.join('\n');
 }
 

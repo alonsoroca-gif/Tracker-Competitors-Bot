@@ -1,0 +1,33 @@
+---
+description: Tracker Brief Viewer must fit the viewport — no horizontal scroll; layout adapts to pane width.
+globs:
+  - tracker-briefs/viewer/**
+alwaysApply: false
+---
+
+# Tracker Brief Viewer — responsive layout
+
+## Rule
+
+The Tracker Brief Viewer (`tracker-briefs/viewer/`) **must fit the visible Simple Browser pane** without horizontal scrolling. All signal fields remain readable via wrapping, column priority, or card layout — never a wide `overflow-x: auto` table.
+
+## Requirements
+
+1. **No horizontal scroll** on `#table-wrap` or `body` at any viewport width (320px–4K).
+2. **Viewport-aware** — use `clamp()`, `%` column widths, `table-layout: fixed`, and breakpoints; test in Cursor Simple Browser split-pane (~700–1200px wide).
+3. **Column priority** (hide or collapse lowest priority first on narrow panes):
+   - Always: `#`, Competitor, Headline, Classification, Why / routing
+   - Medium+: Parity, Routing
+   - Wide only: Source link column
+4. **Card fallback** below ~900px — stacked signal cards replace the table; same data, no loss.
+5. **Do not** set `width: max-content` on the signals table or fixed `min-width` sums that exceed 100vw.
+
+## Test
+
+After viewer changes, open:
+
+```bash
+npm run brief:open-viewer --prefix initiative-1-tracker/tracker
+```
+
+Resize the Simple Browser pane — table/cards must reflow with no sideways scroll.

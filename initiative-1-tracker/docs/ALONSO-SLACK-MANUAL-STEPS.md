@@ -48,6 +48,17 @@ gh secret set SLACK_WEBHOOK_URL -R alonsoroca-gif/Tracker-Competitors-Bot -b "PA
 
 ---
 
+### Step 3b — Brief opener (one-time, for tracker-feed `--open`)
+
+```bash
+cd initiative-1-tracker/tracker
+npm run brief:install-opener
+```
+
+Reload Cursor. Required so morningbrief opens the viewer in Simple Browser, not external Chrome.
+
+---
+
 ### Step 4 — Smoke test (automated — agent runs)
 
 ```bash
