@@ -7,7 +7,16 @@
     "signal_id": 1,
     "html_path": "tracker-briefs/runs/_sample-product-day/prototypes/siteplan.html",
     "preview_path": "tracker-briefs/runs/_sample-product-day/prototypes/siteplan.html",
-    "prd_path": "tracker-briefs/runs/_sample-product-day/prds/siteplan-prd.md"
+    "prd_path": "tracker-briefs/runs/_sample-product-day/prds/siteplan-prd.md",
+    "roi": {
+      "verdict": "pursue",
+      "lever": "Conversion / vacancy days",
+      "summary": "Live unit pricing on the siteplan lifts high-intent apply starts; delta is PMS-tied map UX, not a static embed.",
+      "per_unit_annual": "~$22/unit/yr NOI",
+      "property_250": "~$5.5K/yr",
+      "portfolio_10k": "~$220K/yr",
+      "confidence": "modeled"
+    }
   },
   {
     "id": "field-mode",
@@ -17,6 +26,15 @@
     "signal_id": 2,
     "html_path": "tracker-briefs/runs/_sample-product-day/prototypes/field-mode.html",
     "preview_path": "tracker-briefs/runs/_sample-product-day/prototypes/field-mode.html",
-    "prd_path": "tracker-briefs/runs/_sample-product-day/prds/field-mode-prd.md"
+    "prd_path": "tracker-briefs/runs/_sample-product-day/prds/field-mode-prd.md",
+    "roi": {
+      "verdict": "pursue",
+      "lever": "Leasing labor capacity",
+      "summary": "In-tour capture + push-to-apply off mobile frees ~0.3 agent hrs/unit/mo on follow-up; Entrata-owned PMS path competitors cannot copy.",
+      "per_unit_annual": "~$11/unit/yr capacity",
+      "property_250": "~$2.8K/yr",
+      "portfolio_10k": "~$110K/yr",
+      "confidence": "modeled"
+    }
   }
 ]

@@ -55,7 +55,8 @@ When **product_row_count > 0**, expect this exact shape:
 
 2. **Browser auto-opens** — Tracker Brief Viewer
    - Full signals table (scroll horizontally if needed)
-   - **Prototype cards** side-by-side — click to expand, download PRD PDF
+   - **Prototype cards** side-by-side — **ROI block** (pursue/watch + $ scale), vignette, PRD PDF
+   - **Run dropdown** — switch past brief days (runs-index.json)
    - Same run id as summary line
 
 3. **You do not** re-run publish or open \`tracker-drops/\` manually

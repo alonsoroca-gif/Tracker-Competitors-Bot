@@ -119,7 +119,8 @@ For each Tier — Now Product row:
 
 1. **PRD** — use `tracker-drop-cycle` §4.4 template (Problem, Target user, Existing Entrata implementation, Delta vs Core, Scope, Net-new engineering ask). Write to `tracker-briefs/runs/<run_id>/prds/<slug>.md`
 2. **HTML vignette** (Tier 1 prototype) → `tracker-briefs/runs/<run_id>/prototypes/<slug>.html` — viewer-embeddable static HTML, not `create-prototype`
-3. Register in `prototypes.json`
+3. **Short ROI** — invoke **roi-analyst** skill for a TL;DR only (not full 7-section report). One primary lever; per-unit + 250-unit + 10k-unit scale; `verdict`: pursue | watch | skip. Store in `prototypes.json` → `roi` object (see `TRACKER-BRIEFS-SCHEMA.md`).
+4. Register in `prototypes.json`
 
 Skip when `product_row_count === 0`.
 
