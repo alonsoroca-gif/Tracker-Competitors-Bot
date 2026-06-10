@@ -91,14 +91,27 @@
     th:nth-child(10), td:nth-child(10) { min-width: 10rem; max-width: 18rem; }
     .proto-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(min(100%, 380px), 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(min(100%, 360px), 1fr));
       gap: clamp(16px, 2vw, 24px);
+      width: 100%;
+    }
+    /* Fill row width — 2 cards = 50/50, 3 = thirds */
+    .proto-grid--1 { grid-template-columns: 1fr; }
+    .proto-grid--2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .proto-grid--3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    @media (max-width: 960px) {
+      .proto-grid--2,
+      .proto-grid--3 { grid-template-columns: 1fr; }
     }
     .proto-card {
       background: var(--panel);
       border: 1px solid var(--border);
       border-radius: 12px;
       overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      height: 100%;
     }
     .proto-card header {
       position: static;
@@ -110,14 +123,18 @@
     .proto-preview {
       position: relative;
       cursor: pointer;
-      display: block;
+      display: flex;
+      flex: 1;
+      flex-direction: column;
       text-decoration: none;
       color: inherit;
+      min-height: 0;
     }
     .proto-preview:hover .proto-open-hint { opacity: 1; }
     .proto-card iframe {
       width: 100%;
-      height: clamp(320px, 42vh, 520px);
+      flex: 1;
+      min-height: clamp(360px, 48vh, 560px);
       border: none;
       background: #fff;
       pointer-events: none;
@@ -140,7 +157,14 @@
       flex-wrap: wrap;
       gap: 10px;
       align-items: center;
-      justify-content: center;
+      justify-content: stretch;
+      margin-top: auto;
+    }
+    .proto-card .links .btn-proto,
+    .proto-card .links .btn-prd {
+      flex: 1 1 auto;
+      text-align: center;
+      min-width: 10rem;
     }
     .btn-proto, .btn-prd {
       display: inline-block;
@@ -267,6 +291,10 @@
       if (!protos.length) {
         el.innerHTML = '<p class="empty">No prototypes this run (PMM-only or non-Product day).</p>';
         return;
+      }
+      el.className = 'proto-grid';
+      if (protos.length >= 1 && protos.length <= 3) {
+        el.classList.add(`proto-grid--${protos.length}`);
       }
       el.innerHTML = protos.map((p) => {
         const htmlPath = p.preview_path || p.html_path || '';

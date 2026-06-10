@@ -64,11 +64,17 @@ Send setup docs                        ~8:00 morningbrief → publish background
 - [ ] **Slack secrets** in GitHub: `SLACK_WEBHOOK_URL_OPERATOR`, `SLACK_WEBHOOK_URL_BILLY` (optional alerts)
 - [ ] Send Billy — use [HANDOFF-TO-BILLY.md](./HANDOFF-TO-BILLY.md) (links all three setup docs)
 
-**Explicitly later (not blocking handoff):**
+**Nice-to-have (shipped):**
 
-- Auto-open viewer from morningbrief
-- Richer HTML vignettes
-- `create-prototype` inside publish (use `/trackerstart` instead — see [TRACKER-PROTOTYPE-TIERS.md](./TRACKER-PROTOTYPE-TIERS.md))
+- [x] `BILLY-COMPLETE-SETUP.md` — single start-to-finish doc
+- [x] Auto-open viewer (`brief:open-viewer`, `tracker-feed-render.js --open`)
+- [x] Richer sample HTML vignettes (`_sample-product-day`)
+- [x] `entrata-plus-tracker.code-workspace` (local, gitignored — Billy copies from `.example`)
+
+**Still optional:**
+
+- `create-prototype` inside publish (use `/trackerstart` instead)
+- Slack webhook secrets (Alonso / IT — see `BILLY-COMPLETE-SETUP.md` Part 9)
 
 ---
 

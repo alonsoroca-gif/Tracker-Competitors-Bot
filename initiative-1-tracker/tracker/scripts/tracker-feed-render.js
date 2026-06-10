@@ -7,6 +7,7 @@
  *   node scripts/tracker-feed-render.js --run 2026-06-02T00-10-59Z
  */
 
+const path = require('path');
 const {
   loadLatest,
   loadRunManifest,
@@ -16,11 +17,13 @@ const {
 const { formatFeedMarkdown, formatNotReady } = require('../lib/briefFeed.js');
 
 function parseArgs(argv) {
-  const args = { run: null };
+  const args = { run: null, open: false };
   for (let i = 2; i < argv.length; i += 1) {
     if (argv[i] === '--run' && argv[i + 1]) {
       args.run = argv[i + 1];
       i += 1;
+    } else if (argv[i] === '--open') {
+      args.open = true;
     }
   }
   return args;
@@ -58,6 +61,16 @@ function main() {
       prototypes,
     }) + '\n',
   );
+
+  if (args.open) {
+    const { spawnSync } = require('child_process');
+    spawnSync(
+      'node',
+      [path.join(__dirname, 'open-brief-viewer.js'), '--run', runId],
+      { cwd: path.join(__dirname, '..', '..', '..'), stdio: 'inherit' },
+    );
+  }
+
   process.exit(0);
 }
 
