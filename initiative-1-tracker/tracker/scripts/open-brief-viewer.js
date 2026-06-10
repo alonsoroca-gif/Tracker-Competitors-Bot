@@ -68,7 +68,12 @@ function viewerUrl(port, runId) {
 async function main() {
   const args = parseArgs(process.argv);
   const latest = loadLatest();
-  const runId = args.run || (latest?.status === 'ready' ? latest.run_id : null);
+  let runId = args.run || (latest?.status === 'ready' ? latest.run_id : null);
+  // Default latest is often PMM-only (0 prototypes) — demo run shows ROI cards
+  if (!args.run && latest && (latest.prototype_count ?? 0) === 0) {
+    runId = '_sample-product-day';
+    process.stdout.write('open-brief-viewer: latest has 0 prototypes — opening Product-day demo.\n');
+  }
   await ensureServer(args.port);
   const url = viewerUrl(args.port, runId);
 
