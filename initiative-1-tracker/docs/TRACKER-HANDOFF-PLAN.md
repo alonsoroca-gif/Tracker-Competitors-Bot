@@ -57,7 +57,7 @@ Send setup docs                        ~8:00 morningbrief → publish background
 
 **Still to do before Billy:**
 
-- [ ] **Commit + push** handoff package to `main` (most of the above is not on `main` yet)
+- [x] **Commit + push** handoff package to `agent/P1.1` (`92732fd` — auto-merge to `main` on next drop cycle)
 - [x] **Phase B scaffold** — `publish:dry-run` + `manager:preflight` PASS (live agent publish on first morningbrief)
 - [x] Document **entrata-core** re-clone if `git pull` fails ([CORE-CLONE-SETUP.md](./CORE-CLONE-SETUP.md) troubleshooting)
 - [ ] Alonso re-clone Core locally before first live publish (optional; `verify:core` OK on disk today)
