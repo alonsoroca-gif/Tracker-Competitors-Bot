@@ -4,9 +4,9 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Tracker Brief Viewer</title>
-  <!-- viewer-build: 2026-06-10-responsive-v9 -->
-  <link rel="stylesheet" href="roi-styles.css?v=roi-v9" />
-  <script src="roi-shared.js?v=roi-v9"></script>
+  <!-- viewer-build: 2026-06-10-responsive-v11 -->
+  <link rel="stylesheet" href="roi-styles.css?v=roi-v11" />
+  <script src="roi-shared.js?v=roi-v11"></script>
   <style>
     :root {
       --bg: #0c0c0f;
@@ -58,7 +58,7 @@
     }
     section { margin-bottom: clamp(20px, 3vw, 32px); }
     h2 { font-size: clamp(0.95rem, 1.1vw, 1.1rem); margin: 0 0 10px; }
-    /* Signals — fit pane width, no horizontal scroll */
+    /* Signals — fit pane width, no horizontal scroll (container queries: Simple Browser split pane ≠ viewport) */
     #table-wrap {
       width: 100%;
       max-width: 100%;
@@ -66,6 +66,8 @@
       border: 1px solid var(--border);
       border-radius: 12px;
       background: var(--panel);
+      container-type: inline-size;
+      container-name: signals-pane;
     }
     .signals-table-wrap table {
       width: 100%;
@@ -103,18 +105,24 @@
       font-size: 0.78em;
       word-break: normal;
     }
-    /* Hide lower-priority columns as pane narrows */
-    @media (max-width: 1280px) {
+    /* Default: table on; cards off. Queries below must come AFTER this rule. */
+    .signals-cards { display: none; }
+    /* Hide lower-priority columns as the viewer pane narrows (not window width) */
+    @container signals-pane (max-width: 1280px) {
       .signals-table-wrap .col-source { display: none; }
     }
-    @media (max-width: 1024px) {
+    @container signals-pane (max-width: 1024px) {
       .signals-table-wrap .col-parity { display: none; }
     }
+    @container signals-pane (max-width: 900px) {
+      .signals-table-wrap { display: none; }
+      .signals-cards { display: block; }
+    }
+    /* Viewport fallback when container queries unsupported */
     @media (max-width: 900px) {
       .signals-table-wrap { display: none; }
       .signals-cards { display: block; }
     }
-    .signals-cards { display: none; }
     .signal-card {
       background: var(--panel);
       border: 1px solid var(--border);
@@ -280,7 +288,7 @@
   <header>
     <h1>Tracker Brief Viewer</h1>
     <span class="meta" id="run-meta">Loading…</span>
-    <span class="meta" title="Hard-refresh if layout looks stale">viewer roi-v9</span>
+    <span class="meta" title="Hard-refresh if layout looks stale">viewer roi-v11</span>
     <select id="run-select" aria-label="Select run"></select>
     <button type="button" id="reload-btn">Reload</button>
   </header>
@@ -289,13 +297,14 @@
       <h2>Summary</h2>
       <p id="summary-text" class="meta">—</p>
     </section>
+    <section id="table-section">
+      <h2>Signals</h2>
+      <p class="meta" style="margin:0 0 10px;font-size:0.82rem;">Full table on wide panes · stacked cards when the Simple Browser pane is narrow.</p>
+      <div id="table-wrap"></div>
+    </section>
     <section id="prototypes-section">
       <h2>Prototypes</h2>
       <div id="prototypes" class="proto-grid"></div>
-    </section>
-    <section id="table-section">
-      <h2>Signals (full table)</h2>
-      <div id="table-wrap"></div>
     </section>
   </main>
   <script>
@@ -332,7 +341,7 @@
 
     async function fetchJson(path) {
       const url = new URL(path, window.location.href);
-      url.searchParams.set('v', typeof VIEWER_BUILD !== 'undefined' ? VIEWER_BUILD : 'roi-v9');
+      url.searchParams.set('v', typeof VIEWER_BUILD !== 'undefined' ? VIEWER_BUILD : 'roi-v11');
       const res = await fetch(url);
       if (!res.ok) throw new Error(`${path} → ${res.status}`);
       return res.json();
@@ -440,7 +449,7 @@
       el.innerHTML = '';
       protos.forEach((p) => {
         const htmlPath = p.preview_path || p.html_path || '';
-        const src = assetUrl(htmlPath) + '?v=roi-v9';
+        const src = assetUrl(htmlPath) + '?v=roi-v11';
         const protoShell = viewerShellUrl('prototype.html', htmlPath, p.title, runId, p.id);
         const prdShell = p.prd_path
           ? `prd.html?src=${encodeURIComponent(assetUrl(p.prd_path))}&back=${encodeURIComponent(window.location.href)}&auto=pdf`

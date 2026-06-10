@@ -1,5 +1,5 @@
 /** Shared ROI + brief renderers — index.html + prototype.html */
-const VIEWER_BUILD = 'roi-v8';
+const VIEWER_BUILD = 'roi-v11';
 
 function escRoi(s) {
   return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');

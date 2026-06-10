@@ -14,12 +14,12 @@ The Tracker Brief Viewer (`tracker-briefs/viewer/`) **must fit the visible Simpl
 ## Requirements
 
 1. **No horizontal scroll** on `#table-wrap` or `body` at any viewport width (320px–4K).
-2. **Viewport-aware** — use `clamp()`, `%` column widths, `table-layout: fixed`, and breakpoints; test in Cursor Simple Browser split-pane (~700–1200px wide).
+2. **Pane-aware** — use `container-type: inline-size` on `#table-wrap` and `@container` breakpoints (Simple Browser split-pane width ≠ `window.innerWidth`). Also `clamp()`, `%` column widths, `table-layout: fixed`.
 3. **Column priority** (hide or collapse lowest priority first on narrow panes):
    - Always: `#`, Competitor, Headline, Classification, Why / routing
    - Medium+: Parity, Routing
    - Wide only: Source link column
-4. **Card fallback** below ~900px — stacked signal cards replace the table; same data, no loss.
+4. **Card fallback** below ~900px — stacked signal cards replace the table; same data, no loss. Default `.signals-cards { display: none }` must appear **before** `@container` / `@media` rules that set `display: block`, or cards stay hidden.
 5. **Do not** set `width: max-content` on the signals table or fixed `min-width` sums that exceed 100vw.
 
 ## Test
