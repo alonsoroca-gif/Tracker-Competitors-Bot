@@ -69,7 +69,7 @@ function formatPrototypeCards(prototypes) {
     if (p.prd_path) lines.push(`  - PRD: \`${p.prd_path}\``);
   }
   lines.push('');
-  lines.push('_Open **Simple Browser** → `tracker-briefs/viewer/index.html` to scroll all prototypes._');
+  lines.push('_Viewer: `npm run brief:open-viewer` or Simple Browser → `tracker-briefs/viewer/index.html`_');
   return lines.join('\n');
 }
 
@@ -91,7 +91,7 @@ function formatFeedMarkdown({ manifest, latest, signalsTable, prototypes }) {
     '',
     '### Detail',
     '',
-    'Full parity audit and wide table: open `tracker-briefs/viewer/index.html` in Cursor Simple Browser.',
+    'Full parity audit and wide table: `npm run brief:open-viewer --prefix initiative-1-tracker/tracker` (or Simple Browser → `tracker-briefs/viewer/index.html`).',
   );
 
   return blocks.join('\n');

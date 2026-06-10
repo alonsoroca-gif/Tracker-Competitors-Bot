@@ -31,7 +31,7 @@ Run **after** other subskills. By then publish has usually finished (~12 min PMM
 
 ```bash
 node initiative-1-tracker/tracker/scripts/brief-readiness-check.js --json
-node initiative-1-tracker/tracker/scripts/tracker-feed-render.js
+node initiative-1-tracker/tracker/scripts/tracker-feed-render.js --open
 ```
 
 ### If `brief-readiness-check` → `ok: false`
@@ -49,7 +49,7 @@ Paste the full `tracker-feed-render.js` output into chat:
 - Summary line (net-new, prototypes, ready time)
 - **6-column signals table** (all classifications)
 - Prototype bullets (if any)
-- Point to **Simple Browser** → `tracker-briefs/viewer/index.html`
+- Viewer opens automatically via `--open` (or `npm run brief:open-viewer`)
 
 ### Non-Product days
 

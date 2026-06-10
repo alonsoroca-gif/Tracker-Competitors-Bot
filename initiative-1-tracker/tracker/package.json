@@ -20,6 +20,7 @@
     "preflight:publish": "node scripts/publish-preflight.js",
     "brief:readiness": "node scripts/brief-readiness-check.js",
     "brief:feed": "node scripts/tracker-feed-render.js",
+    "brief:open-viewer": "node scripts/open-brief-viewer.js",
     "test:brief": "node test/brief-feed.test.js",
     "publish:dry-run": "node scripts/tracker-publish-dry-run.js",
     "slack:brief-preflight": "node scripts/slack-brief-notify.js --mode preflight",

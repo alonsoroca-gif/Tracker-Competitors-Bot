@@ -17,7 +17,7 @@ description: Billy-facing consumer for published tracker briefs — reads tracke
 tracker-feed:
 - [ ] Step 1 — Readiness (latest.json status === ready)
 - [ ] Step 2 — Load run manifest + signals-table + prototypes
-- [ ] Step 3 — Emit chat blocks (summary + table + viewer tab)
+- [ ] Step 3 — Emit chat blocks (summary + table + open viewer)
 - [ ] Step 4 — Stop (no collect, no publish, no AskQuestion gates)
 ```
 
@@ -39,7 +39,7 @@ node initiative-1-tracker/tracker/scripts/brief-readiness-check.js --json
 Optional render check:
 
 ```bash
-node initiative-1-tracker/tracker/scripts/tracker-feed-render.js
+node initiative-1-tracker/tracker/scripts/tracker-feed-render.js --open
 ```
 
 If render exits non-zero, surface `formatNotReady` text only.
@@ -84,13 +84,17 @@ Use `tracker-feed-render.js` output as the canonical formatter, or mirror `lib/b
 When `prototype_count > 0`:
 
 - Bullet per prototype: title, competitor, path
-- Instruction: open **Simple Browser** → `tracker-briefs/viewer/index.html`
+- Run `npm run brief:open-viewer --prefix initiative-1-tracker/tracker` (or `--run <run_id>`)
 
-### 3.4 Viewer tab (always)
+### 3.4 Viewer (always)
 
-> Full parity detail + wide table + scroll prototypes: **Simple Browser** → `tracker-briefs/viewer/index.html`
+After chat output, run:
 
-Append `?run=<run_id>` when not using latest.
+```bash
+node initiative-1-tracker/tracker/scripts/open-brief-viewer.js --run <run_id>
+```
+
+Or use `tracker-feed-render.js --open` which renders + opens in one step. Falls back to Simple Browser URL if auto-open fails.
 
 ---
 
