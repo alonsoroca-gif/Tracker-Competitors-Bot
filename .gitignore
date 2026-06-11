@@ -23,6 +23,9 @@ entrata-plus-tracker.code-workspace
 tmp/
 temp/
 
+# Local Domo MCP zip extract (canonical copy: alonso-workspace/vendors/mcp-domo)
+.tmp-mcp-domo-review/
+
 # Independent agent repo (do not track)
 coding-automation-agent/
 

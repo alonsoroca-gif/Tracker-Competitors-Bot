@@ -2,7 +2,7 @@
 
 This document links to all artifacts produced from the **Three initiatives plan** (Tracker product, ProspectPortal, Marketplace). Use it to navigate deliverables and share with your manager and coworker.
 
-**Running all three on a 24-hour, non-stop basis?** See **[24-7-SUMMARY.md](24-7-SUMMARY.md)** for a one-page summary and **[24-7-DEVELOPMENT-GUIDE.md](24-7-DEVELOPMENT-GUIDE.md)** for the full guide (prerequisites, handoff, status, GAPS, notifications). Task lists: **[initiative-1-tracker/TASKS.md](initiative-1-tracker/TASKS.md)** (Tracker), **[initiative-2-prospectportal/TASKS.md](initiative-2-prospectportal/TASKS.md)** (ProspectPortal), **[initiative-3-marketplace/TASKS.md](initiative-3-marketplace/TASKS.md)** (Marketplace — standby). **Mon–Tue review:** **[MON-TUE-REVIEW.md](MON-TUE-REVIEW.md)** (today/tomorrow sub-tasks + Initiative 2 direction check).
+**Running all three on a 24-hour, non-stop basis?** See **[24-7-SUMMARY.md](24-7-SUMMARY.md)** for a one-page summary and **[24-7-DEVELOPMENT-GUIDE.md](24-7-DEVELOPMENT-GUIDE.md)** for the full guide (prerequisites, handoff, status, GAPS, notifications). Task lists: **[initiative-1-tracker/TASKS.md](initiative-1-tracker/TASKS.md)** (Tracker), **ProspectPortal Website** (separate repo — [PROSPECTPORTAL-EXTERNAL.md](PROSPECTPORTAL-EXTERNAL.md)), **Marketplace** (standby — [MARKETPLACE-EXTERNAL.md](MARKETPLACE-EXTERNAL.md)). **Mon–Tue review:** **[MON-TUE-REVIEW.md](MON-TUE-REVIEW.md)**.
 
 ---
 
@@ -26,15 +26,15 @@ This document links to all artifacts produced from the **Three initiatives plan*
 
 **Goal:** A new product: a bot that creates whole websites (with CSS and compelling models) from one link + 3 key questions.
 
+**Repo (separate from Tracker):** `prospectportal-website` — `~/Developer/alonso-workspace/repos/prospectportal-website`. Open via **`~/Developer/alonso-workspace/alonso.code-workspace`**.
+
 | Artifact | Location |
 |----------|----------|
-| Product one-pager | [initiative-2-prospectportal/product-one-pager.md](initiative-2-prospectportal/product-one-pager.md) |
-| 3 key questions (v1) | [initiative-2-prospectportal/discovery-questions.md](initiative-2-prospectportal/discovery-questions.md) |
-| Bot flow wireframe | [initiative-2-prospectportal/bot-flow-wireframe.md](initiative-2-prospectportal/bot-flow-wireframe.md) |
-| Tech/UX concept | [initiative-2-prospectportal/tech-ux-concept.md](initiative-2-prospectportal/tech-ux-concept.md) |
-| Landing or demo script | [initiative-2-prospectportal/landing-demo-script.md](initiative-2-prospectportal/landing-demo-script.md) |
+| README + tasks | `prospectportal-website/README.md`, `TASKS.md` |
+| Cowork sessions | `prospectportal-website/docs/COWORK-SESSIONS.md` |
+| React prototype | `prospectportal-website/prototypes/website-draft-pipeline/` (symlinked into Product OS) |
 
-**Next:** Review with manager; then landing/demo script and first bot prototype.
+**Next:** Per-template intake forms + Cowork Session S1 demo. See [PROSPECTPORTAL-EXTERNAL.md](PROSPECTPORTAL-EXTERNAL.md).
 
 ---
 
@@ -42,15 +42,9 @@ This document links to all artifacts produced from the **Three initiatives plan*
 
 **Goal:** Investigate how Tracker and/or ProspectPortal can be performed inside the marketplace.
 
-| Artifact | Location |
-|----------|----------|
-| Marketplace overview | [initiative-3-marketplace/marketplace-overview.md](initiative-3-marketplace/marketplace-overview.md) |
-| Our flow in marketplace (diagram) | [initiative-3-marketplace/our-flow-in-marketplace.md](initiative-3-marketplace/our-flow-in-marketplace.md) |
-| Fit matrix | [initiative-3-marketplace/fit-matrix.md](initiative-3-marketplace/fit-matrix.md) |
-| Minimal integration prototype | [initiative-3-marketplace/minimal-integration-prototype.md](initiative-3-marketplace/minimal-integration-prototype.md) |
-| Key info summary | [initiative-3-marketplace/key-info-summary.md](initiative-3-marketplace/key-info-summary.md) |
+**Status:** **Standby / future.** Separate repo: `~/Developer/alonso-workspace/repos/marketplace-integration` (GitHub: `marketplace-integration`). See [MARKETPLACE-EXTERNAL.md](MARKETPLACE-EXTERNAL.md).
 
-**Next:** Align with coworker; then minimal integration prototype and key info doc.
+**Next (when resumed):** Sync with marketplace coworker (M1 in marketplace TASKS.md); then minimal “Get latest Tracker report” integration stub.
 
 ---
 

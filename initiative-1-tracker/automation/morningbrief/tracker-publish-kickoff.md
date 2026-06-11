@@ -1,6 +1,6 @@
 # Morningbrief kickoff — tracker-publish (background)
 
-**When:** First step of Billy's **morningbrief** (~8:00am MT). **Do not wait** for completion.
+**When:** **morningbrief Step 1** (~8:00am MT), after Step 0 preflight passes. **Do not wait** for completion.
 
 **Skill:** `.cursor/skills/tracker-publish/SKILL.md`
 
@@ -10,8 +10,9 @@
 
 ## How morningbrief uses this
 
-1. **Step 0 (8:00)** — Paste kickoff below → start **background** Cursor agent. Continue other morningbrief subskills immediately.
-2. **Tracker section (~8:20–8:30)** — Run **tracker-feed** only. If not ready → skip + Slack when done.
+1. **Step 0 (8:00)** — Agent runs `morningbrief:preflight` (skills + kickoff on disk).
+2. **Step 1 (8:00)** — Paste kickoff below → start **background** Cursor agent. Continue other morningbrief subskills immediately.
+3. **Tracker section (~8:20–8:30)** — Run **tracker-feed** only. If not ready → skip + Slack when done.
 
 ---
 

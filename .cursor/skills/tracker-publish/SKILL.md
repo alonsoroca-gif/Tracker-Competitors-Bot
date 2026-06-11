@@ -1,6 +1,6 @@
 ---
 name: tracker-publish
-description: Morningbrief factory on Billy's Mac — kicks off at 8am in background; interpret, Core parity (Path A local or optional GitHub API), PRDs, prototypes, writes tracker-briefs. Use when morningbrief Step 0 starts publish or user says "tracker publish". Do NOT use for tracker-feed, /trackerstart, or CI collect.
+description: Morningbrief factory on Billy's Mac — kicks off at 8am in background; interpret, Core parity (Path A local or optional GitHub API), PRDs, prototypes, writes tracker-briefs. Use when morningbrief Step 1 starts publish or user says "tracker publish". Do NOT use for tracker-feed, /trackerstart, or CI collect.
 ---
 
 # tracker-publish
@@ -17,7 +17,8 @@ description: Morningbrief factory on Billy's Mac — kicks off at 8am in backgro
 | 5:45am | CI collect |
 | **5:35am** | **Preflight** → operator Slack only |
 | **7:45am** | GHA readiness — **not ready is expected** (publish has not started) |
-| **~8:00am** | **morningbrief Step 0** → **tracker-publish** background kickoff |
+| **~8:00am** | **morningbrief Step 0** → `morningbrief:preflight` (auto) |
+| **~8:00am** | **morningbrief Step 1** → **tracker-publish** background kickoff |
 | **~8:20–8:30am** | morningbrief tracker section → **tracker-feed** |
 
 Overnight unattended publish is **out of scope**. Core parity runs when Billy opens morningbrief.

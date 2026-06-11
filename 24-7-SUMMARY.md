@@ -68,8 +68,8 @@ You develop **solo** (with school, etc.). **Automation** runs 24/7: CI, schedule
 | Initiative | Status | Task list |
 |------------|--------|-----------|
 | **Tracker Bot** | Active | [initiative-1-tracker/TASKS.md](initiative-1-tracker/TASKS.md) |
-| **ProspectPortal** | Active | [initiative-2-prospectportal/TASKS.md](initiative-2-prospectportal/TASKS.md) |
-| **Marketplace** | Standby | [initiative-3-marketplace/TASKS.md](initiative-3-marketplace/TASKS.md) |
+| **ProspectPortal Website** | Active (separate repo) | `~/Developer/alonso-workspace/repos/prospectportal-website/TASKS.md` |
+| **Marketplace Integration** | Standby (separate repo) | `~/Developer/alonso-workspace/repos/marketplace-integration/TASKS.md` |
 
 ---
 
