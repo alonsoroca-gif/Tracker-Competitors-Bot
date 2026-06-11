@@ -15,7 +15,8 @@
 
 const net = require('net');
 const fs = require('fs');
-const { spawn, execSync } = require('child_process');
+const os = require('os');
+const { spawn, spawnSync, execSync } = require('child_process');
 const path = require('path');
 const { loadLatest } = require('../lib/briefPaths.js');
 
@@ -119,8 +120,40 @@ function extensionOpenerUri(url) {
   return `cursor://${EXT_ID}/open?${query}`;
 }
 
+/** Cursor CLI writes under ~/Library/Application Support/Cursor/logs — blocked in agent sandbox. */
+function isCursorCliBlocked() {
+  if (process.platform !== 'darwin') return false;
+  const probeDir = path.join(
+    os.homedir(),
+    'Library',
+    'Application Support',
+    'Cursor',
+    'logs',
+    `.open-probe-${process.pid}`,
+  );
+  try {
+    fs.mkdirSync(probeDir, { recursive: true });
+    fs.rmdirSync(probeDir);
+    return false;
+  } catch (err) {
+    return err.code === 'EPERM' || err.code === 'EACCES';
+  }
+}
+
 function openViaCursorCli(cursorBin, targetUrl) {
-  execSync(`"${cursorBin}" --open-url "${targetUrl.replace(/"/g, '\\"')}"`, { stdio: 'ignore' });
+  const result = spawnSync(cursorBin, ['--open-url', targetUrl], {
+    encoding: 'utf8',
+    timeout: 15000,
+  });
+  const combined = `${result.stderr || ''}${result.stdout || ''}${result.error?.message || ''}`;
+  if (/EPERM|operation not permitted/i.test(combined)) {
+    const err = new Error('CURSOR_CLI_SANDBOX_BLOCKED');
+    err.detail = combined.trim();
+    throw err;
+  }
+  if (result.status !== 0) {
+    throw new Error(`cursor --open-url exited ${result.status ?? 'unknown'}`);
+  }
 }
 
 /** Default — Cursor Simple Browser tab via local extension + cursor --open-url. */
@@ -135,6 +168,12 @@ function openInExternalBrowser(url) {
 
 function printManualFallback() {
   process.stdout.write('  Manual: Cmd+Shift+P → "Simple Browser: Show" → Cmd+V (URL in clipboard)\n');
+}
+
+function printSandboxBlockedHelp() {
+  process.stdout.write('\nopen-brief-viewer: auto-open blocked — agent sandbox cannot run cursor --open-url.\n');
+  process.stdout.write('  Agent: re-run with Shell required_permissions ["all"].\n');
+  printManualFallback();
 }
 
 async function main() {
@@ -176,6 +215,11 @@ async function main() {
     return;
   }
 
+  if (isCursorCliBlocked()) {
+    printSandboxBlockedHelp();
+    process.exit(1);
+  }
+
   if (!isOpenerExtensionInstalled(cursorBin)) {
     process.stdout.write(`\nopen-brief-viewer: ${EXT_ID} not installed (required once).\n`);
     process.stdout.write('  Run: npm run brief:install-opener --prefix initiative-1-tracker/tracker\n');
@@ -188,10 +232,14 @@ async function main() {
     openInCursorSimpleBrowser(url, cursorBin);
     process.stdout.write('open-brief-viewer: sent to Cursor Simple Browser via local extension.\n');
     process.stdout.write('  If nothing appeared: reload Cursor window, then retry.\n');
-    printManualFallback();
-  } catch {
-    process.stdout.write('open-brief-viewer: auto-open failed.\n');
-    printManualFallback();
+  } catch (err) {
+    if (err.message === 'CURSOR_CLI_SANDBOX_BLOCKED') {
+      printSandboxBlockedHelp();
+    } else {
+      process.stdout.write(`open-brief-viewer: auto-open failed — ${err.message}\n`);
+      printManualFallback();
+    }
+    process.exit(1);
   }
 }
 

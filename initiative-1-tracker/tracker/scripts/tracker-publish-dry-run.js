@@ -117,7 +117,7 @@ function main() {
   );
 
   const latest = loadLatest();
-  const readiness = runNode('brief-readiness-check.js', ['--json']);
+  const readiness = runNode('brief-readiness-check.js', ['--json', '--allow-stale']);
   let readyPayload = null;
   if (readiness.code === 0 && readiness.stdout) {
     try {

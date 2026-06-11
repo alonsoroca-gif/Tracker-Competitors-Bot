@@ -33,8 +33,8 @@ node initiative-1-tracker/tracker/scripts/brief-readiness-check.js --json
 
 | `ok` | Action |
 |------|--------|
-| `true` | Continue |
-| `false` | Print not-ready message. **Do not** show yesterday's brief. **Do not** fall back to raw `tracker-drops/`. Stop. |
+| `true` **and** `fresh_for_today: true` | Continue |
+| `false` or stale (`fresh_for_today: false`) | Print not-ready message. **Do not** show yesterday's brief. **Do not** fall back to raw `tracker-drops/`. Stop. |
 
 Optional render check:
 
@@ -42,7 +42,9 @@ Optional render check:
 node initiative-1-tracker/tracker/scripts/tracker-feed-render.js --open
 ```
 
-If render exits non-zero, surface `formatNotReady` text only.
+**Agent Shell (required):** Run `--open` with **`required_permissions: ["all"]`**. Default sandbox blocks `cursor --open-url`; opener exits **1** with a sandbox message if not run with full permissions.
+
+If render exits non-zero, surface `formatNotReady` text only (or retry `--open` with `all` if sandbox-blocked).
 
 ---
 
@@ -95,6 +97,8 @@ node initiative-1-tracker/tracker/scripts/open-brief-viewer.js --run <run_id>
 ```
 
 Or use `tracker-feed-render.js --open` which renders + opens in one step. **Default:** Cursor Simple Browser tab (in-editor). Use `--external` on `open-brief-viewer.js` for Chrome/Safari.
+
+**Agents:** always run `--open` / `open-brief-viewer.js` via Shell with **`required_permissions: ["all"]`** — otherwise Simple Browser will not open.
 
 **One-time setup (Cursor):** `cursor://vscode.runCommands` is not supported — Cursor tries to install a fake extension. Run once:
 

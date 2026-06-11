@@ -24,6 +24,8 @@
     "brief:install-opener": "node scripts/install-brief-opener.js",
     "billy:demo": "node scripts/billy-first-run-demo.js",
     "morningbrief:preflight": "node scripts/morningbrief-preflight.js",
+    "morningbrief:kickoff": "node scripts/morningbrief-kickoff-publish.js",
+    "publish:zero-day": "node scripts/tracker-publish-zero-day.js",
     "slack:test-operator": "node scripts/slack-webhook-test.js --target operator",
     "slack:test-billy": "node scripts/slack-webhook-test.js --target billy",
     "reclone:core": "bash scripts/reclone-core.sh",

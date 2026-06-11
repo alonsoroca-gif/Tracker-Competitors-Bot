@@ -1,0 +1,29 @@
+# Morningbrief must kickoff publish
+
+## Rule
+
+On `/morningbrief`, after Step 0 preflight passes, the agent **must** run the kickoff gate — never infer publish status from `latest.json` alone.
+
+```bash
+node initiative-1-tracker/tracker/scripts/morningbrief-kickoff-publish.js --json
+```
+
+## Gate outcomes
+
+| `action` | Agent must |
+|----------|------------|
+| `skip_already_fresh` | Skip Step 1 — today's brief is ready (`fresh_for_today: true`) |
+| `published_zero_day` | Skip Step 1 — zero-signal day written synchronously |
+| `kickoff_agent_required` | **Launch Task background agent** with `tracker-publish` + kickoff prompt. Do NOT wait. |
+
+## Never do this
+
+- Skip Step 1 because `latest.json` says `status: "ready"` when `fresh_for_today` is false
+- Show yesterday's brief in Step 8 when readiness `ok: false` or `fresh_for_today: false`
+- Use session metadata for today's date — run `date` or read `today_mt` from kickoff/readiness JSON
+
+## "Automatic" means
+
+Publish is automatic **when the user runs `/morningbrief`** — not an OS cron at 8:00. Billy and Alonso get the same behavior: one chat kickoff, agent runs the gate, agent launches publish if needed.
+
+CI collect (GHA) is the only overnight automation. Interpret + brief writing is **not** in GHA.

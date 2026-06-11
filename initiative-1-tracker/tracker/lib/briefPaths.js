@@ -120,6 +120,23 @@ function loadRunsIndex() {
   return { runs: refreshRunsIndex() };
 }
 
+/** Calendar day in America/Denver (YYYY-MM-DD). */
+function mtCalendarDay(isoOrDate = new Date()) {
+  const d = typeof isoOrDate === 'string' ? new Date(isoOrDate) : isoOrDate;
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'America/Denver',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(d);
+}
+
+/** True when ready_at falls on today's calendar day in MT. */
+function isBriefFreshForToday(readyAtIso) {
+  if (!readyAtIso) return false;
+  return mtCalendarDay(readyAtIso) === mtCalendarDay(new Date());
+}
+
 module.exports = {
   repoRoot,
   briefsRoot,
@@ -142,4 +159,6 @@ module.exports = {
   listBriefRunIds,
   refreshRunsIndex,
   loadRunsIndex,
+  mtCalendarDay,
+  isBriefFreshForToday,
 };

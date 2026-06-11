@@ -17,18 +17,21 @@ const {
   loadSignalsTable,
   writeJson,
   refreshRunsIndex,
+  mtCalendarDay,
+  isBriefFreshForToday,
 } = require('../lib/briefPaths.js');
 
 function parseArgs(argv) {
-  const args = { json: false, markReady: false };
+  const args = { json: false, markReady: false, allowStale: false };
   for (let i = 2; i < argv.length; i += 1) {
     if (argv[i] === '--json') args.json = true;
     if (argv[i] === '--mark-ready') args.markReady = true;
+    if (argv[i] === '--allow-stale') args.allowStale = true;
   }
   return args;
 }
 
-function validateBrief(latest) {
+function validateBrief(latest, { allowStale = false } = {}) {
   const issues = [];
   if (!latest) {
     issues.push('tracker-briefs/latest.json missing');
@@ -36,6 +39,11 @@ function validateBrief(latest) {
   }
   if (latest.status !== 'ready') {
     issues.push(`status is "${latest.status}" (need "ready")`);
+  }
+  if (!allowStale && latest.ready_at && !isBriefFreshForToday(latest.ready_at)) {
+    issues.push(
+      `brief is stale — ready_at ${latest.ready_at} (${mtCalendarDay(latest.ready_at)} MT); need today's publish (${mtCalendarDay()} MT)`,
+    );
   }
   const runId = latest.run_id;
   if (!runId) issues.push('latest.json missing run_id');
@@ -73,15 +81,19 @@ function main() {
     process.exit(0);
   }
 
-  const { ok, issues, runId } = validateBrief(latest);
+  const { ok, issues, runId } = validateBrief(latest, { allowStale: args.allowStale });
   const manifest = runId ? loadRunManifest(runId) : null;
   const table = runId ? loadSignalsTable(runId) : [];
+  const freshForToday = latest?.ready_at ? isBriefFreshForToday(latest.ready_at) : false;
 
   const payload = {
     ok,
     status: latest?.status || 'missing',
     run_id: runId || null,
     ready_at: latest?.ready_at || null,
+    fresh_for_today: freshForToday,
+    today_mt: mtCalendarDay(),
+    ready_day_mt: latest?.ready_at ? mtCalendarDay(latest.ready_at) : null,
     net_new_count: manifest?.net_new_count ?? null,
     prototype_count: manifest?.prototype_count ?? null,
     signal_rows: table.length,

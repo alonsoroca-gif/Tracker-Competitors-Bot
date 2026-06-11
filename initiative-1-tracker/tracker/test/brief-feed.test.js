@@ -19,7 +19,7 @@ function run(script, args = []) {
 
 let failed = 0;
 
-const readiness = run('brief-readiness-check.js', ['--json']);
+const readiness = run('brief-readiness-check.js', ['--json', '--allow-stale']);
 if (readiness.status !== 0) {
   process.stderr.write('brief-feed.test: readiness check failed\n');
   process.stderr.write(readiness.stderr || readiness.stdout);
@@ -44,7 +44,7 @@ if (feed.status !== 0) {
   const checks = [
     ['Tracker brief', out.includes('Tracker brief')],
     ['signals table header', out.includes('| # | Competitor |')],
-    ['PMM row', out.includes('Funnel') || out.includes('PMM')],
+    ['PMM row or empty day', out.includes('PMM') || out.includes('No net-new signals')],
     ['viewer hint', out.includes('viewer/index.html')],
   ];
   for (const [name, ok] of checks) {

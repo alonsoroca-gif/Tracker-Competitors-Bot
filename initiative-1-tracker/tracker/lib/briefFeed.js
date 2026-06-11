@@ -44,13 +44,13 @@ function formatSummary(manifest, latest) {
 }
 
 function formatChatTable(rows) {
-  if (!rows.length) {
-    return '_No net-new signals in this brief._';
-  }
-
   const header =
     '| # | Competitor | Headline | Classification | Parity | Why / routing |';
   const sep = '|---:|---|---|---|---|---|';
+
+  if (!rows.length) {
+    return [header, sep, '', '_No net-new signals in this brief._'].join('\n');
+  }
 
   const body = rows.map((r) => {
     const parity = r.parity_l2 || r.parity || '—';
@@ -102,9 +102,12 @@ function formatFeedMarkdown({ manifest, latest, signalsTable, prototypes }) {
   return blocks.join('\n');
 }
 
-function formatNotReady(latest) {
+function formatNotReady(latest, { stale = false, todayMt = null, readyDayMt = null } = {}) {
   const status = latest?.status || 'not_ready';
   const runId = latest?.run_id || '(unknown)';
+  if (stale) {
+    return `**Tracker brief not ready for today** — latest brief (\`${runId}\`, ready ${latest?.ready_at || '—'}) is from **${readyDayMt || 'yesterday'}** MT. Today's publish (${todayMt || 'today'} MT) has not run yet. Do not show yesterday's brief.`;
+  }
   if (status === 'publishing') {
     return `**Tracker brief not ready** — publish in progress for \`${runId}\`. Check again shortly; late runs DM via Slack when ready.`;
   }

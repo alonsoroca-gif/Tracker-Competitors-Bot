@@ -79,7 +79,7 @@ function main() {
     required,
     optional,
     next: allOk
-      ? 'Continue morningbrief — Step 1 tracker-publish (background) or smoke test Step 7 tracker-feed'
+      ? 'Continue morningbrief — Step 1 run morningbrief:kickoff (never skip when stale)'
       : 'Fix failed checks before running morningbrief',
   };
 

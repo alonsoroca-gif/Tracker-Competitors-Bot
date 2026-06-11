@@ -1,0 +1,29 @@
+---
+description: Tracker Brief Viewer --open must run outside agent sandbox (cursor --open-url needs Application Support write).
+globs:
+  - initiative-1-tracker/tracker/scripts/open-brief-viewer.js
+  - initiative-1-tracker/tracker/scripts/tracker-feed-render.js
+alwaysApply: false
+---
+
+# Tracker Brief Viewer — agent sandbox
+
+## Rule
+
+When running `open-brief-viewer.js` or `tracker-feed-render.js --open` from a **Cursor agent Shell**, always pass **`required_permissions: ["all"]`**.
+
+The opener calls `cursor --open-url` to hand off to the local `entrata.tracker-brief-opener` extension. That CLI writes under `~/Library/Application Support/Cursor/logs/`. The default agent sandbox returns **EPERM** and Simple Browser never opens — the script now exits **1** with an explicit sandbox message.
+
+## Commands
+
+```bash
+node initiative-1-tracker/tracker/scripts/tracker-feed-render.js --open
+# or
+npm run brief:open-viewer --prefix initiative-1-tracker/tracker
+```
+
+Both require Shell **`required_permissions: ["all"]`** when invoked by an agent.
+
+## If exit 1
+
+Output includes `auto-open blocked — agent sandbox`. Retry the same command with `all`. URL is copied to clipboard — manual fallback: Cmd+Shift+P → Simple Browser: Show → Cmd+V.

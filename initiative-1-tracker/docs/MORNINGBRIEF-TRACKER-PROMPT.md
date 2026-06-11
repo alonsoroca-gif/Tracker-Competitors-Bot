@@ -20,18 +20,21 @@ If `ok: false`, fix items in output before Step 1.
 
 ## Step 1 — Kick off publish (~8:00am MT)
 
-**After Step 0 passes.** Start publish in the **background** — do **not** wait for it to finish.
+**After Step 0 passes.** Agent runs the kickoff gate — Billy does not decide manually.
 
-1. Open the **Tracker Competitors Bot** workspace (multi-root with entrata-core).
-2. Start a **background Cursor agent** with the kickoff prompt:
-   - File: `initiative-1-tracker/automation/morningbrief/tracker-publish-kickoff.md`
-   - Skill: **tracker-publish**
-3. Tell Billy in chat (one line): _Tracker publish started in background — parity + brief will finish while you run the rest of morningbrief._
-4. **Immediately continue** to standup / portfolio / other subskills.
+```bash
+npm run morningbrief:kickoff --prefix initiative-1-tracker/tracker -- --json
+```
 
-**Do not** run `/trackerstart` or collect drops here.
+| `action` | Agent |
+|----------|--------|
+| `skip_already_fresh` | Skip — today's brief already ready |
+| `published_zero_day` | Skip agent — 0 net-new day stamped synchronously |
+| `kickoff_agent_required` | Start **background Cursor agent** (tracker-publish + kickoff prompt) |
 
-**First-run only:** if `manager:preflight` passes, agent may note optional GitHub API token (`TRACKER-PARITY-GITHUB.md`). Not required.
+Then tell Billy: _Tracker publish started in background (~12–28 min)._ Continue other subskills immediately.
+
+**Never** skip because yesterday's `latest.json` still says `ready`.
 
 ---
 
@@ -47,6 +50,8 @@ Run **after** other subskills. By then publish has usually finished (~12 min PMM
 node initiative-1-tracker/tracker/scripts/brief-readiness-check.js --json
 node initiative-1-tracker/tracker/scripts/tracker-feed-render.js --open
 ```
+
+**Cursor agent:** run `--open` with Shell **`required_permissions: ["all"]`** — default sandbox blocks `cursor --open-url` and Simple Browser will not open.
 
 ### If `brief-readiness-check` → `ok: false`
 

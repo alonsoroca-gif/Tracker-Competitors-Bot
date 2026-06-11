@@ -13,6 +13,8 @@ const {
   loadRunManifest,
   loadSignalsTable,
   loadPrototypes,
+  mtCalendarDay,
+  isBriefFreshForToday,
 } = require('../lib/briefPaths.js');
 const { formatFeedMarkdown, formatNotReady } = require('../lib/briefFeed.js');
 
@@ -36,6 +38,16 @@ function main() {
   const runId = args.run || latest?.run_id;
   if (!args.run && latest?.status !== 'ready') {
     process.stdout.write(formatNotReady(latest || { status: 'missing' }) + '\n');
+    process.exit(2);
+  }
+  if (!args.run && latest?.ready_at && !isBriefFreshForToday(latest.ready_at)) {
+    process.stdout.write(
+      formatNotReady(latest, {
+        stale: true,
+        todayMt: mtCalendarDay(),
+        readyDayMt: mtCalendarDay(latest.ready_at),
+      }) + '\n',
+    );
     process.exit(2);
   }
 
