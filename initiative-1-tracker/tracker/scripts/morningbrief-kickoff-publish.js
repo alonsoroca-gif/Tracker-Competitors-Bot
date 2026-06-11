@@ -53,6 +53,34 @@ function gitPull() {
   return { ok: r.status === 0, stdout: (r.stdout || '').trim(), stderr: (r.stderr || '').trim() };
 }
 
+function commitTrackerBriefs(message) {
+  const status = spawnSync('git', ['status', '--porcelain', '--', 'tracker-briefs'], {
+    cwd: repoRoot,
+    encoding: 'utf8',
+  });
+  const dirty = (status.stdout || '').trim();
+  if (!dirty) {
+    return { committed: false, reason: 'clean' };
+  }
+  spawnSync('git', ['add', 'tracker-briefs'], { cwd: repoRoot });
+  const commit = spawnSync('git', ['commit', '-m', message], {
+    cwd: repoRoot,
+    encoding: 'utf8',
+  });
+  if (commit.status !== 0) {
+    return {
+      committed: false,
+      reason: 'commit_failed',
+      stderr: (commit.stderr || commit.stdout || '').trim(),
+    };
+  }
+  return { committed: true, message };
+}
+
+function tryAutoPush() {
+  return runNode('maybe-auto-push.js', ['--json', '--ahead', '1']);
+}
+
 function lastPublishedDropId(latest) {
   if (!latest?.run_id) return null;
   const manifest = loadRunManifest(latest.run_id);
@@ -129,6 +157,8 @@ function main() {
   let kickoffRequired = false;
   let publishedZeroDay = false;
   let zeroDayPayload = null;
+  let briefCommit = null;
+  let autoPush = null;
 
   if (!freshForToday && dropId && issues.length === 0) {
     if (netNewCount === 0 && predictedProduct === 0) {
@@ -138,6 +168,21 @@ function main() {
           zeroDayPayload = JSON.parse(zd.stdout);
           publishedZeroDay = Boolean(zeroDayPayload.ok);
           action = publishedZeroDay ? 'published_zero_day' : 'zero_day_failed';
+          if (publishedZeroDay) {
+            briefCommit = commitTrackerBriefs(`tracker-publish: zero-day brief for ${dropId}`);
+            if (briefCommit.committed) {
+              const ap = tryAutoPush();
+              if (ap.code === 0 && ap.stdout) {
+                try {
+                  autoPush = JSON.parse(ap.stdout);
+                } catch {
+                  autoPush = { parse_error: true, raw: ap.stdout };
+                }
+              } else {
+                autoPush = { action: 'auto_push_skipped', stderr: ap.stderr || ap.stdout };
+              }
+            }
+          }
         } catch {
           action = 'zero_day_failed';
           issues.push('tracker-publish-zero-day returned invalid JSON');
@@ -171,6 +216,8 @@ function main() {
     latest_ready_day_mt: latest?.ready_at ? mtCalendarDay(latest.ready_at) : null,
     git_pull: pull,
     zero_day: zeroDayPayload,
+    brief_commit: briefCommit,
+    auto_push: autoPush,
     kickoff_prompt: kickoffRequired
       ? 'initiative-1-tracker/automation/morningbrief/tracker-publish-kickoff.md'
       : null,

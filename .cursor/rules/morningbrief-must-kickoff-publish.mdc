@@ -26,4 +26,12 @@ node initiative-1-tracker/tracker/scripts/morningbrief-kickoff-publish.js --json
 
 Publish is automatic **when the user runs `/morningbrief`** — not an OS cron at 8:00. Billy and Alonso get the same behavior: one chat kickoff, agent runs the gate, agent launches publish if needed.
 
-CI collect (GHA) is the only overnight automation. Interpret + brief writing is **not** in GHA.
+## Auto-push after zero-day brief
+
+When kickoff writes a zero-day brief, it **commits `tracker-briefs/`** and runs:
+
+```bash
+npm run git:maybe-push --prefix initiative-1-tracker/tracker -- --ahead 1
+```
+
+Pushes only when **exactly 1 commit ahead** of upstream and `test:brief` passes.
