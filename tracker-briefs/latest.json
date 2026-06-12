@@ -1,13 +1,13 @@
 {
   "status": "ready",
-  "run_id": "2026-06-11T15-23-19Z",
+  "run_id": "2026-06-12T14-25-23Z",
   "deadline_mt": "07:45",
   "viewer_path": "tracker-briefs/viewer/index.html",
-  "run_dir": "tracker-briefs/runs/2026-06-11T15-23-19Z",
+  "run_dir": "tracker-briefs/runs/2026-06-12T14-25-23Z",
   "prototype_count": 0,
   "net_new_count": 0,
   "product_row_count": 0,
   "source": "tracker-publish-zero-day",
-  "ready_at": "2026-06-11T16:16:51.682Z",
+  "ready_at": "2026-06-12T20:05:43.294Z",
   "drop_new_signals_added": 187
 }
