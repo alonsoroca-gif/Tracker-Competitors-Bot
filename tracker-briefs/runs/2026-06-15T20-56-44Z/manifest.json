@@ -1,0 +1,19 @@
+{
+  "run_id": "2026-06-15T20-56-44Z",
+  "drop_run_id": "2026-06-15T20-56-44Z",
+  "published_at": "2026-06-15T21:19:08.808Z",
+  "source": "tracker-publish",
+  "day_type": "mixed",
+  "net_new_count": 16,
+  "weekend_mandatory_count": 0,
+  "weekend_drop_ids": [],
+  "catch_up_count": 16,
+  "content_refreshed_count": 0,
+  "carryover_count": 0,
+  "calendar_gap_days": 0,
+  "product_row_count": 4,
+  "tier_now_product_count": 1,
+  "prototype_count": 1,
+  "interpretation_pointer": "2026-06-15T20-56-44Z",
+  "summary": "16 catch-up URL(s) · 16 row(s) incl. 4 Product · 1 Tier-Now prototype (Jonah SightMap live-PMS delta)."
+}
