@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-06-12T20:05:43.296Z",
+  "updated_at": "2026-06-15T16:36:54.935Z",
   "runs": [
     {
       "run_id": "_sample-product-day",
@@ -9,6 +9,15 @@
       "prototype_count": 2,
       "summary": "Sample Product day for viewer QA — not wired to latest.json.",
       "fixture": true
+    },
+    {
+      "run_id": "2026-06-15T16-35-10Z",
+      "published_at": "2026-06-15T16:36:54.933Z",
+      "day_type": "no_signals",
+      "net_new_count": 0,
+      "prototype_count": 0,
+      "summary": "0 net-new competitor URLs since last brief — retention collect only. No new signals to interpret; table empty for today.",
+      "fixture": false
     },
     {
       "run_id": "2026-06-12T14-25-23Z",
