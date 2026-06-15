@@ -208,6 +208,16 @@ function estimatePublishMinutes(productRowCount) {
   return base + productRowCount * perRow;
 }
 
+/** Product rows in a published table that still need agent parity + prototype pass. */
+function countProductRowsPendingParity(signalsTable) {
+  return (signalsTable || []).filter(
+    (r) =>
+      r.classification === 'Product' &&
+      (r.parity === 'not_scanned' || !r.parity) &&
+      !r.prototype_path,
+  ).length;
+}
+
 module.exports = {
   signalKey,
   netNewBetween,
@@ -222,4 +232,5 @@ module.exports = {
   weekendIntelPendingForMonday,
   predictProductCandidates,
   estimatePublishMinutes,
+  countProductRowsPendingParity,
 };

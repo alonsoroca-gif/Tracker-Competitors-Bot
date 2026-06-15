@@ -3,11 +3,22 @@
  * Intel publish + preflight baseline smoke tests.
  */
 
-const { netNewBetween, contentChangedBetween } = require('../lib/briefNetNew.js');
+const {
+  netNewBetween,
+  contentChangedBetween,
+  catchUpNetNewInDropWindow,
+  countProductRowsPendingParity,
+} = require('../lib/briefNetNew.js');
 const { buildSignalsTableRows, classifySignal } = require('../lib/briefClassify.js');
 const { checkCollectHealth } = require('../lib/collectHealth.js');
 const { gatherIntelSignals } = require('../scripts/tracker-publish-intel.js');
-const { loadDropSignals, lastPublishedBriefDropId, loadLatest } = require('../lib/briefPaths.js');
+const {
+  loadDropSignals,
+  lastPublishedBriefDropId,
+  loadLatest,
+  loadSignalsTable,
+  listDropIds,
+} = require('../lib/briefPaths.js');
 
 let failed = 0;
 
@@ -25,8 +36,7 @@ const fridayBriefDrop = '2026-06-12T14-25-23Z';
 const mondayDrop = '2026-06-15T16-35-10Z';
 try {
   const publishedKeys = new Set(); // empty table
-  const drops = require('../lib/briefPaths.js').listDropIds();
-  const { catchUpNetNewInDropWindow } = require('../lib/briefNetNew.js');
+  const drops = listDropIds();
   const catchUp = catchUpNetNewInDropWindow(
     drops,
     fridayBriefDrop,
@@ -70,8 +80,12 @@ try {
   const baseline = lastPublishedBriefDropId(latest);
   assert(typeof baseline === 'string' || baseline === null, 'lastPublishedBriefDropId returns string or null');
   if (baseline) {
-    const intel = gatherIntelSignals(latest?.run_id || drop);
+    const intel = gatherIntelSignals(latest?.run_id || mondayDrop);
     assert(Array.isArray(intel.combined), 'gatherIntelSignals returns combined array');
+  }
+  if (latest?.run_id) {
+    const pending = countProductRowsPendingParity(loadSignalsTable(latest.run_id));
+    assert(typeof pending === 'number', 'countProductRowsPendingParity returns number');
   }
 } catch (e) {
   process.stderr.write(`intel gather: ${e.message}\n`);

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * Synchronous intel publish — classify PMM / News / Press / Talent / Pricing rows
- * when no Tier-Now Product work is predicted. Replaces empty zero-day briefs.
+ * when no Product rows need the agent path (parity + prototypes). Replaces empty zero-day briefs.
  *
  * Row sources (in priority order):
  *   1. Weekend rule (Monday MT) — every URL from Sat/Sun collects since last brief

@@ -28,11 +28,13 @@ const {
   mtWeekday,
 } = require('../lib/briefPaths.js');
 const {
-  netNewBetween,
-  predictProductCandidates,
   weekendIntelPendingForMonday,
   publishedUrlKeys,
+  countProductRowsPendingParity,
+  estimatePublishMinutes,
 } = require('../lib/briefNetNew.js');
+const { gatherIntelSignals } = require('./tracker-publish-intel.js');
+const { buildSignalsTableRows } = require('../lib/briefClassify.js');
 
 function parseArgs(argv) {
   const args = { json: false, skipPull: false };
@@ -145,6 +147,12 @@ function main() {
   if (dropId && latest?.run_id && latest.run_id !== dropId) {
     freshForToday = false;
   }
+  const pendingParityProduct = latest?.run_id
+    ? countProductRowsPendingParity(loadSignalsTable(latest.run_id))
+    : 0;
+  if (pendingParityProduct > 0) {
+    freshForToday = false;
+  }
 
   if (!dropId) {
     issues.push('tracker-drops/.latest-drop-id missing after pull');
@@ -152,6 +160,7 @@ function main() {
 
   let netNewCount = null;
   let predictedProduct = null;
+  let productRowsForAgent = pendingParityProduct;
   let estimatedMinutes = null;
   let priorBriefDropId = lastPublishedDropId(latest);
 
@@ -166,14 +175,15 @@ function main() {
       }
     }
 
-    const baselineDrop = priorBriefDropId;
-    const currentSignals = loadDropSignals(dropId);
-    const baselineSignals = baselineDrop ? loadDropSignals(baselineDrop) : [];
-    const netNew = netNewBetween(currentSignals, baselineSignals);
-    netNewCount = netNew.length;
-    predictedProduct = predictProductCandidates(netNew).length;
+    const { combined, sources } = gatherIntelSignals(dropId);
+    const previewRows = buildSignalsTableRows(combined);
+    const previewProduct = previewRows.filter((r) => r.classification === 'Product').length;
+    productRowsForAgent = Math.max(pendingParityProduct, previewProduct);
+    predictedProduct = productRowsForAgent;
+    netNewCount = sources.net_new ?? previewRows.length;
+
     if (estimatedMinutes == null) {
-      estimatedMinutes = predictedProduct >= 2 ? 28 : predictedProduct >= 1 ? 20 : 12;
+      estimatedMinutes = estimatePublishMinutes(predictedProduct);
     }
   }
 
@@ -185,7 +195,7 @@ function main() {
   let autoPush = null;
 
   if (!freshForToday && dropId && issues.length === 0) {
-    if (predictedProduct > 0) {
+    if (productRowsForAgent > 0) {
       markPublishing(dropId);
       kickoffRequired = true;
       action = 'kickoff_agent_required';
@@ -236,6 +246,8 @@ function main() {
     prior_brief_drop_id: priorBriefDropId,
     net_new_urls: netNewCount,
     predicted_product_rows: predictedProduct,
+    product_rows_for_agent: productRowsForAgent,
+    pending_parity_product_rows: pendingParityProduct,
     estimated_publish_minutes: estimatedMinutes,
     latest_status: latest?.status || null,
     latest_run_id: latest?.run_id || null,
@@ -251,7 +263,9 @@ function main() {
       : null,
     kickoff_skill: kickoffRequired ? '.cursor/skills/tracker-publish/SKILL.md' : null,
     agent_instruction: kickoffRequired
-      ? 'Launch background Task agent NOW with tracker-publish skill + kickoff prompt. Do NOT skip because yesterday brief was ready.'
+      ? pendingParityProduct > 0
+        ? 'Launch background Task agent NOW — Product rows in today\'s brief still have parity not_scanned (no prototypes). Run full tracker-publish with Core parity; only Existing parity skips prototype.'
+        : 'Launch background Task agent NOW with tracker-publish skill + kickoff prompt. Product rows detected in catch-up or net-new — parity + prototypes required.'
       : publishedIntel
         ? 'Intel brief published synchronously — table includes PMM/News/Press rows; tracker-feed should pass fresh_for_today.'
         : freshForToday
