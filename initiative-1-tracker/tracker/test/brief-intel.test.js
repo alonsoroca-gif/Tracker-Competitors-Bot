@@ -10,6 +10,7 @@ const {
   countProductRowsPendingParity,
 } = require('../lib/briefNetNew.js');
 const { buildSignalsTableRows, classifySignal } = require('../lib/briefClassify.js');
+const { buildSignalAnalysis } = require('../lib/briefSignalAnalysis.js');
 const { checkCollectHealth } = require('../lib/collectHealth.js');
 const { gatherIntelSignals } = require('../scripts/tracker-publish-intel.js');
 const {
@@ -68,6 +69,47 @@ const pmm = classifySignal({
   competitor_id: 'funnel-leasing',
 });
 assert(pmm.classification === 'PMM', 'g2 → PMM classification');
+
+const leasehawkPricing = {
+  type: 'pricing',
+  source: 'pricing_page',
+  source_url: 'https://leasehawk.com/',
+  competitor_id: 'leasehawk',
+  snippet:
+    'Detected pricing values: $4. Tier language: 46% conversion for AI-handled prospects, compared to 19% tour conversion',
+  entities: { prices: ['$4'], keywords: ['ai', 'crm', 'voice ai'] },
+  metadata: { page_kind: 'pricing' },
+};
+const pricingRow = classifySignal(leasehawkPricing);
+assert(pricingRow.classification === 'Pricing', 'pricing page → Pricing');
+const pricingAnalysis = buildSignalAnalysis(leasehawkPricing, pricingRow);
+assert(
+  pricingAnalysis.includes('$4') && pricingAnalysis.includes('46%'),
+  'pricing analysis includes concrete collect facts',
+);
+
+const jonahArticles = {
+  type: 'article',
+  source: 'articles_index',
+  event_type: 'pricing_change',
+  source_url: 'https://jonahdigital.com/articles/',
+  competitor_id: 'jonah-digital',
+  snippet: '7 article(s) parsed. Latest: AI Is Changing the Way Your Renters Search',
+  entities: {
+    article_titles: [
+      'AI Is Changing the Way Your Renters Search',
+      'Fee Transparency: How All-In Pricing is the Solution Ahead of the Problem',
+    ],
+  },
+  metadata: { page_kind: 'articles_index' },
+};
+const articleRow = classifySignal(jonahArticles);
+assert(articleRow.classification === 'PMM', 'articles index not misclassified as Pricing');
+const articleAnalysis = buildSignalAnalysis(jonahArticles, articleRow);
+assert(
+  articleAnalysis.includes('AI Is Changing') || articleAnalysis.includes('2 article'),
+  'article analysis names actual titles',
+);
 
 const table = buildSignalsTableRows([sample, { ...pmm, source_url: 'https://g2.com/products/foo/reviews' }]);
 assert(table.length === 2, 'buildSignalsTableRows keeps distinct URLs');

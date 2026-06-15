@@ -382,7 +382,7 @@
           </div>
           <dl>
             <dt>Headline</dt><dd>${esc(r.headline)}</dd>
-            <dt>Why / routing</dt><dd>${esc(r.why_routing)}</dd>
+            <dt>Why / routing</dt><dd>${esc(r.why_routing || r.signal_summary)}</dd>
             ${r.source_url ? `<dt>Source</dt><dd>${sourceLink(r.source_url)}</dd>` : ''}
           </dl>
         </article>
@@ -417,7 +417,7 @@
           <td class="col-class">${esc(classLabel(r))}</td>
           <td class="col-parity">${esc(parityLabel(r))}</td>
           <td class="col-routing">${esc(r.routing)}</td>
-          <td class="col-why">${esc(r.why_routing)}</td>
+          <td class="col-why">${esc(r.why_routing || r.signal_summary)}</td>
           <td class="col-source">${sourceLink(r.source_url)}</td>
         </tr>
       `).join('');

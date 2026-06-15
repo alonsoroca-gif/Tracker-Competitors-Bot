@@ -4,6 +4,7 @@
  */
 
 const { loadConfig } = require('./loadConfig');
+const { buildSignalAnalysis, applyContextPrefix } = require('./briefSignalAnalysis.js');
 
 function competitorNameMap() {
   try {
@@ -50,6 +51,7 @@ function classifySignal(signal) {
   const src = String(signal.source || '').toLowerCase();
   const url = String(signal.source_url || '').toLowerCase();
   const sn = String(signal.snippet || '').toLowerCase();
+  const pk = String(signal.metadata?.page_kind || '').toLowerCase();
 
   if (type.includes('review') || src.includes('g2') || isAggregatorUrl(url)) {
     return {
@@ -71,7 +73,7 @@ function classifySignal(signal) {
     };
   }
 
-  if (type === 'job' || src === 'careers' || /hiring|careers|open role/i.test(sn)) {
+  if (type === 'job' || src === 'careers' || pk === 'careers' || /hiring|careers|open role/i.test(sn)) {
     return {
       classification: 'Talent',
       classification_detail: 'hiring',
@@ -81,17 +83,27 @@ function classifySignal(signal) {
     };
   }
 
-  if (type === 'pricing' || src === 'pricing_page' || etStartsWith(signal, 'pricing')) {
+  if (
+    type === 'blog' ||
+    type === 'insights' ||
+    type === 'article' ||
+    type === 'articles' ||
+    type === 'podcast' ||
+    src === 'articles_index' ||
+    src === 'insights' ||
+    src === 'podcast' ||
+    pk === 'articles_index'
+  ) {
     return {
-      classification: 'Pricing',
-      classification_detail: 'packaging',
+      classification: 'PMM',
+      classification_detail: 'editorial-cadence',
       routing: "Won't chase",
-      why_routing: 'Pricing or packaging page update — validate against Core fee disclosure before chasing.',
+      why_routing: 'Editorial or thought-leadership content — positioning signal, not a product PRD.',
       tier: "Won't chase",
     };
   }
 
-  if (type === 'case_study' || src === 'case_studies' || /testimonial|customer story|client logo/i.test(sn)) {
+  if (type === 'case_study' || src === 'case_studies' || pk === 'case_studies' || /testimonial|customer story|client logo/i.test(sn)) {
     return {
       classification: 'PMM',
       classification_detail: 'social-proof',
@@ -101,20 +113,12 @@ function classifySignal(signal) {
     };
   }
 
-  if (
-    type === 'blog' ||
-    type === 'insights' ||
-    type === 'article' ||
-    type === 'podcast' ||
-    src === 'articles_index' ||
-    src === 'insights' ||
-    src === 'podcast'
-  ) {
+  if (type === 'pricing' || src === 'pricing_page' || pk === 'pricing') {
     return {
-      classification: 'PMM',
-      classification_detail: 'editorial-cadence',
+      classification: 'Pricing',
+      classification_detail: 'packaging',
       routing: "Won't chase",
-      why_routing: 'Editorial or thought-leadership content — positioning signal, not a product PRD.',
+      why_routing: 'Pricing or packaging page update — validate against Core fee disclosure before chasing.',
       tier: "Won't chase",
     };
   }
@@ -150,10 +154,6 @@ function classifySignal(signal) {
   };
 }
 
-function etStartsWith(signal, prefix) {
-  return String(signal.event_type || '').toLowerCase().startsWith(prefix);
-}
-
 /** One table row per unique source_url (prefer highest-importance signal). */
 function dedupeSignalsByUrl(signals) {
   const byUrl = new Map();
@@ -179,6 +179,7 @@ function buildSignalsTableRows(signals, opts = {}) {
   return deduped.map((s, idx) => {
     const c = classifySignal(s);
     const isProduct = c.classification === 'Product';
+    const analysis = applyContextPrefix(buildSignalAnalysis(s, c), s);
     return {
       id: idx + 1,
       competitor_id: s.competitor_id || '',
@@ -190,15 +191,8 @@ function buildSignalsTableRows(signals, opts = {}) {
       parity_l1: isProduct ? null : null,
       parity_l2: isProduct ? null : null,
       routing: c.routing,
-      why_routing: s._weekend
-        ? `[Weekend collect — Monday brief] ${c.why_routing}`
-        : s._catchup
-          ? `[Catch-up since last brief] ${c.why_routing}`
-          : s._carryover
-            ? `[Carryover] ${c.why_routing}`
-            : s._content_refresh
-              ? `[Content refresh] ${c.why_routing}`
-              : c.why_routing,
+      why_routing: analysis,
+      signal_summary: analysis,
       tier: c.tier,
       source_url: s.source_url || '',
       prototype_path: null,
