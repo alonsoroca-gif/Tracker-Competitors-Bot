@@ -49,7 +49,7 @@ function formatChatTable(rows) {
   const sep = '|---:|---|---|---|---|---|';
 
   if (!rows.length) {
-    return [header, sep, '', '_No net-new signals in this brief._'].join('\n');
+    return [header, sep, '', '_No classified rows in this brief — competitors quiet or carryover empty._'].join('\n');
   }
 
   const body = rows.map((r) => {

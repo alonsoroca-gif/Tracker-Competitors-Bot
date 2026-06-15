@@ -12,6 +12,9 @@ on:
     - cron: '45 11 * * 1-5'   # 5:45am MDT — morning collect (feeds publish)
     - cron: '0 18 * * 1-5'    # 12:00pm MDT — midday catch
     - cron: '0 23 * * 1-5'    # 5:00pm MDT — end-of-day (next-morning brief)
+    # Weekend backup — one morning collect Sat+Sun so Monday brief has weekend drops
+    # (paired with weekend-intel-mandatory-monday publish rule).
+    - cron: '45 11 * * 0,6'   # 5:45am MDT — Sat/Sun backup collect
 
 permissions:
   contents: write

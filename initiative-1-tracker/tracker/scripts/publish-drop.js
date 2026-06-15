@@ -73,6 +73,27 @@ async function main() {
 
   fs.writeFileSync(path.join(dropDir, 'signals.json'), signalsJson, 'utf8');
 
+  let collectHealth = { ok: true, regressions: [] };
+  try {
+    const { checkCollectHealth } = require('../lib/collectHealth.js');
+    const { priorDropId, loadDropSignals: loadDropSigs } = require('../lib/briefPaths.js');
+    const priorId = priorDropId(runId);
+    if (priorId) {
+      const currentArr = JSON.parse(signalsJson);
+      const priorArr = loadDropSigs(priorId);
+      collectHealth = checkCollectHealth(currentArr, priorArr);
+      if (!collectHealth.ok) {
+        for (const r of collectHealth.regressions) {
+          console.warn(
+            `publish-drop: COLLECT REGRESSION — ${r.competitor_id} dropped ${r.prior} → ${r.current} rows`,
+          );
+        }
+      }
+    }
+  } catch (e) {
+    console.warn('publish-drop: collect health check skipped:', e.message);
+  }
+
   const summaryLines = [
     '# Tracker drop',
     '',
@@ -92,6 +113,18 @@ async function main() {
   if (intelMeta && typeof intelMeta === 'object') {
     summaryLines.push('## Intel snapshot (from last run)', '', '```json', JSON.stringify(intelMeta, null, 2), '```', '');
   }
+  if (!collectHealth.ok && collectHealth.regressions.length) {
+    summaryLines.push(
+      '## Collect health warning',
+      '',
+      'One or more competitors dropped to **0 rows** vs the prior drop (possible lane failure):',
+      '',
+      ...collectHealth.regressions.map(
+        (r) => `- \`${r.competitor_id}\`: ${r.prior} → ${r.current} rows`,
+      ),
+      '',
+    );
+  }
   fs.writeFileSync(path.join(dropDir, 'SUMMARY.md'), summaryLines.join('\n'), 'utf8');
 
   const manifest = {
@@ -102,6 +135,7 @@ async function main() {
     signals_kept_after_prune: pruned.kept,
     signals_removed_retention: pruned.removed,
     source: 'tracker-publish-drop.js',
+    collect_health: collectHealth,
   };
   fs.writeFileSync(path.join(dropDir, 'manifest.json'), JSON.stringify(manifest, null, 2), 'utf8');
 

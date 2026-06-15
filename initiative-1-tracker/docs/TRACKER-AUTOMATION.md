@@ -6,11 +6,10 @@
 
 ```
 GitHub Actions 5:45am     →  tracker-drops/ (collect)
-GitHub Actions 5:35am     →  preflight → operator Slack
+GitHub Actions 5:55am     →  preflight → operator Slack (after collect)
 GitHub Actions 7:45am     →  readiness (not ready = expected)
-~8:00am Billy morningbrief Step 0  →  tracker-publish (background)
-~8:00–8:20 other subskills         →  publish + Core parity in parallel
-~8:20 tracker section              →  tracker-feed
+~8:00am morningbrief      →  intel publish (sync) OR tracker-publish agent (Product rows)
+~8:20 tracker section     →  tracker-feed
 ```
 
 | Locked | Out of scope |
@@ -58,12 +57,38 @@ Publish runs when Billy starts morningbrief — Core is fresh via `git pull` at 
 | Time | What |
 |------|------|
 | 5:00pm | CI collect |
-| 5:35am | GHA preflight → operator Slack |
 | 5:45am | CI collect |
+| 5:55am | GHA preflight (after collect) → operator Slack |
+| 5:10pm | GHA preflight (after 5pm collect) → operator Slack |
 | 7:45am | GHA readiness — informational (not ready OK) |
 | **~8:00am** | **morningbrief → tracker-publish kickoff** |
 | **~8:20am** | **tracker-feed** |
 | 8:15am | GHA late-ready Billy ping (if brief landed) |
+
+### Weekend backup (Sat/Sun)
+
+| Time | What |
+|------|------|
+| 5:45am Sat/Sun | CI collect (backup — low volume expected) |
+| Monday ~8:00am | **Mandatory Monday rule** — every URL from weekend drops since last brief appears in the table (see `.cursor/rules/weekend-intel-mandatory-monday.mdc`) |
+
+No weekend preflight Slack (nobody runs morningbrief Sat/Sun). Monday kickoff + catch-up handles the gap.
+
+---
+
+## Intel loss prevention (publish layer)
+
+Once morningbrief Step 1 runs, these rules prevent signals dying in the brief:
+
+| Rule | What it prevents |
+|------|------------------|
+| **Intel publish** (replaces empty zero-day) | PMM / News / Press rows dropped when Product count = 0 |
+| **Catch-up since last brief** | URLs in weekday drops after last publish but not in published table |
+| **Newer-drop bypass** | Kickoff skips republish when brief is “fresh today” but still bound to an older drop |
+| **Monday weekend mandatory** | All Sat/Sun collect URLs surfaced on Monday, no published-table filter |
+| **Content refresh** | Same URL re-shown only when live page text changed |
+
+**Still required:** someone runs morningbrief Step 1 (no headless auto-publish). **Collect layer** can still flake (e.g. competitor lane → 0 rows); `collectHealth.js` warns but does not fail the workflow.
 
 ---
 

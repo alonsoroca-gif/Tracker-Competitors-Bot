@@ -1,0 +1,36 @@
+[
+  {
+    "id": 1,
+    "competitor_id": "leasehawk",
+    "competitor": "LeaseHawk (ACE)",
+    "headline": "#1 CRM and AI property management software | #1 Rental Experience",
+    "classification": "Pricing",
+    "classification_detail": "packaging",
+    "parity": "—",
+    "parity_l1": null,
+    "parity_l2": null,
+    "routing": "Won't chase",
+    "why_routing": "[Content refresh] Pricing or packaging page update — validate against Core fee disclosure before chasing.",
+    "tier": "Won't chase",
+    "source_url": "https://leasehawk.com/",
+    "prototype_path": null,
+    "prd_path": null
+  },
+  {
+    "id": 2,
+    "competitor_id": "funnel-leasing",
+    "competitor": "Funnel Leasing",
+    "headline": "26 Funnel Leasing Customer Reviews & References",
+    "classification": "PMM",
+    "classification_detail": "channel-building",
+    "parity": "—",
+    "parity_l1": null,
+    "parity_l2": null,
+    "routing": "Won't chase",
+    "why_routing": "[Content refresh] Third-party social proof or review listing — PMM channel work, not an engineering PRD.",
+    "tier": "Won't chase",
+    "source_url": "https://www.featuredcustomers.com/vendor/funnel-leasing",
+    "prototype_path": null,
+    "prd_path": null
+  }
+]

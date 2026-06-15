@@ -77,7 +77,7 @@ After first successful publish with Path A, optionally say:
 2. Read `tracker-drops/.latest-drop-id`
 3. Confirm drop age / hash vs prior (same rules as tracker-drop-cycle Phase 0, but **no AskQuestion** — auto-skip empty hash-match days)
 
-If no net-new interpret rows → still publish PMM-only brief; set `prototype_count: 0`.
+If no net-new Product rows → run **tracker-publish-intel** (sync): classify all PMM / News / Press / Talent / Pricing rows into `signals-table.json`; set `prototype_count: 0`. Only kickoff the background agent when `predicted_product_rows > 0` (needs Core parity).
 
 ---
 

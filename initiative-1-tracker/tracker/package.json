@@ -30,7 +30,8 @@
     "slack:test-operator": "node scripts/slack-webhook-test.js --target operator",
     "slack:test-billy": "node scripts/slack-webhook-test.js --target billy",
     "reclone:core": "bash scripts/reclone-core.sh",
-    "test:brief": "node test/brief-feed.test.js",
+    "test:brief": "node test/brief-feed.test.js && node test/brief-intel.test.js",
+    "publish:intel": "node scripts/tracker-publish-intel.js",
     "publish:dry-run": "node scripts/tracker-publish-dry-run.js",
     "slack:brief-preflight": "node scripts/slack-brief-notify.js --mode preflight",
     "slack:brief-not-ready": "node scripts/slack-brief-notify.js --mode not-ready"

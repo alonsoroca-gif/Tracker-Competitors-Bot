@@ -5,9 +5,9 @@
   "viewer_path": "tracker-briefs/viewer/index.html",
   "run_dir": "tracker-briefs/runs/2026-06-15T16-35-10Z",
   "prototype_count": 0,
-  "net_new_count": 0,
-  "product_row_count": 0,
-  "source": "tracker-publish-zero-day",
-  "ready_at": "2026-06-15T16:36:54.933Z",
+  "net_new_count": 16,
+  "product_row_count": 4,
+  "source": "tracker-publish-intel",
+  "ready_at": "2026-06-15T17:16:42.277Z",
   "drop_new_signals_added": 187
 }

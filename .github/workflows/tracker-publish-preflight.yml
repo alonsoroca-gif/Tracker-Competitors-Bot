@@ -6,10 +6,10 @@ name: Tracker publish preflight
 on:
   workflow_dispatch:
   schedule:
-    # 5:35am MDT ≈ 11:35 UTC (before publish)
-    - cron: '35 11 * * 1-5'
-    # ~6:05pm MDT after 5pm collect ≈ 00:05 UTC next calendar day
-    - cron: '5 0 * * 2-6'
+    # After morning collect (5:45am MDT = 11:45 UTC). Preflight @ 5:55am MDT = 11:55 UTC.
+    - cron: '55 11 * * 1-5'
+    # After 5pm MDT collect (23:00 UTC). Preflight @ 5:10pm MDT = 23:10 UTC.
+    - cron: '10 23 * * 1-5'
 
 permissions:
   contents: read

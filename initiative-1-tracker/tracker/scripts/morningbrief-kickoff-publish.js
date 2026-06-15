@@ -20,8 +20,19 @@ const {
   latestPath,
   mtCalendarDay,
   isBriefFreshForToday,
+  lastPublishedBriefDropId,
+  listDropIds,
+  loadDropManifest,
+  loadSignalsTable,
+  isMondayMt,
+  mtWeekday,
 } = require('../lib/briefPaths.js');
-const { netNewBetween, predictProductCandidates } = require('../lib/briefNetNew.js');
+const {
+  netNewBetween,
+  predictProductCandidates,
+  weekendIntelPendingForMonday,
+  publishedUrlKeys,
+} = require('../lib/briefNetNew.js');
 
 function parseArgs(argv) {
   const args = { json: false, skipPull: false };
@@ -82,9 +93,7 @@ function tryAutoPush() {
 }
 
 function lastPublishedDropId(latest) {
-  if (!latest?.run_id) return null;
-  const manifest = loadRunManifest(latest.run_id);
-  return manifest?.drop_run_id || latest.run_id;
+  return lastPublishedBriefDropId(latest);
 }
 
 function markPublishing(dropId) {
@@ -119,8 +128,23 @@ function main() {
 
   const latest = loadLatest();
   const todayMt = mtCalendarDay();
-  const freshForToday = latest?.ready_at ? isBriefFreshForToday(latest.ready_at) : false;
+  let freshForToday = latest?.ready_at ? isBriefFreshForToday(latest.ready_at) : false;
   const dropId = readLatestDropId();
+
+  const weekendPending = weekendIntelPendingForMonday(
+    latest,
+    listDropIds(),
+    loadDropManifest,
+    loadDropSignals,
+    loadSignalsTable,
+    { mtWeekdayFn: mtWeekday, isMondayFn: isMondayMt, publishedUrlKeysFn: publishedUrlKeys },
+  );
+  if (weekendPending.pending) {
+    freshForToday = false;
+  }
+  if (dropId && latest?.run_id && latest.run_id !== dropId) {
+    freshForToday = false;
+  }
 
   if (!dropId) {
     issues.push('tracker-drops/.latest-drop-id missing after pull');
@@ -155,21 +179,25 @@ function main() {
 
   let action = 'skip_already_fresh';
   let kickoffRequired = false;
-  let publishedZeroDay = false;
-  let zeroDayPayload = null;
+  let publishedIntel = false;
+  let intelPayload = null;
   let briefCommit = null;
   let autoPush = null;
 
   if (!freshForToday && dropId && issues.length === 0) {
-    if (netNewCount === 0 && predictedProduct === 0) {
-      const zd = runNode('tracker-publish-zero-day.js', ['--drop', dropId, '--json']);
-      if (zd.code === 0 && zd.stdout) {
+    if (predictedProduct > 0) {
+      markPublishing(dropId);
+      kickoffRequired = true;
+      action = 'kickoff_agent_required';
+    } else {
+      const intel = runNode('tracker-publish-intel.js', ['--drop', dropId, '--json']);
+      if (intel.code === 0 && intel.stdout) {
         try {
-          zeroDayPayload = JSON.parse(zd.stdout);
-          publishedZeroDay = Boolean(zeroDayPayload.ok);
-          action = publishedZeroDay ? 'published_zero_day' : 'zero_day_failed';
-          if (publishedZeroDay) {
-            briefCommit = commitTrackerBriefs(`tracker-publish: zero-day brief for ${dropId}`);
+          intelPayload = JSON.parse(intel.stdout);
+          publishedIntel = Boolean(intelPayload.ok);
+          action = publishedIntel ? 'published_intel' : 'intel_publish_failed';
+          if (publishedIntel) {
+            briefCommit = commitTrackerBriefs(`tracker-publish: intel brief for ${dropId}`);
             if (briefCommit.committed) {
               const ap = tryAutoPush();
               if (ap.code === 0 && ap.stdout) {
@@ -184,17 +212,13 @@ function main() {
             }
           }
         } catch {
-          action = 'zero_day_failed';
-          issues.push('tracker-publish-zero-day returned invalid JSON');
+          action = 'intel_publish_failed';
+          issues.push('tracker-publish-intel returned invalid JSON');
         }
       } else {
-        action = 'zero_day_failed';
-        issues.push(zd.stderr || zd.stdout || 'tracker-publish-zero-day failed');
+        action = 'intel_publish_failed';
+        issues.push(intel.stderr || intel.stdout || 'tracker-publish-intel failed');
       }
-    } else {
-      markPublishing(dropId);
-      kickoffRequired = true;
-      action = 'kickoff_agent_required';
     }
   }
 
@@ -202,9 +226,12 @@ function main() {
     ok: issues.length === 0,
     today_mt: todayMt,
     fresh_for_today: freshForToday,
+    weekend_intel_pending: weekendPending.pending,
+    weekend_drop_ids: weekendPending.weekendDropIds,
     action,
     kickoff_required: kickoffRequired,
-    published_zero_day: publishedZeroDay,
+    published_intel: publishedIntel,
+    published_zero_day: publishedIntel,
     drop_id: dropId,
     prior_brief_drop_id: priorBriefDropId,
     net_new_urls: netNewCount,
@@ -215,7 +242,8 @@ function main() {
     latest_ready_at: latest?.ready_at || null,
     latest_ready_day_mt: latest?.ready_at ? mtCalendarDay(latest.ready_at) : null,
     git_pull: pull,
-    zero_day: zeroDayPayload,
+    zero_day: intelPayload,
+    intel: intelPayload,
     brief_commit: briefCommit,
     auto_push: autoPush,
     kickoff_prompt: kickoffRequired
@@ -224,8 +252,8 @@ function main() {
     kickoff_skill: kickoffRequired ? '.cursor/skills/tracker-publish/SKILL.md' : null,
     agent_instruction: kickoffRequired
       ? 'Launch background Task agent NOW with tracker-publish skill + kickoff prompt. Do NOT skip because yesterday brief was ready.'
-      : publishedZeroDay
-        ? 'Zero-signal day published synchronously — continue morningbrief; tracker-feed should pass fresh_for_today.'
+      : publishedIntel
+        ? 'Intel brief published synchronously — table includes PMM/News/Press rows; tracker-feed should pass fresh_for_today.'
         : freshForToday
           ? 'Today\'s brief already fresh — skip Step 1 publish.'
           : 'Fix issues before continuing.',
@@ -241,8 +269,8 @@ function main() {
   if (kickoffRequired) {
     process.stdout.write(`  → kickoff agent required (~${estimatedMinutes} min)\n`);
   }
-  if (publishedZeroDay) {
-    process.stdout.write(`  → zero-day brief ready: ${dropId}\n`);
+  if (publishedIntel) {
+    process.stdout.write(`  → intel brief ready: ${dropId}\n`);
   }
   for (const issue of issues) {
     process.stderr.write(`  issue: ${issue}\n`);

@@ -44,7 +44,7 @@ if (feed.status !== 0) {
   const checks = [
     ['Tracker brief', out.includes('Tracker brief')],
     ['signals table header', out.includes('| # | Competitor |')],
-    ['PMM row or empty day', out.includes('PMM') || out.includes('No net-new signals')],
+    ['PMM row or intel empty day', out.includes('PMM') || out.includes('No classified rows') || out.includes('competitors quiet')],
     ['viewer hint', out.includes('viewer/index.html')],
   ];
   for (const [name, ok] of checks) {

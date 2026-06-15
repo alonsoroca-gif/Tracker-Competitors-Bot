@@ -1,13 +1,19 @@
 {
   "run_id": "2026-06-15T16-35-10Z",
   "drop_run_id": "2026-06-15T16-35-10Z",
-  "published_at": "2026-06-15T16:36:54.933Z",
-  "source": "tracker-publish-zero-day",
-  "day_type": "no_signals",
-  "net_new_count": 0,
-  "product_row_count": 0,
+  "published_at": "2026-06-15T17:16:42.277Z",
+  "source": "tracker-publish-intel",
+  "day_type": "mixed",
+  "net_new_count": 16,
+  "weekend_mandatory_count": 0,
+  "weekend_drop_ids": [],
+  "catch_up_count": 16,
+  "content_refreshed_count": 0,
+  "carryover_count": 0,
+  "calendar_gap_days": 0,
+  "product_row_count": 4,
   "tier_now_product_count": 0,
   "prototype_count": 0,
   "interpretation_pointer": "2026-06-15T16-35-10Z",
-  "summary": "0 net-new competitor URLs since last brief — retention collect only. No new signals to interpret; table empty for today."
+  "summary": "16 catch-up URL(s) · 16 row(s) incl. 4 Product (parity not scanned on intel path)."
 }

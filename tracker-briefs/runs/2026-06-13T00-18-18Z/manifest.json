@@ -1,0 +1,15 @@
+{
+  "run_id": "2026-06-13T00-18-18Z",
+  "drop_run_id": "2026-06-13T00-18-18Z",
+  "published_at": "2026-06-15T16:56:02.467Z",
+  "source": "tracker-publish-intel",
+  "day_type": "pmm_only",
+  "net_new_count": 0,
+  "content_refreshed_count": 2,
+  "carryover_count": 0,
+  "product_row_count": 0,
+  "tier_now_product_count": 0,
+  "prototype_count": 0,
+  "interpretation_pointer": "2026-06-13T00-18-18Z",
+  "summary": "2 content refresh(es) · 2 intel row(s) (PMM / News / Press / etc.) · 0 Product rows — no prototypes."
+}

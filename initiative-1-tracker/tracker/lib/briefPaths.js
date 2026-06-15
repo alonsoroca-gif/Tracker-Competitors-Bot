@@ -131,10 +131,38 @@ function mtCalendarDay(isoOrDate = new Date()) {
   }).format(d);
 }
 
+/** 0=Sun … 6=Sat in America/Denver. */
+function mtWeekday(isoOrDate = new Date()) {
+  const d = typeof isoOrDate === 'string' ? new Date(isoOrDate) : isoOrDate;
+  const short = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/Denver',
+    weekday: 'short',
+  }).format(d);
+  const map = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 };
+  return map[short] ?? null;
+}
+
+function isMondayMt(isoOrDate = new Date()) {
+  return mtWeekday(isoOrDate) === 1;
+}
+
+function isWeekendMt(isoOrDate = new Date()) {
+  const w = mtWeekday(isoOrDate);
+  return w === 0 || w === 6;
+}
+
 /** True when ready_at falls on today's calendar day in MT. */
 function isBriefFreshForToday(readyAtIso) {
   if (!readyAtIso) return false;
   return mtCalendarDay(readyAtIso) === mtCalendarDay(new Date());
+}
+
+/** Drop id the last published brief was built from (kickoff net-new baseline). */
+function lastPublishedBriefDropId(latest) {
+  const brief = latest || loadLatest();
+  if (!brief?.run_id) return null;
+  const manifest = loadRunManifest(brief.run_id);
+  return manifest?.drop_run_id || brief.run_id;
 }
 
 module.exports = {
@@ -160,5 +188,9 @@ module.exports = {
   refreshRunsIndex,
   loadRunsIndex,
   mtCalendarDay,
+  mtWeekday,
+  isMondayMt,
+  isWeekendMt,
   isBriefFreshForToday,
+  lastPublishedBriefDropId,
 };

@@ -86,18 +86,18 @@ async function main() {
       process.stderr.write('slack-brief-notify: preflight failed\n');
       process.exit(2);
     }
-    text = `Tracker preflight — ${pf.run_id}: ${pf.net_new_urls} net-new URLs, ~${pf.predicted_product_rows} Product rows, est ${pf.estimated_publish_minutes}min, start ${pf.recommended_start_mt} MT`;
+    text = `Tracker preflight — ${pf.run_id}: ${pf.net_new_urls} net-new vs brief (${pf.net_new_vs_prior_drop ?? '?'} vs prior drop), ~${pf.predicted_product_rows} Product rows, est ${pf.estimated_publish_minutes}min`;
     blocks = [
       { type: 'header', text: { type: 'plain_text', text: 'Tracker publish preflight', emoji: true } },
       {
         type: 'section',
         fields: [
           { type: 'mrkdwn', text: `*Drop*\n\`${pf.run_id}\`` },
-          { type: 'mrkdwn', text: `*Net-new URLs*\n${pf.net_new_urls}` },
+          { type: 'mrkdwn', text: `*Net-new vs brief*\n${pf.net_new_urls}` },
+          { type: 'mrkdwn', text: `*Net-new vs prior drop*\n${pf.net_new_vs_prior_drop ?? '—'}` },
           { type: 'mrkdwn', text: `*Predicted Product*\n${pf.predicted_product_rows}` },
           { type: 'mrkdwn', text: `*Est. minutes*\n~${pf.estimated_publish_minutes}` },
           { type: 'mrkdwn', text: `*Start*\n${pf.recommended_start_mt} MT` },
-          { type: 'mrkdwn', text: `*Level*\n${pf.workload_level}` },
         ],
       },
       { type: 'section', text: { type: 'mrkdwn', text: pf.note } },

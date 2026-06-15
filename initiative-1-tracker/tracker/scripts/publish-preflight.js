@@ -14,9 +14,16 @@ const {
   priorDropId,
   loadDropSignals,
   loadDropManifest,
+  loadLatest,
+  loadSignalsTable,
+  lastPublishedBriefDropId,
+  listDropIds,
 } = require('../lib/briefPaths.js');
 const {
   netNewBetween,
+  publishedUrlKeys,
+  catchUpNetNewInDropWindow,
+  calendarDaysSinceBriefReady,
   predictProductCandidates,
   estimatePublishMinutes,
 } = require('../lib/briefNetNew.js');
@@ -67,8 +74,20 @@ function main() {
   const priorId = priorDropId(runId);
   const current = loadDropSignals(runId);
   const prior = priorId ? loadDropSignals(priorId) : [];
-  const netNew = netNewBetween(current, prior);
-  const candidates = predictProductCandidates(netNew);
+  const latestBrief = loadLatest();
+  const briefBaselineId = lastPublishedBriefDropId(latestBrief);
+  const briefBaseline = briefBaselineId ? loadDropSignals(briefBaselineId) : [];
+  const publishedTable = latestBrief?.run_id ? loadSignalsTable(latestBrief.run_id) : [];
+  const publishedKeys = publishedUrlKeys(publishedTable);
+  const allDrops = listDropIds();
+  const gapDays = calendarDaysSinceBriefReady(latestBrief?.ready_at, require('../lib/briefPaths.js').mtCalendarDay);
+
+  const netNewBrief =
+    briefBaselineId && latestBrief?.run_id
+      ? catchUpNetNewInDropWindow(allDrops, briefBaselineId, runId, loadDropSignals, publishedKeys)
+      : netNewBetween(current, briefBaseline);
+  const netNewPriorDrop = netNewBetween(current, prior);
+  const candidates = predictProductCandidates(netNewBrief);
   const estimatedMin = estimatePublishMinutes(candidates.length);
   const rec = recommendStart(estimatedMin, candidates.length);
   const dropManifest = loadDropManifest(runId);
@@ -76,14 +95,21 @@ function main() {
   const payload = {
     run_id: runId,
     prior_drop_id: priorId,
+    brief_baseline_drop_id: briefBaselineId,
     drop_new_signals_added: dropManifest?.new_signals_added ?? null,
-    net_new_urls: netNew.length,
+    net_new_urls: netNewBrief.length,
+    net_new_vs_prior_drop: netNewPriorDrop.length,
     predicted_product_rows: candidates.length,
     estimated_publish_minutes: estimatedMin,
     recommended_start_mt: rec.start_mt,
     workload_level: rec.level,
-    note: rec.note,
-    sample_net_new: netNew.slice(0, 5).map((s) => ({
+    note:
+      netNewBrief.length !== netNewPriorDrop.length
+        ? `${rec.note} (Brief baseline: ${netNewBrief.length} net-new; prior drop diff: ${netNewPriorDrop.length} — use brief baseline for morningbrief.)`
+        : rec.note,
+    calendar_gap_days: gapDays,
+    published_row_count: publishedTable.length,
+    sample_net_new: netNewBrief.slice(0, 5).map((s) => ({
       competitor_id: s.competitor_id,
       headline: s.headline,
       source_url: s.source_url,
@@ -97,7 +123,11 @@ function main() {
 
   process.stdout.write(`publish-preflight: drop ${runId}\n`);
   process.stdout.write(`  prior drop:        ${priorId || '(none)'}\n`);
-  process.stdout.write(`  net-new URLs:      ${netNew.length}\n`);
+  process.stdout.write(`  brief baseline:    ${briefBaselineId || '(none)'}\n`);
+  process.stdout.write(`  net-new URLs:      ${netNewBrief.length} (vs last brief)\n`);
+  if (netNewPriorDrop.length !== netNewBrief.length) {
+    process.stdout.write(`  vs prior drop:     ${netNewPriorDrop.length} (collect-only diff — can mislead)\n`);
+  }
   process.stdout.write(`  predicted Product: ${candidates.length} (heuristic — interpret may differ)\n`);
   process.stdout.write(`  est. publish:      ~${estimatedMin} min\n`);
   process.stdout.write(`  recommend start:   ${rec.start_mt} MT (${rec.level})\n`);

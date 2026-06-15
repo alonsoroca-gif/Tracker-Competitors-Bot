@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-06-15T16:36:54.935Z",
+  "updated_at": "2026-06-15T17:16:42.279Z",
   "runs": [
     {
       "run_id": "_sample-product-day",
@@ -12,11 +12,20 @@
     },
     {
       "run_id": "2026-06-15T16-35-10Z",
-      "published_at": "2026-06-15T16:36:54.933Z",
-      "day_type": "no_signals",
+      "published_at": "2026-06-15T17:16:42.277Z",
+      "day_type": "mixed",
+      "net_new_count": 16,
+      "prototype_count": 0,
+      "summary": "16 catch-up URL(s) · 16 row(s) incl. 4 Product (parity not scanned on intel path).",
+      "fixture": false
+    },
+    {
+      "run_id": "2026-06-13T00-18-18Z",
+      "published_at": "2026-06-15T16:56:02.467Z",
+      "day_type": "pmm_only",
       "net_new_count": 0,
       "prototype_count": 0,
-      "summary": "0 net-new competitor URLs since last brief — retention collect only. No new signals to interpret; table empty for today.",
+      "summary": "2 content refresh(es) · 2 intel row(s) (PMM / News / Press / etc.) · 0 Product rows — no prototypes.",
       "fixture": false
     },
     {

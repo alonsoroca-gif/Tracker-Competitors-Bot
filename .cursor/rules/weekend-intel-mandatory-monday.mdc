@@ -1,0 +1,29 @@
+# Weekend intel — mandatory Monday brief
+
+## The rule
+
+Every URL collected in a **Saturday or Sunday** drop (America/Denver calendar) since the last published brief **must appear in Monday's signals table**, regardless of whether that URL was already in a prior brief or classified as "not net-new."
+
+This is a **publish-layer** rule. Raw drops live in `tracker-drops/`; the failure mode we prevent is intel dying in the brief because morningbrief was not run over the weekend or zero-day skipped classification.
+
+## Implementation
+
+| Layer | Behavior |
+|-------|----------|
+| `lib/briefNetNew.js` | `weekendDropIds()` — Sat/Sun MT drops after last `ready_at`; `allSignalsFromDrops()` — no published-table filter |
+| `tracker-publish-intel.js` | `gatherIntelSignals()` — weekend block first; tag rows `[Weekend collect — Monday brief]` |
+| `morningbrief-kickoff-publish.js` | On Monday MT, if any weekend drops exist since last brief → **bypass `fresh_for_today`** and re-run intel publish |
+
+## What this does NOT do
+
+- ~~**Does not add weekend CI collect.**~~ **Weekend backup collect** runs 5:45am MDT Sat/Sun (`tracker-drop.yml` cron `0,6`). Weekday schedule unchanged (3× Mon–Fri).
+- **Does not auto-publish without morningbrief.** Kickoff still runs when the human (or morningbrief skill) invokes Step 1 — no headless auto-publish.
+- **Does not repeat URLs Tue–Fri.** Only Monday mandatory surfacing for weekend drops; weekday catch-up uses published-table baseline separately.
+
+## Saturday signals without weekend CI
+
+If a drop's **run-id is UTC-dated Saturday** but collect ran **Friday evening MDT**, that is a **weekday collect**, not a weekend drop. It is covered by **catch-up since last brief**, not this rule. Do not conflate UTC run-id dates with MT collect day.
+
+## Origin
+
+Established 2026-06-15 after manager review: Billy's bot had subskills but brief still lost intel via zero-day empty tables and baseline mismatches. Weekend gap was a second loss vector when nobody ran morningbrief Sat/Sun.
