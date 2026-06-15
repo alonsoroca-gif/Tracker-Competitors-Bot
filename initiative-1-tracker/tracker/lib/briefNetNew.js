@@ -208,14 +208,27 @@ function estimatePublishMinutes(productRowCount) {
   return base + productRowCount * perRow;
 }
 
-/** Product rows in a published table that still need agent parity + prototype pass. */
-function countProductRowsPendingParity(signalsTable) {
+/** Whether a Product row finished parity + prototype (Existing skips prototype). */
+function isProductPipelineComplete(row) {
+  if (row?.classification !== 'Product') return true;
+  const parity = String(row.parity || 'not_scanned').toLowerCase();
+  if (!parity || parity === 'not_scanned' || parity === '—') return false;
+  if (parity === 'existing') return true;
+  if (parity === 'gap' || parity === 'partial') return Boolean(row.prototype_path);
+  if (parity === 'unknown' || parity === 'borderline') return false;
+  return Boolean(row.prototype_path);
+}
+
+/** Product rows missing Core parity and/or prototype (must not skip agent path). */
+function countProductRowsIncompletePipeline(signalsTable) {
   return (signalsTable || []).filter(
-    (r) =>
-      r.classification === 'Product' &&
-      (r.parity === 'not_scanned' || !r.parity) &&
-      !r.prototype_path,
+    (r) => r.classification === 'Product' && !isProductPipelineComplete(r),
   ).length;
+}
+
+/** @deprecated alias — use countProductRowsIncompletePipeline */
+function countProductRowsPendingParity(signalsTable) {
+  return countProductRowsIncompletePipeline(signalsTable);
 }
 
 module.exports = {
@@ -233,4 +246,6 @@ module.exports = {
   predictProductCandidates,
   estimatePublishMinutes,
   countProductRowsPendingParity,
+  countProductRowsIncompletePipeline,
+  isProductPipelineComplete,
 };

@@ -90,6 +90,18 @@ Once morningbrief Step 1 runs, these rules prevent signals dying in the brief:
 
 **Still required:** someone runs morningbrief Step 1 (no headless auto-publish). **Collect layer** can still flake (e.g. competitor lane → 0 rows); `collectHealth.js` warns but does not fail the workflow.
 
+### Collect lane health (ops only — not product insight)
+
+`collectHealth.js` compares **this drop vs the immediately prior drop** (often hours apart, not week-over-week). It flags only **lane failure**: competitor had **≥5 rows** last collect → **0 rows** this collect (broken scraper, site down, Playwright timeout).
+
+| Use | Not use |
+|-----|---------|
+| CI log + drop `SUMMARY.md` warning | “Competitor quiet this week” |
+| Future: Slack ops alert | Filtering or ranking signals |
+| Detect webpage/collect down | Product roadmap decisions |
+
+It does **not** remove or hide signals. Safe to keep as debug; optional to tune threshold or Slack-only later.
+
 ---
 
 ## Kickoff prompt

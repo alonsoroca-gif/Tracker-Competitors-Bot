@@ -1,0 +1,60 @@
+# Brief signal description — grounded and complete
+
+## The rule
+
+Every **`why_routing`** / **`signal_summary`** cell in the signals table must let a manager understand **what happened** from that sentence alone — without opening the source URL.
+
+This is **not** a request for AI “analysis” or opinion. It is a **factual one-liner** built from collect evidence.
+
+## Required shape
+
+```
+[optional context prefix] {what the competitor did/published — concrete facts} → {short routing implication}
+```
+
+### Must include (from collect data)
+
+At least **one concrete fact** from, in order of preference:
+
+1. `evidence_snippet`
+2. `snippet`
+3. `entities` (article titles, prices, role groups, integration names, etc.)
+4. `headline` + page kind (`metadata.page_kind` or `source`)
+
+### Must not be
+
+- A generic routing label alone (“pricing or packaging page update”, “careers signal”, “product-shaped signal”)
+- Classification name with no substance (“PMM / channel-building”)
+- Parity jargon without saying what changed on the competitor side
+
+### Good
+
+> Pricing/packaging page update — values spotted: $4; 46% AI tour conversion vs 19% non-AI — themes: voice ai, crm → Compare to Core all-in disclosure before chasing packaging.
+
+> 6 article(s) on index — latest: "AI Is Changing the Way Your Renters Search", "Fee Transparency: How All-In Pricing…" → PMM/positioning — no engineering PRD unless promoted manually.
+
+### Bad
+
+> Pricing or packaging page update — validate against Core fee disclosure before chasing.
+
+## Implementation
+
+| Layer | Owner |
+|-------|--------|
+| Intel publish | `lib/briefSignalAnalysis.js` → `buildSignalAnalysis()` |
+| Table rows | `lib/briefClassify.js` → `buildSignalsTableRows()` sets `why_routing` + `signal_summary` |
+| Backfill | `scripts/reanalyze-signals-table.js --drop <id>` |
+| Agent publish | Must preserve or enrich grounded facts; may add parity/prototype detail after scan |
+
+## Display
+
+- **Morningbrief chat table:** up to ~220 chars (see `briefFeed.js`)
+- **Viewer:** full string, no truncation
+
+## The test
+
+A manager reading only the Why column can answer: **Who? What changed? Why is it in this bucket?** If not, the row fails this rule.
+
+## Origin
+
+Established 2026-06-15 after manager review: generic template strings replaced real collect evidence in the brief table.

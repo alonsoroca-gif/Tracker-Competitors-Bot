@@ -31,6 +31,7 @@ const {
   weekendIntelPendingForMonday,
   publishedUrlKeys,
   countProductRowsPendingParity,
+  countProductRowsIncompletePipeline,
   estimatePublishMinutes,
 } = require('../lib/briefNetNew.js');
 const { gatherIntelSignals } = require('./tracker-publish-intel.js');
@@ -148,7 +149,7 @@ function main() {
     freshForToday = false;
   }
   const pendingParityProduct = latest?.run_id
-    ? countProductRowsPendingParity(loadSignalsTable(latest.run_id))
+    ? countProductRowsIncompletePipeline(loadSignalsTable(latest.run_id))
     : 0;
   if (pendingParityProduct > 0) {
     freshForToday = false;
@@ -248,6 +249,7 @@ function main() {
     predicted_product_rows: predictedProduct,
     product_rows_for_agent: productRowsForAgent,
     pending_parity_product_rows: pendingParityProduct,
+    product_pipeline_incomplete: pendingParityProduct,
     estimated_publish_minutes: estimatedMinutes,
     latest_status: latest?.status || null,
     latest_run_id: latest?.run_id || null,

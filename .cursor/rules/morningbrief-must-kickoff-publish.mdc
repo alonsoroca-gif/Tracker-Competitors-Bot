@@ -14,7 +14,7 @@ node initiative-1-tracker/tracker/scripts/morningbrief-kickoff-publish.js --json
 |----------|------------|
 | `skip_already_fresh` | Skip Step 1 — today's brief is ready (`fresh_for_today: true`) |
 | `published_zero_day` | Skip Step 1 — zero-signal day written synchronously |
-| `kickoff_agent_required` | **Launch Task background agent** with `tracker-publish` + kickoff prompt. Do NOT wait. |
+| `kickoff_agent_required` | **Launch Task background agent** with `tracker-publish` + kickoff prompt. Product rows with incomplete parity/prototype **must not** be left on intel-only publish. Do NOT wait. |
 
 ## Never do this
 

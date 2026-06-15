@@ -1,0 +1,42 @@
+# Product signals — full pipeline required
+
+## The rule
+
+Every row with **`classification: Product`** in `signals-table.json` **must complete the full pipeline**. No Product signal may skip any step except prototype when parity is **Existing**.
+
+| Step | Required | Skip only when |
+|------|----------|----------------|
+| **1. In brief table + viewer** | Yes — row in `tracker-briefs/runs/<id>/signals-table.json` | Never |
+| **2. Core parity scan** | Yes — `parity` / `parity_l1` / `parity_l2` populated | Never for Product rows |
+| **3. Prototype in viewer** | Yes — `prototype_path` set and listed in `prototypes.json` | **`parity: Existing`** only (Won't chase — already in Core) |
+| **4. PRD** | When parity is **Gap** or **Partial** and tier is Tier-Now | Optional for Later tier |
+
+**Intel-only publish (`tracker-publish-intel.js`) must never be the final state for Product rows.** It may list them temporarily with `parity: not_scanned`; kickoff must then route to the **tracker-publish agent**.
+
+## Kickoff gate
+
+`morningbrief-kickoff-publish.js` uses `countProductRowsIncompletePipeline()`:
+
+- `parity: not_scanned` → **incomplete** → `kickoff_agent_required`
+- `parity: Gap` or `Partial` without `prototype_path` → **incomplete**
+- `parity: Existing` → **complete** (no prototype)
+
+Morningbrief Step 1 **must launch the agent** when kickoff returns `kickoff_agent_required`. Do not proceed to tracker-feed with incomplete Product rows unless the manager explicitly accepts the gap.
+
+## Agent / tracker-publish skill
+
+For each Product row the agent processes:
+
+1. Run `core-parity-check.js` (Path A local Core)
+2. Update row parity fields in `signals-table.json`
+3. If Gap/Partial + Tier-Now → vignette prototype + optional PRD
+4. If Existing → set routing Won't chase, **no prototype**
+5. Commit `tracker-briefs/` — viewer reads the same run folder
+
+## The test
+
+Before marking a brief `status: ready`, every Product row must pass `isProductPipelineComplete(row)` in `lib/briefNetNew.js`. If any fail, brief is not manager-ready.
+
+## Origin
+
+Established 2026-06-15 after catch-up Product rows appeared in the table with `not_scanned` and zero prototypes because intel path ran instead of the agent. Product classification without parity/prototype is a pipeline failure, not a finished brief.
