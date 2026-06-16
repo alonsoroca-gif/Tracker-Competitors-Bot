@@ -38,11 +38,7 @@ function pillarCoverageFromUrls(urls) {
     Array.isArray(urls.youtube_discovery_queries) &&
     urls.youtube_discovery_queries.length > 0 &&
     !!ytKey;
-  const hasG2 = !!(
-    urls.g2_reviews_url ||
-    (Array.isArray(urls.g2_reviews_urls) && urls.g2_reviews_urls.length > 0)
-  );
-  const p3 = !!(hasG2 || urls.media_url || urls.reviews_url || hasYtComments || hasYtDiscovery);
+  const p3 = !!(urls.media_url || urls.reviews_url || hasYtComments || hasYtDiscovery);
   const p4_configured = false;
 
   const missing_hints = [];
@@ -56,7 +52,7 @@ function pillarCoverageFromUrls(urls) {
   }
   if (!p3) {
     missing_hints.push(
-      'Pillar 3 (third party): set g2_reviews_url, media_url, reviews_url, and/or youtube_comment_video_ids and/or youtube_discovery_queries (+ YOUTUBE_DATA_API_KEY)'
+      'Pillar 3 (third party): set media_url, reviews_url, and/or youtube_comment_video_ids and/or youtube_discovery_queries (+ YOUTUBE_DATA_API_KEY)'
     );
   }
   missing_hints.push(

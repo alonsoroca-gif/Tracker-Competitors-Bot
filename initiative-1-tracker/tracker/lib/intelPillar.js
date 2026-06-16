@@ -22,7 +22,7 @@ function intelPillarFromSourceType(source, type) {
   if (t === 'pricing' || t === 'job') {
     return { pillar: 2, pillar_key: PILLAR_META[2].key, pillar_label: PILLAR_META[2].short };
   }
-  if (t === 'review_g2' || t === 'review_youtube' || t === 'review_other') {
+  if (t === 'review_youtube' || t === 'review_other') {
     return { pillar: 3, pillar_key: PILLAR_META[3].key, pillar_label: PILLAR_META[3].short };
   }
   if (t === 'media') {
@@ -31,7 +31,6 @@ function intelPillarFromSourceType(source, type) {
   if (
     src === 'youtube_search' ||
     src === 'youtube_comments' ||
-    src === 'g2_reviews' ||
     src === 'reviews_other' ||
     src === 'media'
   ) {

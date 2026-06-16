@@ -90,7 +90,6 @@ const TYPE_ACTION_FALLBACK = {
   pricing: 'Updated pricing-related signals',
   features: 'Updated product or features messaging',
   job: 'Surfaced careers or hiring signals',
-  review_g2: 'User review voices on G2',
   review_youtube: 'YouTube comment / community voices',
   insights: 'Published editorial article or thought leadership',
   media: 'Surfaced third-party media coverage',
@@ -135,7 +134,6 @@ function sourceHumanLabel(signal) {
     youtube: 'YouTube',
     youtube_comments: 'YouTube comments',
     youtube_search: 'YouTube (search)',
-    g2_reviews: 'G2 reviews',
     docs: 'Documentation',
     insights: 'Editorial articles',
     media: 'Media coverage',
@@ -218,7 +216,7 @@ function specificActionPhrase(s) {
   const reviewQuotes = Array.isArray(ent.review_quotes) ? ent.review_quotes.filter(Boolean) : [];
   if (
     reviewQuotes.length &&
-    (type === 'review_g2' || type === 'review_youtube' || src === 'g2_reviews' || src === 'youtube_comments')
+    (type === 'review_youtube' || type === 'review_other' || src === 'reviews_other' || src === 'youtube_comments')
   ) {
     return clip(`User voices: ${joinCommaChunks(reviewQuotes, { maxItems: 2, maxEach: 44 })}`, MAX_ACTION_LEN);
   }
@@ -334,7 +332,7 @@ function inferDimension(signal) {
   if (t === 'press' || t === 'news') return { dimension: 'positioning', ourKey: 'positioning' };
   if (t === 'youtube' || t === 'video') return { dimension: 'positioning', ourKey: 'positioning' };
   if (t === 'review_youtube') return { dimension: 'positioning', ourKey: 'positioning' };
-  if (t === 'review_g2' || t === 'review_other') return { dimension: 'features', ourKey: 'features' };
+  if (t === 'review_other') return { dimension: 'features', ourKey: 'features' };
   if (t === 'media') return { dimension: 'positioning', ourKey: 'positioning' };
   if (t === 'podcast') return { dimension: 'positioning', ourKey: 'positioning' };
   if (t === 'insights') return { dimension: 'features', ourKey: 'features' };

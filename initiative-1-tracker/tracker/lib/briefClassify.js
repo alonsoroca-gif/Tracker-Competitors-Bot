@@ -6,6 +6,13 @@
 const { loadConfig } = require('./loadConfig');
 const { buildSignalAnalysis, applyContextPrefix } = require('./briefSignalAnalysis.js');
 
+function isG2Signal(signal) {
+  const type = String(signal?.type || '').toLowerCase();
+  const src = String(signal?.source || '').toLowerCase();
+  const url = String(signal?.source_url || '').toLowerCase();
+  return type === 'review_g2' || src === 'g2_reviews' || /(^|\.)g2\.com/.test(url);
+}
+
 function competitorNameMap() {
   try {
     const config = loadConfig();
@@ -30,7 +37,7 @@ function displayName(signal, nameMap) {
 }
 
 function isAggregatorUrl(url) {
-  return /featuredcustomers\.com|capterra\.com|getapp\.com|g2\.com|softwareadvice\.com/i.test(url);
+  return /featuredcustomers\.com|capterra\.com|getapp\.com|softwareadvice\.com/i.test(url);
 }
 
 function isProductSignal(signal) {
@@ -53,7 +60,7 @@ function classifySignal(signal) {
   const sn = String(signal.snippet || '').toLowerCase();
   const pk = String(signal.metadata?.page_kind || '').toLowerCase();
 
-  if (type.includes('review') || src.includes('g2') || isAggregatorUrl(url)) {
+  if (type.includes('review') || isAggregatorUrl(url)) {
     return {
       classification: 'PMM',
       classification_detail: 'channel-building',
@@ -173,7 +180,7 @@ function dedupeSignalsByUrl(signals) {
  */
 function buildSignalsTableRows(signals, opts = {}) {
   const nameMap = competitorNameMap();
-  const deduped = dedupeSignalsByUrl(signals);
+  const deduped = dedupeSignalsByUrl(signals).filter((s) => !isG2Signal(s));
   deduped.sort((a, b) => (b.importance || 0) - (a.importance || 0));
 
   return deduped.map((s, idx) => {
@@ -206,4 +213,5 @@ module.exports = {
   buildSignalsTableRows,
   dedupeSignalsByUrl,
   isProductSignal,
+  isG2Signal,
 };

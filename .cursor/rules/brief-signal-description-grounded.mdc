@@ -2,59 +2,73 @@
 
 ## The rule
 
-Every **`why_routing`** / **`signal_summary`** cell in the signals table must let a manager understand **what happened** from that sentence alone — without opening the source URL.
+Every **`why_routing`** / **`signal_summary`** cell must let a manager understand **what happened** from that sentence alone — without opening the source URL.
 
-This is **not** a request for AI “analysis” or opinion. It is a **factual one-liner** built from collect evidence.
+This is **not** AI opinion. It is a **brief narrative** built from collect evidence, plus a routing tail.
 
 ## Required shape
 
 ```
-[optional context prefix] {what the competitor did/published — concrete facts} → {short routing implication}
+{1–2 plain sentences: what page changed + what changed} → {routing matched to classification/tier}
 ```
+
+**Opening pattern:** `We found a change on the {page}. {What changed — full sentences, stats in context.}`
+
+**Do not prefix** `[Catch-up since last brief]` — if the row is in today's table, it is already implied.
+
+**Only prefix when timing matters:**
+- `[Weekend collect — Monday brief]`
+- `[Page content changed since last brief]`
+- `[Carryover spotlight]`
+
+### Routing tail must match classification
+
+| Classification | Tail must NOT say |
+|----------------|-------------------|
+| **Pricing** | "Compare to Core" — Pricing rows are Won't chase; no parity scan |
+| **PMM / Talent / News** | "prototype" or "Core parity" unless manually promoted |
+| **Product + Existing** | "needs parity scan" — parity is done |
 
 ### Must include (from collect data)
 
-At least **one concrete fact** from, in order of preference:
+At least **one concrete fact** — embedded in prose, not bullet fragments:
 
-1. `evidence_snippet`
-2. `snippet`
-3. `entities` (article titles, prices, role groups, integration names, etc.)
-4. `headline` + page kind (`metadata.page_kind` or `source`)
+1. Which page changed (`source_url`, `page_kind`, `source`)
+2. What changed (snippet, entities, headline)
+
+**Stats must have context.** Bad: `46% tour conversion when AI handles…` as a standalone fragment. Good: `LeaseHawk claims AI-handled prospects convert to tours at 46%, compared to 19% when staff handle tours without AI.`
 
 ### Must not be
 
-- A generic routing label alone (“pricing or packaging page update”, “careers signal”, “product-shaped signal”)
-- Classification name with no substance (“PMM / channel-building”)
-- Parity jargon without saying what changed on the competitor side
+- Stacked ` — ` fragments (page label — stat — packages — scrape note)
+- A generic routing label alone
+- Classification name with no substance
+- Bare numbers without who/what comparison
 
 ### Good
 
-> Pricing/packaging page update — values spotted: $4; 46% AI tour conversion vs 19% non-AI — themes: voice ai, crm → Compare to Core all-in disclosure before chasing packaging.
+> We found a change on the homepage. LeaseHawk claims AI-handled prospects convert to tours at 46%, compared to 19% when staff handle tours without AI (their marketing claim). No clear public rate card on the page. → Won't chase — competitor pricing/marketing packaging; monitor positioning only (no Core parity or prototype).
 
-> 6 article(s) on index — latest: "AI Is Changing the Way Your Renters Search", "Fee Transparency: How All-In Pricing…" → PMM/positioning — no engineering PRD unless promoted manually.
+> We found a change on the pricing page. EliseAI updated published pricing to $2.50/unit/mo. → Won't chase — competitor pricing/marketing packaging; monitor positioning only (no Core parity or prototype).
+
+> We found a change on the articles/blog index. New articles including "AI Is Changing the Way Your Renters Search" and "Fee Transparency: How All-In Pricing…". → Won't chase — PMM/positioning; no engineering PRD unless you promote manually.
 
 ### Bad
 
-> Pricing or packaging page update — validate against Core fee disclosure before chasing.
+> homepage (pricing/packaging language) update — 46% tour conversion when their AI handles the prospect vs 19% when staff handle it — Packages/themes: ai, crm…
 
 ## Implementation
 
 | Layer | Owner |
 |-------|--------|
 | Intel publish | `lib/briefSignalAnalysis.js` → `buildSignalAnalysis()` |
-| Table rows | `lib/briefClassify.js` → `buildSignalsTableRows()` sets `why_routing` + `signal_summary` |
+| Table rows | `lib/briefClassify.js` → `buildSignalsTableRows()` |
 | Backfill | `scripts/reanalyze-signals-table.js --drop <id>` |
-| Agent publish | Must preserve or enrich grounded facts; may add parity/prototype detail after scan |
-
-## Display
-
-- **Morningbrief chat table:** up to ~220 chars (see `briefFeed.js`)
-- **Viewer:** full string, no truncation
 
 ## The test
 
-A manager reading only the Why column can answer: **Who? What changed? Why is it in this bucket?** If not, the row fails this rule.
+A manager reading only the Why column can answer: **What page? What changed? Why won't we chase it?**
 
 ## Origin
 
-Established 2026-06-15 after manager review: generic template strings replaced real collect evidence in the brief table.
+Established 2026-06-15; revised 2026-06-16 — narrative fact block replaces fragment stacks after manager review (LeaseHawk 46% lacked context).

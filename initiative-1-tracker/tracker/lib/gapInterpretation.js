@@ -210,7 +210,7 @@ function buildMultiSurfaceWhy(who, dimension, clusterSignalCount, sourceLabels, 
     if (h === 1) {
       return `${n} similar captures on ${uniq[0]}${theme ? ` about “${theme}”` : ''}: likely a crawl or copy refresh, not proof of a new build. Compare week over week before reacting.`;
     }
-    return `${who} hit the same ${story} on ${uniq[0]}${theme ? ` with “${theme}” visible in both scrapes` : ''}. Validate on a different pillar (pricing, G2, careers) before you match in product.`;
+    return `${who} hit the same ${story} on ${uniq[0]}${theme ? ` with “${theme}” visible in both scrapes` : ''}. Validate on a different pillar (pricing, reviews, careers) before you match in product.`;
   }
   return `${who} showed the same ${story} in ${n} places this week. Treat as one public narrative until a non‑owned source backs it.`;
 }

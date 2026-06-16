@@ -69,7 +69,7 @@ NET-NEW BY COMPETITOR:
 NET-NEW BY SOURCE:
   5  features_page
   3  blog
-  2  g2_reviews
+  2  reviews_other
   2  case_studies
   1  insights
   1  media
@@ -93,7 +93,7 @@ The 6 carryover URLs (e.g. EliseAI homepage, EliseAI careers, LeaseHawk homepage
 | insights | P1 | ✅ | — |
 | media | P3 | ✅ | — |
 | blog | P1 | ✅ | — |
-| g2_reviews | P3 | ❌ | Cloudflare 403 |
+| reviews_other | P3 | ✅ | FeaturedCustomers excerpts |
 | reviews_other | P3 | ❌ | JS-hydrated (featuredcustomers) |
 | articles_index | P1 | ❌ | JS-hydrated (jonah) |
 | changelog | P1 | ❓ | silent — verify next run |

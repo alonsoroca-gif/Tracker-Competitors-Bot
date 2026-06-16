@@ -9,7 +9,6 @@ const { loadConfig } = require('./loadConfig');
 const { attachIntelPillarMetadata } = require('./intelPillar');
 const { fetchYouTubeCommentThreads } = require('./youtubeComments');
 const { searchYouTubeVideos, listVideoDetails } = require('./youtubeDiscovery');
-const { fetchG2ReviewSnippets } = require('./g2Scrape');
 
 // Browser-like UA. The previous self-identifying "CompetitorTracker/1.0"
 // string was triggering Cloudflare/WAF challenges for some hosts (verified by
@@ -243,7 +242,7 @@ function youtubeDiscoveryMaxQueries(base) {
 /**
  * Normalize a config value (string or string[]) plus an optional env override
  * (comma/whitespace separated) into a deduped array of valid http(s) URLs.
- * Used by g2_reviews_url, case_studies_url, articles_url.
+ * Used by case_studies_url, articles_url.
  */
 function normalizeUrlList(rawValue, envOverride) {
   const fromEnv = (envOverride || '')
@@ -261,12 +260,6 @@ function normalizeUrlList(rawValue, envOverride) {
   return [...new Set(merged.filter((u) => isValidPublicUrl(u)))];
 }
 
-/**
- * Back-compat alias used by tests / external callers from Phase 2.
- */
-function normalizeG2ReviewsUrls(rawValue, envOverride) {
-  return normalizeUrlList(rawValue, envOverride);
-}
 
 function getSourceUrls(competitorId) {
   const config = loadConfig();
@@ -291,10 +284,6 @@ function getSourceUrls(competitorId) {
   const baseUrls = Object.fromEntries(
     Object.entries(urls).map(([k, v]) => [k, isValidPublicUrl(v) ? v : ''])
   );
-  const g2List = normalizeUrlList(
-    base.g2_reviews_url,
-    process.env[`TRACKER_G2_REVIEWS_URL_${suffix}`] || ''
-  );
   const caseStudiesList = normalizeUrlList(
     base.case_studies_url,
     process.env[`TRACKER_CASE_STUDIES_URL_${suffix}`] || ''
@@ -305,8 +294,6 @@ function getSourceUrls(competitorId) {
   );
   return {
     ...baseUrls,
-    g2_reviews_url: g2List[0] || '', // legacy string for back-compat consumers
-    g2_reviews_urls: g2List, // canonical array used by collect()
     case_studies_url: caseStudiesList[0] || '',
     case_studies_urls: caseStudiesList,
     articles_url: articlesList[0] || '',
@@ -1616,69 +1603,6 @@ async function collectArticleIndexSignals(competitorId, productId, pageUrl) {
   ];
 }
 
-async function collectG2ReviewSignals(competitorId, productId, g2Url) {
-  if (!isValidPublicUrl(g2Url)) return [];
-  try {
-    // APIFY INTEGRATION POINT — when APIFY_TOKEN is authorized and ready,
-    // replace the line below with the branching call documented in
-    // docs/APIFY-INTEGRATION.md ("Wiring into the pipeline"). The
-    // scaffold lives at lib/apifyClient.js + lib/g2ApifyScrape.js and
-    // is inert until that swap happens. Until then this fetch will
-    // continue to return HTTP 403 from Cloudflare — by design, not bug.
-    const { reviews, note } = await fetchG2ReviewSnippets(g2Url, { maxReviews: 12 });
-    const texts = reviews.map((r) => r.text);
-    if (!texts.length) {
-      return [
-        buildSignalBase({
-          competitorId,
-          productId,
-          source: 'g2_reviews',
-          type: 'review_g2',
-          event_type: 'content_update',
-          headline: 'G2 reviews (no static HTML excerpts)',
-          source_url: g2Url,
-          date: todayISO(),
-          snippet: note,
-          evidence_snippet: note,
-          confidence: 0.35,
-          importance: 0.5,
-          entities: { review_quotes: [], g2_parse_note: note },
-          metadata: { page_kind: 'g2', parse_ok: false },
-        }),
-      ];
-    }
-
-    const combined = texts.join('\n');
-    const { event_type, importance } = inferArticleEventType('G2 user reviews', combined);
-    const entities = { ...extractNamedEntities(combined), review_quotes: texts.slice(0, 6) };
-
-    return [
-      buildSignalBase({
-        competitorId,
-        productId,
-        source: 'g2_reviews',
-        type: 'review_g2',
-        event_type,
-        headline: 'G2 user review excerpts',
-        source_url: g2Url,
-        date: todayISO(),
-        snippet: `${texts.length} excerpt(s). ${note} First: ${texts[0].slice(0, 220)}`,
-        evidence_snippet: texts.slice(0, 4).join('\n\n'),
-        confidence: scoreConfidence({
-          evidenceCount: texts.length,
-          hasHeadings: false,
-          directPage: true,
-        }),
-        importance,
-        entities,
-        metadata: { page_kind: 'g2', parse_ok: true },
-      }),
-    ];
-  } catch (_) {
-    return [];
-  }
-}
-
 /**
  * @param {string} competitorId
  * @param {string} productId
@@ -1769,12 +1693,6 @@ async function collect(competitorId, productId, days = 7, session = null) {
     }
   }
   collected.push(...ytDiscoverySignals);
-
-  const g2Urls = Array.isArray(sourceUrls.g2_reviews_urls) ? sourceUrls.g2_reviews_urls : [];
-  for (const g2Url of g2Urls) {
-    const g2Signals = await collectG2ReviewSignals(competitorId, productId, g2Url);
-    collected.push(...g2Signals);
-  }
 
   if (sourceUrls.reviews_url) {
     const otherReviewSignals = await collectGenericReviewSignals(

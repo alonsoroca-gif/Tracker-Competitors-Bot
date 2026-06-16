@@ -62,13 +62,14 @@ const row = classifySignal(sample);
 assert(row.classification === 'News', 'press → News classification');
 
 const pmm = classifySignal({
-  type: 'review_g2',
-  source: 'g2_reviews',
-  source_url: 'https://g2.com/products/foo',
-  headline: 'Reviews',
+  type: 'review_other',
+  source: 'reviews_other',
+  source_url: 'https://www.featuredcustomers.com/vendor/funnel-leasing',
+  headline: 'FeaturedCustomers reviews',
   competitor_id: 'funnel-leasing',
+  snippet: '8 excerpt(s) parsed from FeaturedCustomers.',
 });
-assert(pmm.classification === 'PMM', 'g2 → PMM classification');
+assert(pmm.classification === 'PMM', 'third-party reviews → PMM classification');
 
 const leasehawkPricing = {
   type: 'pricing',
@@ -77,15 +78,32 @@ const leasehawkPricing = {
   competitor_id: 'leasehawk',
   snippet:
     'Detected pricing values: $4. Tier language: 46% conversion for AI-handled prospects, compared to 19% tour conversion',
-  entities: { prices: ['$4'], keywords: ['ai', 'crm', 'voice ai'] },
+  entities: {
+    prices: ['$4'],
+    tiers: [
+      '46% conversion for AI-handled prospects, compared to 19% tour conversion for non-AI handled prospects',
+    ],
+    keywords: ['ai', 'crm', 'voice ai', 'leasing', 'lead nurturing'],
+  },
   metadata: { page_kind: 'pricing' },
 };
 const pricingRow = classifySignal(leasehawkPricing);
 assert(pricingRow.classification === 'Pricing', 'pricing page → Pricing');
 const pricingAnalysis = buildSignalAnalysis(leasehawkPricing, pricingRow);
 assert(
-  pricingAnalysis.includes('$4') && pricingAnalysis.includes('46%'),
-  'pricing analysis includes concrete collect facts',
+  pricingAnalysis.includes('We found a change on the') &&
+    pricingAnalysis.includes('46%') &&
+    pricingAnalysis.includes('19%') &&
+    /claims AI-handled prospects convert/i.test(pricingAnalysis),
+  'pricing analysis — narrative with AI vs non-AI conversion in context',
+);
+assert(
+  !pricingAnalysis.includes('Compare to Core') && !pricingAnalysis.includes('Catch-up'),
+  'pricing Won\'t chase — no Core compare, no catch-up prefix',
+);
+assert(
+  !pricingAnalysis.includes('values spotted: $4'),
+  'pricing analysis drops ambiguous $4 scrape noise',
 );
 
 const jonahArticles = {
@@ -111,8 +129,23 @@ assert(
   'article analysis names actual titles',
 );
 
-const table = buildSignalsTableRows([sample, { ...pmm, source_url: 'https://g2.com/products/foo/reviews' }]);
+const table = buildSignalsTableRows([
+  sample,
+  { ...pmm, source_url: 'https://www.featuredcustomers.com/vendor/funnel-leasing' },
+]);
 assert(table.length === 2, 'buildSignalsTableRows keeps distinct URLs');
+
+const g2Dropped = buildSignalsTableRows([
+  {
+    type: 'review_g2',
+    source: 'g2_reviews',
+    source_url: 'https://www.g2.com/products/eliseai/reviews',
+    competitor_id: 'eliseai',
+    importance: 9,
+  },
+  sample,
+]);
+assert(g2Dropped.length === 1, 'buildSignalsTableRows drops G2 signals');
 
 const health = checkCollectHealth([], [{ competitor_id: 'jonah-digital' }, { competitor_id: 'jonah-digital' }, { competitor_id: 'jonah-digital' }, { competitor_id: 'jonah-digital' }, { competitor_id: 'jonah-digital' }]);
 assert(!health.ok && health.regressions[0].competitor_id === 'jonah-digital', 'collect health detects jonah regression');

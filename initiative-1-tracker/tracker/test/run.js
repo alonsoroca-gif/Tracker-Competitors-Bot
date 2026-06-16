@@ -4,7 +4,7 @@
 
 // Belt-and-suspenders: keep the suite fast even if a future test path
 // accidentally hits a real fetch/parser.parseURL call. politeDelay() in
-// collect.js and g2Delay() in g2Scrape.js both honor this flag.
+// collect.js honors TRACKER_SKIP_POLITE_DELAY in tests.
 process.env.TRACKER_POLITE_DELAY_DISABLED = '1';
 
 const path = require('path');
@@ -259,7 +259,7 @@ const { intelPillarFromSourceType, summarizePillarsFromSignals } = require('../l
 const { pillarCoverageFromUrls } = require('../lib/weeklyIntelFlow');
 assert(intelPillarFromSourceType('blog', 'blog').pillar === 1, 'blog maps to pillar 1');
 assert(intelPillarFromSourceType('pricing_page', 'pricing').pillar === 2, 'pricing maps to pillar 2');
-assert(intelPillarFromSourceType('g2_reviews', 'review_g2').pillar === 3, 'g2 maps to pillar 3');
+assert(intelPillarFromSourceType('reviews_other', 'review_other').pillar === 3, 'reviews_other maps to pillar 3');
 // Phase 2: new source types
 assert(intelPillarFromSourceType('insights', 'insights').pillar === 1, 'insights maps to pillar 1');
 assert(intelPillarFromSourceType('podcast', 'podcast').pillar === 1, 'podcast maps to pillar 1');
@@ -282,9 +282,9 @@ assert(pillarSum.distinct_pillars === 2 && pillarSum.counts['1'] === 1, 'summari
 const cov = pillarCoverageFromUrls({
   blog: 'https://a.com/feed',
   pricing_url: 'https://a.com/pricing',
-  g2_reviews_url: 'https://g2.com/p',
+  reviews_url: 'https://featuredcustomers.com/x',
 });
-assert(cov.p1 && cov.p2 && cov.p3, 'pillarCoverageFromUrls with blog+pricing+g2');
+assert(cov.p1 && cov.p2 && cov.p3, 'pillarCoverageFromUrls with blog+pricing+reviews_url');
 // Phase 2: new URL keys count toward correct pillars
 const covInsights = pillarCoverageFromUrls({ insights_url: 'https://x.com/insights/feed/' });
 assert(covInsights.p1 === true, 'insights_url counts toward P1');
@@ -294,8 +294,6 @@ const covMedia = pillarCoverageFromUrls({ media_url: 'https://x.com/media/feed/'
 assert(covMedia.p3 === true, 'media_url counts toward P3');
 const covReviews = pillarCoverageFromUrls({ reviews_url: 'https://featuredcustomers.com/x' });
 assert(covReviews.p3 === true, 'reviews_url counts toward P3');
-const covG2Array = pillarCoverageFromUrls({ g2_reviews_urls: ['https://g2.com/a', 'https://g2.com/b'] });
-assert(covG2Array.p3 === true, 'g2_reviews_urls array counts toward P3');
 // Phase B-2: HTML lanes count toward P1
 const covCaseStudies = pillarCoverageFromUrls({ case_studies_url: 'https://x.com/customer-stories/' });
 assert(covCaseStudies.p1 === true, 'case_studies_url counts toward P1');
@@ -308,20 +306,16 @@ assert(covArticles.p1 === true, 'articles_url counts toward P1');
 const covArticlesArr = pillarCoverageFromUrls({ articles_urls: ['https://x.com/a'] });
 assert(covArticlesArr.p1 === true, 'articles_urls array counts toward P1');
 
-// Phase 2: getSourceUrls schema upgrades — array form for g2_reviews_url
+// getSourceUrls — funnel-leasing third-party review lane
 const { getSourceUrls } = require('../lib/collect');
 const funnelUrls = getSourceUrls('funnel-leasing');
 assert(
-  Array.isArray(funnelUrls.g2_reviews_urls) && funnelUrls.g2_reviews_urls.length === 2,
-  'funnel-leasing g2_reviews_urls is array of 2'
+  funnelUrls.reviews_url && funnelUrls.reviews_url.includes('featuredcustomers'),
+  'funnel-leasing reviews_url set'
 );
 assert(
-  funnelUrls.g2_reviews_urls.includes('https://www.g2.com/products/fenix-ai/reviews'),
-  'funnel-leasing g2_reviews_urls includes Fenix AI'
-);
-assert(
-  typeof funnelUrls.g2_reviews_url === 'string' && funnelUrls.g2_reviews_url.length > 0,
-  'funnel-leasing g2_reviews_url legacy string still populated for back-compat'
+  funnelUrls.g2_reviews_url === undefined && funnelUrls.g2_reviews_urls === undefined,
+  'funnel-leasing no longer exposes g2_reviews_url fields'
 );
 assert(funnelUrls.insights_url && funnelUrls.insights_url.includes('insights'), 'funnel-leasing insights_url set');
 assert(funnelUrls.media_url && funnelUrls.media_url.includes('media'), 'funnel-leasing media_url set');
@@ -330,14 +324,8 @@ assert(funnelUrls.reviews_url && funnelUrls.reviews_url.includes('featuredcustom
 
 const eliseUrls = getSourceUrls('eliseai');
 assert(
-  Array.isArray(eliseUrls.g2_reviews_urls),
-  'eliseai still has g2_reviews_urls array (back-compat from string config)'
-);
-assert(typeof eliseUrls.g2_reviews_url === 'string', 'eliseai legacy string field present');
-// Phase B-2 — verification round backfill
-assert(
-  eliseUrls.g2_reviews_url.includes('eliseai'),
-  'eliseai g2_reviews_url backfilled (Phase B-2 verification round)'
+  eliseUrls.g2_reviews_url === undefined && eliseUrls.g2_reviews_urls === undefined,
+  'eliseai no longer exposes g2_reviews_url fields'
 );
 // Post-demo cleanup — broken URLs cleared after first live drop validation
 assert(

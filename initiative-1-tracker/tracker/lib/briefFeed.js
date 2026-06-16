@@ -57,7 +57,7 @@ function formatChatTable(rows) {
     const classification = r.classification_detail
       ? `${r.classification} / ${r.classification_detail}`
       : r.classification || '—';
-    return `| ${r.id} | ${escapeCell(competitorLabel(r))} | ${escapeCell(truncate(r.headline, 55))} | ${escapeCell(classification)} | ${escapeCell(parity)} | ${escapeCell(truncate(r.why_routing || r.signal_summary || r.routing, 220))} |`;
+    return `| ${r.id} | ${escapeCell(competitorLabel(r))} | ${escapeCell(truncate(r.headline, 55))} | ${escapeCell(classification)} | ${escapeCell(parity)} | ${escapeCell(truncate(r.why_routing || r.signal_summary || r.routing, 320))} |`;
   });
 
   return [header, sep, ...body].join('\n');

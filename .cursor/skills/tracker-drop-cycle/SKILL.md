@@ -232,7 +232,7 @@ Lanes table. One row per `source` lane present in the drop. Keep it narrow (4 co
 | Lane | Pillar | Status | Cause (if not ✅) |
 |---|---|---|---|
 | features_page | P1 | ✅ | — |
-| g2_reviews | P3 | ❌ | Cloudflare 403 |
+| reviews_other | P3 | ✅ | FeaturedCustomers excerpts |
 ```
 
 Status values: `✅` working / `⚠️` partial (selectors return shallow content) / `❌` broken / `❓` silent (zero rows in window — verify next run).
@@ -343,7 +343,7 @@ These are *suggestions*, not decisions. The bot pastes the classification table 
 |---|---|
 | Lane = `pricing_page`, OR snippet contains `$N/mo`, `tier`, `package` | `Pricing / positioning` |
 | Lane = `careers`, OR snippet contains `hire`, `joined`, `appointed`, `CPO`, `CRO`, `VP of` | `Talent / org` |
-| Lane = `g2_reviews`, `reviews_other`; OR source domain matches `featuredcustomers.com`/`capterra.com`/`getapp.com`; OR snippet about ratings/testimonials/social proof | `PMM / channel-building` |
+| Lane = `reviews_other`; OR source domain matches `featuredcustomers.com`/`capterra.com`/`getapp.com`; OR snippet about ratings/testimonials/social proof | `PMM / channel-building` |
 | Snippet contains `raised $`, `Series A/B/C`, `valuation`, `acquired by` | `Funding / financial` |
 | Lane = `articles_index`, `case_studies`; snippet about content cadence / thought-leadership | `Editorial / content` |
 | Snippet contains `partnership`, `integrated with`, `now works with`, `available on` | `Strategic / partnership` |

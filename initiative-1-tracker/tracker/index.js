@@ -20,7 +20,6 @@ const { getWhatToChange } = require('./lib/whatToChange');
 const { getDemoSignals } = require('./lib/demoSignals');
 const { fetchYouTubeCommentThreads } = require('./lib/youtubeComments');
 const { searchYouTubeVideos, listVideoDetails } = require('./lib/youtubeDiscovery');
-const { fetchG2ReviewSnippets } = require('./lib/g2Scrape');
 
 const command = process.argv[2];
 
@@ -164,23 +163,6 @@ if (command === 'prototype-youtube-search') {
         `${i + 1}. ${r.title}\n   ${r.channelTitle} · ${r.publishedAt} · views=${d.viewCount || '—'} · https://www.youtube.com/watch?v=${r.videoId}`
       );
     });
-  })().catch((e) => {
-    console.error(e.message);
-    process.exit(1);
-  });
-  return;
-}
-
-if (command === 'prototype-g2') {
-  const url = process.argv[3];
-  if (!url || !/^https?:\/\//i.test(url)) {
-    console.log('Usage: node index.js prototype-g2 <https://www.g2.com/products/.../reviews>');
-    process.exit(url ? 1 : 0);
-  }
-  (async () => {
-    const { reviews, note } = await fetchG2ReviewSnippets(url, { maxReviews: 8 });
-    console.log(note);
-    reviews.forEach((r, i) => console.log(`--- ${i + 1}\n${r.text.slice(0, 500)}`));
   })().catch((e) => {
     console.error(e.message);
     process.exit(1);

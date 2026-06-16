@@ -11,8 +11,8 @@ const {
   writeJson,
   runDir,
 } = require('../lib/briefPaths.js');
-const { buildSignalAnalysis, applyContextPrefix } = require('../lib/briefSignalAnalysis.js');
-const { classifySignal, dedupeSignalsByUrl } = require('../lib/briefClassify.js');
+const { buildSignalAnalysis } = require('../lib/briefSignalAnalysis.js');
+const { classifySignal, dedupeSignalsByUrl, isG2Signal } = require('../lib/briefClassify.js');
 
 function parseArgs(argv) {
   const args = { drop: null };
@@ -45,15 +45,20 @@ function main() {
   const rows = loadSignalsTable(drop);
   const byUrl = signalByUrl(loadDropSignals(drop));
 
-  const updated = rows.map((row) => {
+  const updated = rows
+    .map((row) => {
     const key = String(row.source_url || '').trim().toLowerCase();
     const raw = byUrl.get(key);
-    if (!raw) return row;
+    if (!raw || isG2Signal(raw)) return null;
     const meta = classifySignal(raw);
-    const prefix = String(row.why_routing || '').match(/^\[[^\]]+\]/)?.[0];
-    let analysis = buildSignalAnalysis(raw, meta);
-    if (prefix) analysis = `${prefix} ${analysis}`;
-    else if (row.why_routing?.includes('[Catch-up')) analysis = applyContextPrefix(analysis, { _catchup: true });
+    if (row.classification === 'Product' && row.parity && row.parity !== '—' && row.parity !== 'not_scanned') {
+      meta.parity = row.parity;
+      if (String(row.parity).toLowerCase() === 'existing') {
+        meta.routing = "Won't chase";
+        meta.tier = row.tier || "Won't chase";
+      }
+    }
+    const analysis = buildSignalAnalysis(raw, meta);
     return {
       ...row,
       classification: meta.classification,
@@ -63,7 +68,9 @@ function main() {
       why_routing: analysis,
       signal_summary: analysis,
     };
-  });
+  })
+    .filter(Boolean)
+    .map((row, idx) => ({ ...row, id: idx + 1 }));
 
   writeJson(tablePath, updated);
   process.stdout.write(`reanalyze-signals-table: updated ${updated.length} rows for ${drop}\n`);

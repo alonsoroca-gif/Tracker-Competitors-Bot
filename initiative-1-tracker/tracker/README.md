@@ -69,7 +69,6 @@ See [../TASKS.md](../TASKS.md).
 ## Prototypes (manager / roadmap)
 
 - **[YouTube discovery + comments](../docs/YOUTUBE-REVIEWS-PROTOTYPE.md)** — `YOUTUBE_DATA_API_KEY`; `youtube_discovery_queries` (search) + `youtube_comment_video_ids` (comments). CLI: `node index.js prototype-youtube-search "<query>"` and `node index.js prototype-youtube <videoId>`.
-- **[G2 review excerpts](../docs/G2-REVIEWS-PROTOTYPE.md)** — `g2_reviews_url` in sources; CLI `node index.js prototype-g2 <url>`.
 - **[App inventory + structured “what to change”](../docs/APP-INVENTORY-AND-STRUCTURED-WHAT-TO-CHANGE.md)** — `config/app-inventory.json` + nested work items in the report UI.
 - **[Entrata code in Cursor (multi-root workspace)](../docs/ENTRATA-CODE-IN-CURSOR.md)** — open tracker + Entrata repos together; set `ENTRATA_MONO_ROOT` + inventory paths.
 
