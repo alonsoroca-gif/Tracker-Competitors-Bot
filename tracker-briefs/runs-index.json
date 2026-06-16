@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-06-16T17:16:17.056Z",
+  "updated_at": "2026-06-16T21:29:17.268Z",
   "runs": [
     {
       "run_id": "_sample-product-day",
@@ -11,10 +11,19 @@
       "fixture": true
     },
     {
+      "run_id": "2026-06-16T20-52-41Z",
+      "published_at": "2026-06-16T21:29:17.265Z",
+      "day_type": "pmm_only",
+      "net_new_count": 0,
+      "prototype_count": 0,
+      "summary": "2 carryover(s), 999d since last brief · 2 intel row(s) (PMM / News / Press / etc.) · 0 Product rows — no prototypes.",
+      "fixture": false
+    },
+    {
       "run_id": "2026-06-16T16-16-31Z",
       "published_at": "2026-06-16T17:16:14.660Z",
       "day_type": "mixed",
-      "net_new_count": 13,
+      "net_new_count": 11,
       "prototype_count": 0,
       "summary": "13 catch-up URL(s) · 13 row(s) incl. 3 Product · 0 Tier-Now prototypes (all Product rows Existing in Core).",
       "fixture": false
