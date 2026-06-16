@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-06-16T21:29:17.268Z",
+  "updated_at": "2026-06-16T21:31:22.999Z",
   "runs": [
     {
       "run_id": "_sample-product-day",
@@ -12,11 +12,11 @@
     },
     {
       "run_id": "2026-06-16T20-52-41Z",
-      "published_at": "2026-06-16T21:29:17.265Z",
-      "day_type": "pmm_only",
-      "net_new_count": 0,
-      "prototype_count": 0,
-      "summary": "2 carryover(s), 999d since last brief · 2 intel row(s) (PMM / News / Press / etc.) · 0 Product rows — no prototypes.",
+      "published_at": "2026-06-16T21:31:20.875Z",
+      "day_type": "mixed",
+      "net_new_count": 3,
+      "prototype_count": 1,
+      "summary": "3 net-new URL(s) + 11 from prior in-progress brief · 14 row(s) incl. 4 Product · 1 Tier-Now prototype(s).",
       "fixture": false
     },
     {

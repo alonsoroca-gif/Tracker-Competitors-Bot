@@ -4,10 +4,11 @@
   "deadline_mt": "07:45",
   "viewer_path": "tracker-briefs/viewer/index.html",
   "run_dir": "tracker-briefs/runs/2026-06-16T20-52-41Z",
-  "prototype_count": 0,
-  "net_new_count": 0,
-  "product_row_count": 0,
-  "source": "tracker-publish-intel",
-  "ready_at": "2026-06-16T21:29:17.265Z",
-  "drop_new_signals_added": 165
+  "prototype_count": 1,
+  "net_new_count": 3,
+  "product_row_count": 4,
+  "source": "tracker-publish",
+  "ready_at": "2026-06-16T21:31:22.997Z",
+  "drop_new_signals_added": 165,
+  "started_at": "2026-06-16T21:31:20.875Z"
 }

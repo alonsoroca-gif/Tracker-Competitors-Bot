@@ -1,0 +1,28 @@
+#### PRD: Live-PMS Siteplan — SightMap delta
+
+- **Problem:** Jonah Digital markets Engrain SightMap® Experience + Tour Scheduler Integration as website add-ons. Operators comparing vendors see an interactive map with tour booking — but Jonah's embed cannot show rent that updates when the PMS changes rate or hold status. Entrata already ships Engrain widget scaffolding; the competitive gap is **live unit economics on the map**, not rebuilding a static partner embed. Jonah cannot ship this without PMS ownership.
+- **Target user:** Multifamily marketing manager configuring Prospect Portal / leasing website siteplan; prospect shopping unit-level availability before apply.
+- **Scope (in):**
+  - Unit pin overlay on SightMap with live rent + availability pulled from Entrata pricing engine (same source as apply flow)
+  - Pin click → side panel with move-in date, fees summary link, apply CTA with locked live rate
+  - Tour Scheduler deep-link from selected pin (unit context pre-filled)
+  - Admin toggle: Engrain embed vs native live-PMS map mode per property
+  - Cache-bust + stale-price guard when PMS rate changes mid-session
+- **Scope (out):**
+  - Rebuilding Engrain's cartography / floorplate authoring
+  - Retail page add-on (Jonah signal — separate PMM track)
+  - Third-party SightMap licensing negotiation
+- **Success metric:** +0.5–1.0% apply-start rate on siteplan sessions (measured via funnel event: pin click → apply start)
+- **Evidence:** `tracker-drops/2026-06-16T20-52-41Z/signals.json` — Jonah Digital add-ons row; signals-table id 3
+- **Effort estimate:** M — widget delta (S), pricing API wiring (S), tour scheduler context (S), admin toggle + stale guard (S)
+- **Existing Entrata implementation:**
+  - `Applications/ProspectPortal/Library/InternalPageWidgets/Widget/CEngrainSightMapWidget.class.php` — Engrain SightMap embed with floorplan/unit availability filters and rent arrays
+  - `Applications/ProspectPortal/tests/unit/Library/InternalPageWidgets/Widget/CEngrainSightMapWidgetTest.php` — unit availability + move-in date logic
+  - Parity verdict: **Partial** (L1: Existing 141 score / 20 files; L2: embed foundation confirmed, no live per-unit rent pin overlay + tour handoff found)
+- **Delta vs Core:** Interactive unit pins with **live PMS rent + availability** and tour-scheduler handoff on top of existing Engrain widget — not a rebuild of SightMap itself.
+- **Net-new engineering ask:**
+  - Pricing-engine adapter for per-unit rent on map pins (real-time or short-TTL cache)
+  - Pin overlay UI + selected-unit panel with apply/tour CTAs
+  - Tour scheduler integration passing unit/floorplan context from pin selection
+  - Property-level feature flag: legacy Engrain embed vs live-PMS map mode
+  - Stale-price detection when PMS rate changes during active session
