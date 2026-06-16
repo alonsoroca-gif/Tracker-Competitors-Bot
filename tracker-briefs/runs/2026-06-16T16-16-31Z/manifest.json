@@ -1,0 +1,19 @@
+{
+  "run_id": "2026-06-16T16-16-31Z",
+  "drop_run_id": "2026-06-16T16-16-31Z",
+  "published_at": "2026-06-16T17:16:14.660Z",
+  "source": "tracker-publish",
+  "day_type": "mixed",
+  "net_new_count": 13,
+  "weekend_mandatory_count": 0,
+  "weekend_drop_ids": [],
+  "catch_up_count": 13,
+  "content_refreshed_count": 0,
+  "carryover_count": 0,
+  "calendar_gap_days": 1,
+  "product_row_count": 3,
+  "tier_now_product_count": 0,
+  "prototype_count": 0,
+  "interpretation_pointer": "2026-06-16T16-16-31Z",
+  "summary": "13 catch-up URL(s) · 13 row(s) incl. 3 Product · 0 Tier-Now prototypes (all Product rows Existing in Core)."
+}

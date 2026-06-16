@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-06-15T21:19:08.822Z",
+  "updated_at": "2026-06-16T17:16:17.056Z",
   "runs": [
     {
       "run_id": "_sample-product-day",
@@ -9,6 +9,15 @@
       "prototype_count": 2,
       "summary": "Sample Product day for viewer QA — not wired to latest.json.",
       "fixture": true
+    },
+    {
+      "run_id": "2026-06-16T16-16-31Z",
+      "published_at": "2026-06-16T17:16:14.660Z",
+      "day_type": "mixed",
+      "net_new_count": 13,
+      "prototype_count": 0,
+      "summary": "13 catch-up URL(s) · 13 row(s) incl. 3 Product · 0 Tier-Now prototypes (all Product rows Existing in Core).",
+      "fixture": false
     },
     {
       "run_id": "2026-06-15T20-56-44Z",
