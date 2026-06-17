@@ -1,0 +1,38 @@
+[
+  {
+    "id": 1,
+    "competitor_id": "leasehawk",
+    "competitor": "LeaseHawk (ACE)",
+    "headline": "#1 CRM and AI property management software | #1 Rental Experience",
+    "classification": "Pricing",
+    "classification_detail": "packaging",
+    "parity": "—",
+    "parity_l1": null,
+    "parity_l2": null,
+    "routing": "Won't chase",
+    "why_routing": "[Carryover spotlight] We found a change on the pricing page. Leasehawk claims AI-handled prospects convert to tours at 46%, compared to 19% when staff handle tours without AI (their marketing claim). No clear public rate card on the page. → Won't chase — competitor pricing/marketing packaging; monitor positioning only (no Core parity or prototype).",
+    "signal_summary": "[Carryover spotlight] We found a change on the pricing page. Leasehawk claims AI-handled prospects convert to tours at 46%, compared to 19% when staff handle tours without AI (their marketing claim). No clear public rate card on the page. → Won't chase — competitor pricing/marketing packaging; monitor positioning only (no Core parity or prototype).",
+    "tier": "Won't chase",
+    "source_url": "https://leasehawk.com/",
+    "prototype_path": null,
+    "prd_path": null
+  },
+  {
+    "id": 2,
+    "competitor_id": "anyone-home",
+    "competitor": "Anyone Home",
+    "headline": "Why Anyone Home? | Anyone Home",
+    "classification": "PMM",
+    "classification_detail": "social-proof",
+    "parity": "—",
+    "parity_l1": null,
+    "parity_l2": null,
+    "routing": "Won't chase",
+    "why_routing": "[Carryover spotlight] We found a change on the case studies page. See Why Companies Lease Better with Anyone Home Kari \"A comprehensive ‘tour as you like’ program is essential – from self-guided and virtua…. → Won't chase — PMM/positioning; no engineering PRD unless you promote manually.",
+    "signal_summary": "[Carryover spotlight] We found a change on the case studies page. See Why Companies Lease Better with Anyone Home Kari \"A comprehensive ‘tour as you like’ program is essential – from self-guided and virtua…. → Won't chase — PMM/positioning; no engineering PRD unless you promote manually.",
+    "tier": "Won't chase",
+    "source_url": "https://anyonehome.com/why-anyone-home/",
+    "prototype_path": null,
+    "prd_path": null
+  }
+]
