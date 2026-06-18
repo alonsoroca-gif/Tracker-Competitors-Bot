@@ -33,10 +33,15 @@ function runVerifyCore() {
 }
 
 function runParityTest() {
+  // The parity suite scans the Entrata Core monolith (~3.7k source files).
+  // With the in-memory file cache it scores in seconds, but the one-time
+  // cold read of those files is syscall-latency-bound and runs ~3 min on a
+  // cold disk. The old 120s ceiling killed a test that was working — give
+  // it real headroom. A genuine hang still trips this; ~3 min is normal.
   const r = spawnSync('node', [path.join(trackerRoot, 'test', 'parity-check.test.js')], {
     cwd: trackerRoot,
     encoding: 'utf8',
-    timeout: 120000,
+    timeout: 300000,
   });
   return { code: r.status ?? 1, stdout: r.stdout || '', stderr: r.stderr || '' };
 }

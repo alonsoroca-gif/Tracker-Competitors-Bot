@@ -134,6 +134,19 @@ function buildTermMatchers(terms) {
   }));
 }
 
+/**
+ * A single stateless regex that matches a line iff ANY term is present.
+ * Used as a cheap pre-filter in scoreFile: the overwhelming majority of
+ * source lines contain none of the terms, so one combined `.test` lets us
+ * skip the per-term matcher loop on those lines. Boolean-equivalent to
+ * OR-ing every individual `\bterm\b` matcher, so scores are unchanged.
+ * No `g` flag — `.test` must stay stateless across lines.
+ */
+function buildCombinedMatcher(terms) {
+  if (!terms || !terms.length) return null;
+  return new RegExp(`\\b(?:${terms.map(escapeRegex).join('|')})\\b`, 'i');
+}
+
 function* walkFiles(dir, depth, maxDepth) {
   if (depth > maxDepth) return;
   let entries;
@@ -155,13 +168,15 @@ function* walkFiles(dir, depth, maxDepth) {
   }
 }
 
-function scoreFile(content, matchers) {
+function scoreFile(content, matchers, combinedRe) {
   const lines = String(content).split('\n');
   let score = 0;
   const matched = new Set();
   const snippets = [];
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
+    // Fast reject: skip the per-term loop on lines that contain no term.
+    if (combinedRe && !combinedRe.test(line)) continue;
     for (const m of matchers) {
       if (m.re.test(line)) {
         score += 1;
@@ -192,10 +207,70 @@ function scanApp(appRoot, matchers, opts = {}) {
       continue;
     }
     if (buf.length > maxFileBytes) buf = buf.slice(0, maxFileBytes);
-    const { score, matched_terms, snippets } = scoreFile(buf, matchers);
+    const { score, matched_terms, snippets } = scoreFile(buf, matchers, opts.combinedRe);
     if (score <= 0) continue;
     hits.push({
       relativePath: path.relative(appRoot, file),
+      score,
+      matched_terms,
+      snippets,
+    });
+  }
+  hits.sort((a, b) => b.score - a.score);
+  return hits;
+}
+
+/**
+ * Read every app's source files into memory ONCE so repeated parity
+ * checks (e.g. the 21-fixture regression suite, or a multi-row drop)
+ * don't re-read the monolith from disk for every feature. The parity
+ * scan is I/O-bound: a cold read of the ~3.7k source files takes the
+ * bulk of each check's wall time, and doing it per-feature turns a
+ * seconds-long scan into a ~40-minute suite. Caching the contents once
+ * and scoring in-memory keeps verdicts byte-identical (same files, same
+ * truncation) while collapsing N disk passes into one.
+ *
+ * Returns a Map<appName, Array<{ relativePath, content }>> covering the
+ * same files scanApp would visit (same walk order, maxFiles cap, and
+ * maxFileBytes truncation).
+ */
+function buildCoreFileCache(allApps, opts = {}) {
+  const maxDepth = opts.maxDepth ?? 8;
+  const maxFiles = opts.maxFiles ?? 600;
+  const maxFileBytes = opts.maxFileBytes ?? 200000;
+  const cache = new Map();
+  for (const app of allApps) {
+    const files = [];
+    if (fs.existsSync(app.abs)) {
+      let filesSeen = 0;
+      for (const file of walkFiles(app.abs, 0, maxDepth)) {
+        if (filesSeen >= maxFiles) break;
+        filesSeen += 1;
+        let buf;
+        try {
+          buf = fs.readFileSync(file, 'utf8');
+        } catch {
+          continue;
+        }
+        if (buf.length > maxFileBytes) buf = buf.slice(0, maxFileBytes);
+        files.push({ relativePath: path.relative(app.abs, file), content: buf });
+      }
+    }
+    cache.set(app.name, files);
+  }
+  return cache;
+}
+
+/** In-memory twin of scanApp: scores pre-read file contents from
+ *  buildCoreFileCache. Output shape is identical to scanApp so the
+ *  aggregation/verdict path is unchanged. */
+function scanCachedApp(cachedFiles, matchers, combinedRe) {
+  const hits = [];
+  for (const f of cachedFiles) {
+    const { score, matched_terms, snippets } = scoreFile(f.content, matchers, combinedRe);
+    if (score <= 0) continue;
+    hits.push({
+      relativePath: f.relativePath,
       score,
       matched_terms,
       snippets,
@@ -650,7 +725,7 @@ function verdictFor(stats, thresholds) {
   };
 }
 
-function checkOne(feature, applicationsDir, allApps, thresholds) {
+function checkOne(feature, applicationsDir, allApps, thresholds, fileCache) {
   const t = terms(feature);
   if (!t.length) {
     return {
@@ -671,9 +746,12 @@ function checkOne(feature, applicationsDir, allApps, thresholds) {
   const rawHits = [];
   const minDistinct = thresholds.min_distinct_terms_per_file ?? 2;
   const matchers = buildTermMatchers(t);
+  const combinedRe = buildCombinedMatcher(t);
 
   for (const app of apps) {
-    const hits = scanApp(app.abs, matchers, { maxDepth: 8, maxFiles: 600 });
+    const hits = fileCache && fileCache.has(app.name)
+      ? scanCachedApp(fileCache.get(app.name), matchers, combinedRe)
+      : scanApp(app.abs, matchers, { maxDepth: 8, maxFiles: 600, combinedRe });
     for (const h of hits) rawHits.push({ ...h, app: app.name });
   }
 
@@ -899,7 +977,10 @@ function main() {
 
   const allApps = listAppDirs(applicationsDir);
   const effectiveThresholds = { ...args.thresholds, _scopeByProduct: args.scopeByProduct };
-  const results = features.map((f) => checkOne(f, applicationsDir, allApps, effectiveThresholds));
+  // Read the monolith once and score every feature against the in-memory
+  // copy — avoids re-reading ~3.7k files per feature on multi-row runs.
+  const fileCache = buildCoreFileCache(allApps);
+  const results = features.map((f) => checkOne(f, applicationsDir, allApps, effectiveThresholds, fileCache));
 
   if (args.saveCandidate) {
     saveCandidates(features, results, args.saveCandidate);
@@ -989,4 +1070,7 @@ module.exports = {
   listAppDirs,
   filterDomainNoise,
   toMarkdownTable,
+  buildCoreFileCache,
+  scanCachedApp,
+  buildCombinedMatcher,
 };

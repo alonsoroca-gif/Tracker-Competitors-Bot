@@ -29,6 +29,7 @@ const {
   checkOne,
   resolveCoreRoot,
   DEFAULT_THRESHOLDS,
+  buildCoreFileCache,
 } = require('../scripts/core-parity-check.js');
 
 const fixtures = JSON.parse(fs.readFileSync(fixturesPath, 'utf8'));
@@ -51,6 +52,12 @@ const allApps = fs
   .filter((e) => e.isDirectory() && !e.name.startsWith('.'))
   .map((e) => ({ name: e.name, abs: path.join(applicationsDir, e.name) }));
 
+// Read the monolith into memory once and reuse it across every fixture.
+// Without this each fixture re-reads ~3.7k files from disk, turning the
+// suite into a ~40-minute I/O grind that blows past the 2-minute gate
+// timeout in manager-core-preflight.js. The cache keeps verdicts identical.
+const fileCache = buildCoreFileCache(allApps);
+
 let passed = 0;
 let failed = 0;
 const fails = [];
@@ -60,7 +67,7 @@ for (const fixture of fixtures) {
     ? fixture.expected_verdict
     : [fixture.expected_verdict];
 
-  const result = checkOne(fixture, applicationsDir, allApps, DEFAULT_THRESHOLDS);
+  const result = checkOne(fixture, applicationsDir, allApps, DEFAULT_THRESHOLDS, fileCache);
   const stats = `score=${result.total_score}, files=${result.files_with_hits}, apps=${result.apps_with_hits}`;
 
   if (expectedSet.includes(result.parity)) {
