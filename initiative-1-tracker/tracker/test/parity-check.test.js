@@ -29,7 +29,7 @@ const {
   checkOne,
   resolveCoreRoot,
   DEFAULT_THRESHOLDS,
-  buildCoreFileCache,
+  loadOrBuildCoreFileCache,
 } = require('../scripts/core-parity-check.js');
 
 const fixtures = JSON.parse(fs.readFileSync(fixturesPath, 'utf8'));
@@ -54,9 +54,11 @@ const allApps = fs
 
 // Read the monolith into memory once and reuse it across every fixture.
 // Without this each fixture re-reads ~3.7k files from disk, turning the
-// suite into a ~40-minute I/O grind that blows past the 2-minute gate
-// timeout in manager-core-preflight.js. The cache keeps verdicts identical.
-const fileCache = buildCoreFileCache(allApps);
+// suite into a ~40-minute I/O grind that blows past the gate timeout in
+// manager-core-preflight.js. Backed by a git-SHA-keyed disk cache, so when
+// Core is unchanged this loads in seconds instead of re-walking the tree.
+// The cache keeps verdicts identical.
+const fileCache = loadOrBuildCoreFileCache(root, allApps);
 
 let passed = 0;
 let failed = 0;

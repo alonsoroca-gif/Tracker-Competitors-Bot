@@ -41,6 +41,12 @@ initiative-1-tracker/tracker/.playwright-browsers/
 # so the manager never has to re-export ENTRATA_MONO_ROOT).
 initiative-1-tracker/tracker/.core-path
 
+# Cached Entrata Core source corpus for the parity scan (machine-specific;
+# keyed by Core's git SHA). Lets the parity gate load the monolith from one
+# file instead of re-reading ~3.7k files when Core hasn't changed. Rebuilt
+# automatically when Core's HEAD moves. Large (~60–90 MB); never commit.
+initiative-1-tracker/tracker/.core-file-cache.json
+
 # Interpretation pointer (machine-specific — tracks the last drop the manager
 # closed Phase 4 on, so the dedupe + diff in the next /trackerstart can use it
 # as the diff base instead of strict drops[idx-1]. Written by

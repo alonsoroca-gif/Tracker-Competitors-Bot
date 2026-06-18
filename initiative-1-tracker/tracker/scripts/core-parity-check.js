@@ -108,6 +108,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const { spawnSync } = require('child_process');
 
 const trackerRoot = path.resolve(__dirname, '..');
 const { extractSearchTerms } = require(path.join(trackerRoot, 'lib', 'repoInsight.js'));
@@ -169,7 +170,17 @@ function* walkFiles(dir, depth, maxDepth) {
 }
 
 function scoreFile(content, matchers, combinedRe) {
-  const lines = String(content).split('\n');
+  const text = String(content);
+  // File-level fast reject: if no search term appears anywhere in the file,
+  // it contributes zero — skip the line split + per-line scan entirely. For
+  // a given query ~95% of monolith files match no term, so this collapses a
+  // full per-line pass into one regex probe. Semantically identical: terms
+  // are single words that can't span a newline, so "no match in content"
+  // implies "no match on any line".
+  if (combinedRe && !combinedRe.test(text)) {
+    return { score: 0, matched_terms: [], snippets: [] };
+  }
+  const lines = text.split('\n');
   let score = 0;
   const matched = new Set();
   const snippets = [];
@@ -280,6 +291,97 @@ function scanCachedApp(cachedFiles, matchers, combinedRe) {
   return hits;
 }
 
+/**
+ * Resolve Core's git identity for cache-keying: the HEAD SHA plus whether
+ * the tracked working tree is dirty. A dirty tree means the corpus on disk
+ * may not match HEAD, so we bypass the persistent cache entirely (build
+ * fresh, don't read or write it) to avoid serving stale parity verdicts.
+ * Untracked files are ignored for speed — Core is a read-only reference
+ * checkout, so untracked source is not an expected case.
+ */
+function coreGitState(root) {
+  let sha = null;
+  let dirty = false;
+  try {
+    const r = spawnSync('git', ['-C', root, 'rev-parse', 'HEAD'], { encoding: 'utf8', timeout: 15000 });
+    if (r.status === 0) sha = (r.stdout || '').trim() || null;
+  } catch {
+    /* git missing or not a repo — treat as no SHA (cache disabled) */
+  }
+  if (sha) {
+    try {
+      const r = spawnSync('git', ['-C', root, 'status', '--porcelain', '--untracked-files=no'], {
+        encoding: 'utf8',
+        timeout: 60000,
+      });
+      // Non-zero exit → can't confirm clean → treat as dirty (safe: bypass cache).
+      dirty = r.status !== 0 || (r.stdout || '').trim().length > 0;
+    } catch {
+      dirty = true;
+    }
+  }
+  return { sha, dirty };
+}
+
+function fileCacheParamsKey(opts = {}) {
+  const maxDepth = opts.maxDepth ?? 8;
+  const maxFiles = opts.maxFiles ?? 600;
+  const maxFileBytes = opts.maxFileBytes ?? 200000;
+  return `v${FILE_CACHE_VERSION}:d${maxDepth}:f${maxFiles}:b${maxFileBytes}`;
+}
+
+/**
+ * Load the Core file corpus from the persistent on-disk cache when it is
+ * valid for the current Core SHA + scan params; otherwise walk + read the
+ * monolith via buildCoreFileCache and write the cache for next time.
+ *
+ * Falls back to an uncached in-memory build (no read/write) when Core's SHA
+ * can't be resolved or the tree is dirty — correctness over speed. The cache
+ * is read/written atomically (temp file + rename) so a crashed write can't
+ * leave a half-file that poisons the next run.
+ */
+function loadOrBuildCoreFileCache(root, allApps, opts = {}) {
+  const paramsKey = fileCacheParamsKey(opts);
+  const { sha, dirty } = root ? coreGitState(root) : { sha: null, dirty: true };
+  const cacheable = Boolean(sha) && !dirty;
+
+  if (cacheable && fs.existsSync(FILE_CACHE_FILE)) {
+    try {
+      const parsed = JSON.parse(fs.readFileSync(FILE_CACHE_FILE, 'utf8'));
+      if (parsed && parsed.sha === sha && parsed.params === paramsKey && parsed.apps) {
+        const cache = new Map();
+        for (const [name, files] of Object.entries(parsed.apps)) cache.set(name, files);
+        return cache;
+      }
+    } catch {
+      /* corrupt/unreadable cache — fall through and rebuild */
+    }
+  }
+
+  const cache = buildCoreFileCache(allApps, opts);
+
+  if (cacheable) {
+    try {
+      const apps = {};
+      for (const [name, files] of cache.entries()) apps[name] = files;
+      const payload = JSON.stringify({
+        version: FILE_CACHE_VERSION,
+        sha,
+        params: paramsKey,
+        built_at: new Date().toISOString(),
+        apps,
+      });
+      const tmp = `${FILE_CACHE_FILE}.tmp`;
+      fs.writeFileSync(tmp, payload, 'utf8');
+      fs.renameSync(tmp, FILE_CACHE_FILE);
+    } catch (e) {
+      process.stderr.write(`core-parity-check: WARN failed to write Core file cache (${e.message})\n`);
+    }
+  }
+
+  return cache;
+}
+
 const DEFAULT_THRESHOLDS = {
   existing_score: 40,
   existing_files: 4,
@@ -307,6 +409,15 @@ const DEFAULT_THRESHOLDS = {
 
 const HOME = process.env.HOME || process.env.USERPROFILE || '';
 const CACHE_FILE = path.resolve(__dirname, '..', '.core-path');
+
+// Persistent on-disk cache of the scanned Core source corpus. The parity
+// scan's dominant cost is the cold read of ~3.7k monolith files (~3 min).
+// Core rarely changes between runs, so we cache the corpus to one file keyed
+// by Core's git SHA — subsequent runs load one file (~seconds) instead of
+// re-walking the tree. Bump FILE_CACHE_VERSION if the scan params or cache
+// shape change so stale caches self-invalidate.
+const FILE_CACHE_VERSION = 1;
+const FILE_CACHE_FILE = path.resolve(__dirname, '..', '.core-file-cache.json');
 
 /**
  * Auto-discovery candidates, in priority order. The script tries each
@@ -978,8 +1089,10 @@ function main() {
   const allApps = listAppDirs(applicationsDir);
   const effectiveThresholds = { ...args.thresholds, _scopeByProduct: args.scopeByProduct };
   // Read the monolith once and score every feature against the in-memory
-  // copy — avoids re-reading ~3.7k files per feature on multi-row runs.
-  const fileCache = buildCoreFileCache(allApps);
+  // copy — avoids re-reading ~3.7k files per feature on multi-row runs. Backed
+  // by a git-SHA-keyed disk cache so unchanged Core loads in seconds, not the
+  // ~3 min cold walk.
+  const fileCache = loadOrBuildCoreFileCache(root, allApps);
   const results = features.map((f) => checkOne(f, applicationsDir, allApps, effectiveThresholds, fileCache));
 
   if (args.saveCandidate) {
@@ -1071,6 +1184,7 @@ module.exports = {
   filterDomainNoise,
   toMarkdownTable,
   buildCoreFileCache,
+  loadOrBuildCoreFileCache,
   scanCachedApp,
   buildCombinedMatcher,
 };
