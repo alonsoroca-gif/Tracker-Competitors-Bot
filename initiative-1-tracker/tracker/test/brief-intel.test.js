@@ -8,6 +8,8 @@ const {
   contentChangedBetween,
   catchUpNetNewInDropWindow,
   countProductRowsPendingParity,
+  countProductRowsIncompletePipeline,
+  isProductPipelineComplete,
   signalKey,
   publishedUrlKeys,
   contentChangedVsPublished,
@@ -210,6 +212,34 @@ const bodyChanged = [{ source_url: refreshUrl, headline: 'Add-Ons | JONAH', snip
 assert(
   contentChangedVsPublished(bodyChanged, hashedTable).length === 1,
   'genuinely changed page DOES re-surface as a content refresh',
+);
+
+// --- Pipeline-completeness must be tier-aware (kickoff false-trigger regression) ---
+// (Bug: a Gap/Partial Product row tiered Later with no prototype was counted as
+//  "incomplete", so the kickoff gate forced a full republish on every run.)
+assert(
+  isProductPipelineComplete({ classification: 'Product', parity: 'Gap', tier: 'Later', prototype_path: null }),
+  'Tier-Later Gap row with no prototype is complete (deferred, not unfinished)',
+);
+assert(
+  isProductPipelineComplete({ classification: 'Product', parity: 'Existing', tier: "Won't chase" }),
+  'Existing row is complete with no prototype',
+);
+assert(
+  !isProductPipelineComplete({ classification: 'Product', parity: 'Partial', tier: 'Now', prototype_path: null }),
+  'Tier-Now Partial row with no prototype is still incomplete',
+);
+assert(
+  isProductPipelineComplete({ classification: 'Product', parity: 'Partial', tier: 'Now', prototype_path: 'x.html' }),
+  'Tier-Now Partial row with a prototype is complete',
+);
+assert(
+  countProductRowsIncompletePipeline([
+    { classification: 'Product', parity: 'Existing', tier: "Won't chase" },
+    { classification: 'Product', parity: 'Partial', tier: 'Now', prototype_path: 'p.html' },
+    { classification: 'Product', parity: 'Gap', tier: 'Later', prototype_path: null },
+  ]) === 0,
+  'a fully-resolved Product table counts 0 incomplete rows',
 );
 
 process.exit(failed ? 1 : 0);

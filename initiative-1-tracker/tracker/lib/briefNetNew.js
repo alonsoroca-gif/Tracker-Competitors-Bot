@@ -243,8 +243,16 @@ function isProductPipelineComplete(row) {
   const parity = String(row.parity || 'not_scanned').toLowerCase();
   if (!parity || parity === 'not_scanned' || parity === '—') return false;
   if (parity === 'existing') return true;
-  if (parity === 'gap' || parity === 'partial') return Boolean(row.prototype_path);
   if (parity === 'unknown' || parity === 'borderline') return false;
+  if (parity === 'gap' || parity === 'partial') {
+    // A prototype is only required for Tier-Now rows. Rows the publish
+    // deliberately deferred (Later) or dropped (Won't chase) are complete once
+    // scanned — deferral is a decision, not unfinished work. Without this, a
+    // Tier-Later Gap row with no prototype made the kickoff gate re-trigger a
+    // full republish on every run.
+    const tierNow = String(row.tier || '').toLowerCase() === 'now';
+    return tierNow ? Boolean(row.prototype_path) : true;
+  }
   return Boolean(row.prototype_path);
 }
 
