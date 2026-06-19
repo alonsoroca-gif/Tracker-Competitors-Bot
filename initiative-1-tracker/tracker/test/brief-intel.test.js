@@ -8,6 +8,9 @@ const {
   contentChangedBetween,
   catchUpNetNewInDropWindow,
   countProductRowsPendingParity,
+  signalKey,
+  publishedUrlKeys,
+  contentChangedVsPublished,
 } = require('../lib/briefNetNew.js');
 const { buildSignalsTableRows, classifySignal } = require('../lib/briefClassify.js');
 const { buildSignalAnalysis } = require('../lib/briefSignalAnalysis.js');
@@ -165,5 +168,48 @@ try {
 } catch (e) {
   process.stderr.write(`intel gather: ${e.message}\n`);
 }
+
+// --- Dedup regression: signalKey must accept a string or an object ---
+// (Bug: publishedUrlKeys passed row.source_url as a string; signalKey read
+//  .source_url off the string, returned '', and silently disabled dedup so the
+//  same prototype was rebuilt every cycle.)
+assert(
+  signalKey('https://JONAHDIGITAL.com/add-ons/ ') === 'https://jonahdigital.com/add-ons/',
+  'signalKey normalizes a raw URL string',
+);
+assert(
+  signalKey({ source_url: 'https://Eliseai.com/' }) === 'https://eliseai.com/',
+  'signalKey normalizes a signal/row object',
+);
+
+const publishedRows = [
+  { source_url: 'https://jonahdigital.com/add-ons/' },
+  { source_url: 'https://eliseai.com/' },
+];
+const pubKeys = publishedUrlKeys(publishedRows);
+assert(
+  pubKeys.size === 2 && pubKeys.has('https://jonahdigital.com/add-ons/'),
+  'publishedUrlKeys populates from rows (dedup not silently disabled)',
+);
+
+// --- Content-refresh detection must compare like-for-like, not snippet-vs-why_routing ---
+const refreshUrl = 'https://jonahdigital.com/add-ons/';
+const hashedTable = buildSignalsTableRows([
+  { ...jonahArticles, source_url: refreshUrl, headline: 'Add-Ons | JONAH', snippet: 'SightMap embed' },
+]);
+assert(
+  typeof hashedTable[0].content_hash === 'string' && hashedTable[0].content_hash.length > 0,
+  'buildSignalsTableRows stamps a content_hash on each row',
+);
+const unchanged = [{ source_url: refreshUrl, headline: 'Add-Ons | JONAH', snippet: 'SightMap embed' }];
+assert(
+  contentChangedVsPublished(unchanged, hashedTable).length === 0,
+  'unchanged page does NOT re-surface as a content refresh',
+);
+const bodyChanged = [{ source_url: refreshUrl, headline: 'Add-Ons | JONAH', snippet: 'SightMap embed + NEW live pin overlay' }];
+assert(
+  contentChangedVsPublished(bodyChanged, hashedTable).length === 1,
+  'genuinely changed page DOES re-surface as a content refresh',
+);
 
 process.exit(failed ? 1 : 0);

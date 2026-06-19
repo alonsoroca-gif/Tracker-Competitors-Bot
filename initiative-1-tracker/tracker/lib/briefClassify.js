@@ -5,6 +5,7 @@
 
 const { loadConfig } = require('./loadConfig');
 const { buildSignalAnalysis, applyContextPrefix } = require('./briefSignalAnalysis.js');
+const { contentFingerprint } = require('./briefNetNew.js');
 
 function isG2Signal(signal) {
   const type = String(signal?.type || '').toLowerCase();
@@ -202,6 +203,7 @@ function buildSignalsTableRows(signals, opts = {}) {
       signal_summary: analysis,
       tier: c.tier,
       source_url: s.source_url || '',
+      content_hash: contentFingerprint(s),
       prototype_path: null,
       prd_path: null,
     };

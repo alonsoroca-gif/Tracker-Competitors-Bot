@@ -2,8 +2,26 @@
  * Net-new signal detection between drops (source_url diff).
  */
 
+const crypto = require('crypto');
+
 function signalKey(s) {
-  return (s.source_url || '').trim().toLowerCase();
+  // Accept either a signal/row object or a raw source_url string. Several callers
+  // pass `row.source_url` directly; without the string branch this returned ''
+  // for those, silently emptying publishedUrlKeys and disabling dedup.
+  if (typeof s === 'string') return s.trim().toLowerCase();
+  return ((s && s.source_url) || '').trim().toLowerCase();
+}
+
+/**
+ * Stable content fingerprint for a signal or published row.
+ * Hashes the page's own content (headline + snippet) so the same unchanged
+ * page produces the same hash across drops. Used to tell a real content
+ * refresh apart from a page we already published verbatim.
+ */
+function contentFingerprint(s) {
+  const headline = String((s && s.headline) || '').trim().toLowerCase();
+  const snippet = String((s && s.snippet) || '').trim().toLowerCase().slice(0, 200);
+  return crypto.createHash('sha1').update(`${headline}|${snippet}`).digest('hex').slice(0, 16);
 }
 
 function netNewBetween(currentSignals, priorSignals) {
@@ -94,7 +112,7 @@ function catchUpNetNewInDropWindow(dropIds, baselineDropId, latestDropId, loadSi
   return out;
 }
 
-/** Same URL already published in brief table but headline/snippet changed in latest collect. */
+/** Same URL already published in brief table but the page content changed in latest collect. */
 function contentChangedVsPublished(currentSignals, publishedTableRows) {
   const publishedByUrl = new Map();
   for (const r of publishedTableRows || []) {
@@ -108,9 +126,20 @@ function contentChangedVsPublished(currentSignals, publishedTableRows) {
     if (!key || seen.has(key)) continue;
     const pub = publishedByUrl.get(key);
     if (!pub) continue;
-    const live = `${s.headline || ''}|${(s.snippet || '').slice(0, 200)}`;
-    const prev = `${pub.headline || ''}|${(pub.why_routing || '').slice(0, 200)}`;
-    if (live !== prev) {
+    let changed;
+    if (pub.content_hash) {
+      // Compare like-for-like: the page's content fingerprint, recomputed
+      // from the live signal, against the hash stamped when it was published.
+      changed = contentFingerprint(s) !== pub.content_hash;
+    } else {
+      // Legacy rows predate content_hash. Only re-surface on a real headline
+      // change — never the old snippet-vs-why_routing mismatch, which compared
+      // two different fields and so flagged every URL as "changed" every run.
+      changed =
+        String(s.headline || '').trim().toLowerCase() !==
+        String(pub.headline || '').trim().toLowerCase();
+    }
+    if (changed) {
       seen.add(key);
       out.push(s);
     }
@@ -233,6 +262,7 @@ function countProductRowsPendingParity(signalsTable) {
 
 module.exports = {
   signalKey,
+  contentFingerprint,
   netNewBetween,
   contentChangedBetween,
   publishedUrlKeys,
