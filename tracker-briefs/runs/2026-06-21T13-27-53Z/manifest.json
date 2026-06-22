@@ -1,0 +1,24 @@
+{
+  "run_id": "2026-06-21T13-27-53Z",
+  "drop_run_id": "2026-06-21T13-27-53Z",
+  "published_at": "2026-06-22T15:27:43.066Z",
+  "source": "tracker-publish",
+  "day_type": "weekend_catch_up",
+  "net_new_count": 15,
+  "weekend_mandatory_count": 15,
+  "weekend_drop_ids": [
+    "2026-06-20T13-15-11Z",
+    "2026-06-21T13-27-53Z"
+  ],
+  "catch_up_count": 0,
+  "content_refreshed_count": 0,
+  "carryover_count": 0,
+  "calendar_gap_days": 3,
+  "product_row_count": 5,
+  "tier_now_product_count": 1,
+  "prototype_count": 1,
+  "carried_forward_count": 15,
+  "interpretation_pointer": "2026-06-21T13-27-53Z",
+  "prior_brief_run_id": "2026-06-19T19-51-07Z",
+  "summary": "15 weekend collect(s), 3d since last brief · 15 row(s) incl. 5 Product — all content unchanged from Friday; 15 rows carried forward, 1 prototype retained."
+}
