@@ -1,0 +1,28 @@
+{
+  "run_id": "2026-06-23T20-07-42Z",
+  "drop_run_id": "2026-06-23T20-07-42Z",
+  "published_at": "2026-06-23T21:19:21.552Z",
+  "source": "tracker-publish",
+  "day_type": "mixed",
+  "net_new_count": 14,
+  "weekend_mandatory_count": 0,
+  "weekend_drop_ids": [],
+  "catch_up_count": 14,
+  "content_refreshed_count": 0,
+  "carryover_count": 1,
+  "calendar_gap_days": 0,
+  "product_row_count": 5,
+  "tier_now_product_count": 1,
+  "prototype_count": 1,
+  "carried_forward_count": 1,
+  "interpretation_pointer": "2026-06-23T20-07-42Z",
+  "prior_brief_run_id": "2026-06-23T14-08-52Z",
+  "summary": "14 net-new URLs · 1 carryover (Jonah SightMap Tier — Now) · 5 Product rows (1 Tier — Now) · 1 prototype(s).",
+  "parity_notes": {
+    "eliseai_homepage": "Borderline — manager review before promoting",
+    "funnel_homepage": "Existing — Won't chase",
+    "anyone_home_solutions": "Existing — Won't chase",
+    "anyone_home_june_release": "Existing — Won't chase",
+    "jonah_sightmap": "Partial (L2 overrides L1 Existing)"
+  }
+}
