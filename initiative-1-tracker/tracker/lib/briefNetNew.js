@@ -148,39 +148,71 @@ function contentChangedVsPublished(currentSignals, publishedTableRows) {
 }
 
 /**
- * Tag each current brief row as 'new' (URL not in prior brief), 'changed' (URL
- * present but content moved), or 'unchanged' (already shown, no change). The
+ * Tag each current brief row as 'new' (URL never shown before), 'changed' (URL
+ * shown before but content moved), or 'unchanged' (already shown, no change). The
  * renderer shows new + changed and suppresses unchanged so the manager only sees
- * fresh intel. Legacy prior rows without a content_hash fall back to a headline
- * comparison.
+ * fresh intel.
+ *
+ * `priorRows` is the UNION of every brief published before this run (oldest →
+ * newest), not just the single prior run. We remember EVERY content_hash seen
+ * per URL, so a signal whose content is byte-identical to any earlier brief is
+ * 'unchanged' — even when the immediately-prior run was a quiet day that didn't
+ * contain it. (Comparing against only the last run made every old signal look
+ * "new" again the morning after a quiet day.) Legacy rows without a content_hash
+ * fall back to a headline comparison.
  */
 function classifySignalChanges(currentRows, priorRows) {
   const priorByUrl = new Map();
   for (const r of priorRows || []) {
     const key = signalKey(r.source_url || '');
-    if (key) priorByUrl.set(key, r);
+    if (!key) continue;
+    let entry = priorByUrl.get(key);
+    if (!entry) {
+      entry = { hashes: new Set(), headlines: new Set(), last: r };
+      priorByUrl.set(key, entry);
+    }
+    // content_hash is the BODY-AWARE fingerprint (headline + scraped snippet),
+    // stamped at classify time from the raw signal. It is the only persisted
+    // field that reflects a change beneath the headline, so it is the source of
+    // truth for "did this page change?". We remember every hash a URL has ever
+    // shown so a page byte-identical to ANY earlier brief stays unchanged.
+    if (r.content_hash) entry.hashes.add(r.content_hash);
+    entry.headlines.add(String(r.headline || '').trim().toLowerCase());
+    entry.last = r; // priorRows is oldest→newest, so this ends on the most recent
   }
   return (currentRows || []).map((r) => {
     const key = signalKey(r.source_url || '');
-    const prior = key ? priorByUrl.get(key) : null;
-    if (!prior) return { ...r, change_status: 'new' };
-    let changed;
-    if (prior.content_hash && r.content_hash) {
-      changed = r.content_hash !== prior.content_hash;
-    } else {
-      changed =
-        String(r.headline || '').trim().toLowerCase() !==
-        String(prior.headline || '').trim().toLowerCase();
-    }
-    if (!changed) return { ...r, change_status: 'unchanged' };
+    const entry = key ? priorByUrl.get(key) : null;
+    if (!entry) return { ...r, change_status: 'new' };
+    // Unchanged only if the body-aware hash was seen before. If the URL's prior
+    // rows predate hashing (legacy, no hash), fall back to a headline compare.
+    // A new hash means the headline OR the body moved → surface it, because the
+    // whole point is tracking what competitors change day to day.
+    const unchanged = entry.hashes.size && r.content_hash
+      ? entry.hashes.has(r.content_hash)
+      : entry.headlines.has(String(r.headline || '').trim().toLowerCase());
+    if (unchanged) return { ...r, change_status: 'unchanged' };
     // Describe what moved so the brief can highlight the actual change, not just
     // flag "(updated)". Headline diffs are shown verbatim; sub-headline content
     // moves (hash changed, headline same) are reported honestly as such.
+    const prior = entry.last;
     const headlineMoved =
       String(r.headline || '').trim() !== String(prior.headline || '').trim();
-    const change_detail = headlineMoved
-      ? `headline: “${prior.headline || '—'}” → “${r.headline || '—'}”`
-      : 'page content changed beneath the headline';
+    const priorSnip = String(prior.snippet || '').trim();
+    const curSnip = String(r.snippet || '').trim();
+    const clip = (t, n) => (t.length > n ? `${t.slice(0, n)}…` : t);
+    let change_detail;
+    if (headlineMoved) {
+      change_detail = `headline: “${prior.headline || '—'}” → “${r.headline || '—'}”`;
+    } else if (curSnip && priorSnip && curSnip !== priorSnip) {
+      // Both runs carry the excerpt → show the actual body diff.
+      change_detail = `excerpt: “${clip(priorSnip, 70)}” → “${clip(curSnip, 70)}”`;
+    } else if (curSnip && !priorSnip) {
+      // Prior predates snippet persistence; show at least the current excerpt.
+      change_detail = `new excerpt: “${clip(curSnip, 110)}”`;
+    } else {
+      change_detail = 'page content changed beneath the headline';
+    }
     return { ...r, change_status: 'changed', prev_headline: prior.headline || '', change_detail };
   });
 }

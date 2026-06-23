@@ -14,7 +14,7 @@ const {
   loadSignalsTable,
   loadPrototypes,
   annotateCarriedOver,
-  priorPublishedRunId,
+  listBriefRunIds,
   mtCalendarDay,
   isBriefFreshForToday,
   runDir,
@@ -62,8 +62,21 @@ function main() {
   }
 
   const manifest = loadRunManifest(runId);
-  const priorRunId = priorPublishedRunId(runId);
-  const priorSignals = priorRunId ? loadSignalsTable(priorRunId) : [];
+  // Baseline = every real brief published before this run (oldest→newest), not
+  // just the single prior run. A quiet prior day used to make every older signal
+  // look net-new again; spanning history fixes that — a signal is only "new" if
+  // its URL was never shown, and only "changed" if its content_hash never matched
+  // any earlier brief.
+  const currentPublishedAt = (manifest && manifest.published_at) || null;
+  const priorRunIds = listBriefRunIds()
+    .filter((id) => id !== runId && !id.startsWith('_'))
+    .filter((id) => {
+      const p = (loadRunManifest(id) || {}).published_at || null;
+      return !currentPublishedAt || !p || p < currentPublishedAt;
+    })
+    .slice(0, 60) // bound the window (newest-first) so history stays manageable
+    .reverse(); // oldest→newest so the most recent prior wins as `last`
+  const priorSignals = priorRunIds.flatMap((id) => loadSignalsTable(id));
   const signalsTable = classifySignalChanges(loadSignalsTable(runId), priorSignals);
   const prototypes = annotateCarriedOver(runId, loadPrototypes(runId));
 
@@ -76,7 +89,8 @@ function main() {
   // viewer can hide unchanged carryover instead of re-showing old rows every day.
   writeJson(path.join(runDir(runId), 'viewer-annotations.json'), {
     generated_at: new Date().toISOString(),
-    prior_run_id: priorRunId,
+    prior_run_id: priorRunIds[priorRunIds.length - 1] || null,
+    baseline_run_count: priorRunIds.length,
     signals: signalsTable,
     prototypes,
   });

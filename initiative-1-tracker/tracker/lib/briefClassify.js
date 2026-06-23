@@ -193,6 +193,10 @@ function buildSignalsTableRows(signals, opts = {}) {
       competitor_id: s.competitor_id || '',
       competitor: displayName(s, nameMap),
       headline: String(s.headline || s.snippet || 'Competitor update').trim().slice(0, 120),
+      // Persist the scraped excerpt so a later "changed" classification can show
+      // the actual old→new body diff, not just that the hash moved. content_hash
+      // is computed from this same text, so the row now carries what the hash saw.
+      snippet: String(s.snippet || '').trim().slice(0, 280),
       classification: c.classification,
       classification_detail: c.classification_detail,
       parity: isProduct ? c.parity || 'not_scanned' : '—',

@@ -1,6 +1,7 @@
 {
-  "generated_at": "2026-06-23T21:20:10.596Z",
+  "generated_at": "2026-06-23T22:31:52.891Z",
   "prior_run_id": "2026-06-23T14-08-52Z",
+  "baseline_run_count": 14,
   "signals": [
     {
       "id": 1,
@@ -20,7 +21,7 @@
       "content_hash": "455f2df584576de3",
       "prototype_path": null,
       "prd_path": null,
-      "change_status": "new"
+      "change_status": "unchanged"
     },
     {
       "id": 2,
@@ -40,7 +41,7 @@
       "content_hash": "65a05fe65515375a",
       "prototype_path": null,
       "prd_path": null,
-      "change_status": "new"
+      "change_status": "unchanged"
     },
     {
       "id": 3,
@@ -60,7 +61,7 @@
       "content_hash": "7ed1fd6d71d64c89",
       "prototype_path": null,
       "prd_path": null,
-      "change_status": "new"
+      "change_status": "unchanged"
     },
     {
       "id": 4,
@@ -80,7 +81,7 @@
       "content_hash": "25e6ac4505d6bcf5",
       "prototype_path": null,
       "prd_path": null,
-      "change_status": "new"
+      "change_status": "unchanged"
     },
     {
       "id": 5,
@@ -100,7 +101,7 @@
       "content_hash": "39d8ce4be012a7be",
       "prototype_path": null,
       "prd_path": null,
-      "change_status": "new"
+      "change_status": "unchanged"
     },
     {
       "id": 6,
@@ -121,7 +122,7 @@
       "prototype_path": null,
       "prd_path": null,
       "needs_review": true,
-      "change_status": "new"
+      "change_status": "unchanged"
     },
     {
       "id": 7,
@@ -141,7 +142,7 @@
       "content_hash": "3eadab73bbf0f811",
       "prototype_path": null,
       "prd_path": null,
-      "change_status": "new"
+      "change_status": "unchanged"
     },
     {
       "id": 8,
@@ -161,7 +162,7 @@
       "content_hash": "d61d7b0ba0d40751",
       "prototype_path": null,
       "prd_path": null,
-      "change_status": "new"
+      "change_status": "unchanged"
     },
     {
       "id": 9,
@@ -181,7 +182,7 @@
       "content_hash": "ec7dd88758567dd0",
       "prototype_path": null,
       "prd_path": null,
-      "change_status": "new"
+      "change_status": "unchanged"
     },
     {
       "id": 10,
@@ -201,7 +202,7 @@
       "content_hash": "83dfb770761f39ea",
       "prototype_path": null,
       "prd_path": null,
-      "change_status": "new"
+      "change_status": "unchanged"
     },
     {
       "id": 11,
@@ -221,7 +222,7 @@
       "content_hash": "3ae5b9f9d5149b39",
       "prototype_path": null,
       "prd_path": null,
-      "change_status": "new"
+      "change_status": "unchanged"
     },
     {
       "id": 12,
@@ -241,7 +242,7 @@
       "content_hash": "08e6e7e32edd6622",
       "prototype_path": null,
       "prd_path": null,
-      "change_status": "new"
+      "change_status": "unchanged"
     },
     {
       "id": 13,
@@ -261,7 +262,9 @@
       "content_hash": "cba30349ffa31f1a",
       "prototype_path": null,
       "prd_path": null,
-      "change_status": "new"
+      "change_status": "changed",
+      "prev_headline": "26 Funnel Leasing Customer Reviews & References",
+      "change_detail": "page content changed beneath the headline"
     },
     {
       "id": 14,
@@ -281,7 +284,7 @@
       "content_hash": "e34b08f7e6df7ff1",
       "prototype_path": null,
       "prd_path": null,
-      "change_status": "new"
+      "change_status": "unchanged"
     },
     {
       "id": 15,

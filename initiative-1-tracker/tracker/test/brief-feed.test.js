@@ -146,6 +146,47 @@ const legacyClassified = classifySignalChanges(
 );
 check('legacy headline match → unchanged', legacyClassified[0].change_status === 'unchanged');
 
+// History baseline: a signal byte-identical to an OLDER run is unchanged even
+// when the immediately-prior run (a quiet day) did not contain it. priorRows is
+// the union of all prior briefs, oldest→newest.
+const historyPrior = [
+  // older run had the signal...
+  { source_url: 'https://resurface.com/p', headline: 'R', content_hash: 'hR' },
+  // ...then a quiet run with an unrelated row (the signal is absent here)
+  { source_url: 'https://quiet.com/p', headline: 'Q', content_hash: 'hQ' },
+];
+const historyClassified = classifySignalChanges(
+  [{ source_url: 'https://resurface.com/p', headline: 'R', content_hash: 'hR' }],
+  historyPrior,
+);
+check(
+  'resurfaced signal (identical hash in older run) is unchanged, not new',
+  historyClassified[0].change_status === 'unchanged',
+);
+
+// Body-aware: a new content_hash means the headline OR the body moved. Per the
+// project's purpose (track what competitors change day to day) this surfaces as
+// 'changed' even when the headline text is unchanged — the hash includes the
+// scraped body the row does not persist.
+const bodyChanged = classifySignalChanges(
+  [{ source_url: 'https://n.com/reviews', headline: 'Reviews', content_hash: 'newhash' }],
+  [{ source_url: 'https://n.com/reviews', headline: 'Reviews', content_hash: 'oldhash' }],
+);
+check('new content_hash (body moved) surfaces as changed', bodyChanged[0].change_status === 'changed');
+
+// When both runs persist the snippet, a body change shows the actual old→new
+// excerpt diff so the manager sees WHAT the competitor changed.
+const diffClassified = classifySignalChanges(
+  [{ source_url: 'https://n.com/p', headline: 'Same', snippet: 'now mentions AI pricing', content_hash: 'h2' }],
+  [{ source_url: 'https://n.com/p', headline: 'Same', snippet: 'old plain pricing copy', content_hash: 'h1' }],
+);
+check(
+  'changed signal with snippets shows old→new excerpt diff',
+  diffClassified[0].change_detail.includes('excerpt:') &&
+    diffClassified[0].change_detail.includes('old plain pricing copy') &&
+    diffClassified[0].change_detail.includes('now mentions AI pricing'),
+);
+
 const viewer = path.join(repoRoot, 'tracker-briefs/viewer/index.html');
 if (!fs.existsSync(viewer)) {
   process.stderr.write('brief-feed.test: viewer missing\n');
