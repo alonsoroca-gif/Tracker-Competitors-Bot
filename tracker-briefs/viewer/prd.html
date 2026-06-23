@@ -4,24 +4,23 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>PRD — Tracker Brief</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" crossorigin="anonymous"></script>
   <style>
+    /* Light "document" theme — matches tracker-decks/PRD-*.html so the on-screen
+       PRD and the printed PDF are the same artifact. Download = browser print. */
     :root {
-      --bg: #0c0c0f;
-      --panel: #16161a;
-      --text: #ececf1;
-      --muted: #9b9ba7;
-      --accent: #5b8def;
-      --border: #2a2a32;
-      --ok: #4ade80;
+      --ink: #1a1a1a;
+      --muted: #666;
+      --accent: #c0392b;
+      --rule: #ccc;
+      --code-bg: #f4f4f4;
     }
     * { box-sizing: border-box; }
+    html, body { background: #5a5a5f; }
     body {
       margin: 0;
-      font-family: "SF Pro Text", system-ui, sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      line-height: 1.55;
+      font-family: -apple-system, "Helvetica Neue", Arial, sans-serif;
+      color: var(--ink);
+      line-height: 1.5;
     }
     .toolbar {
       position: sticky;
@@ -33,190 +32,213 @@
       align-items: center;
       gap: 12px;
       padding: 12px 20px;
-      background: rgba(12, 12, 15, 0.95);
-      border-bottom: 1px solid var(--border);
+      background: rgba(20, 20, 24, 0.96);
+      border-bottom: 1px solid #2a2a32;
     }
     .btn-back, .btn-pdf {
       display: inline-block;
       padding: 8px 16px;
       border-radius: 8px;
-      border: 1px solid var(--border);
-      background: var(--panel);
-      color: var(--text);
+      border: 1px solid #3a3a44;
+      background: #16161a;
+      color: #ececf1;
       text-decoration: none;
       font-size: 0.9rem;
       font-weight: 500;
       cursor: pointer;
       font-family: inherit;
     }
-    .btn-pdf {
-      border-color: var(--accent);
-      color: var(--accent);
-    }
-    .btn-back:hover, .btn-pdf:hover {
-      background: rgba(91, 141, 239, 0.12);
-    }
+    .btn-pdf { border-color: #5b8def; color: #9dbcff; }
+    .btn-back:hover, .btn-pdf:hover { background: #21212a; }
     .status {
       width: 100%;
       text-align: center;
       font-size: 0.82rem;
-      color: var(--ok);
+      color: #9b9ba7;
       min-height: 1.2em;
     }
-    main {
-      max-width: 800px;
-      margin: 0 auto;
-      padding: 32px 24px 48px;
+    /* The printable page — a letter-width white sheet centered on the dark chrome. */
+    .sheet {
+      max-width: 7.5in;
+      margin: 28px auto 56px;
+      padding: 0.75in;
+      background: #fff;
+      border-radius: 6px;
+      box-shadow: 0 8px 40px rgba(0, 0, 0, 0.35);
     }
-    #content h1 { font-size: 1.5rem; margin-top: 0; }
-    #content h2 { font-size: 1.15rem; margin-top: 1.5rem; }
-    #content h3 { font-size: 1rem; }
-    #content p, #content li { color: var(--text); }
-    #content ul { padding-left: 1.25rem; }
+    #content h1 {
+      font-size: 21px;
+      margin: 0 0 6px 0;
+      border-bottom: 2px solid var(--ink);
+      padding-bottom: 6px;
+      line-height: 1.25;
+    }
+    #content h2 {
+      font-size: 14px;
+      margin: 18px 0 4px 0;
+      color: var(--accent);
+      text-transform: none;
+    }
+    #content h3 { font-size: 12.5px; margin: 12px 0 4px; }
+    #content p { margin: 5px 0; font-size: 13px; }
+    #content ul { margin: 4px 0 8px 20px; padding: 0; }
+    #content li { margin-bottom: 4px; font-size: 13px; }
     #content code {
-      background: var(--panel);
-      padding: 2px 6px;
-      border-radius: 4px;
-      font-size: 0.9em;
+      font-family: ui-monospace, "SF Mono", Menlo, monospace;
+      font-size: 0.86em;
+      background: var(--code-bg);
+      padding: 1px 5px;
+      border-radius: 3px;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+    #content strong { font-weight: 700; }
+    .meta { font-size: 11px; color: var(--muted); margin: 8px 0 16px; }
+    .pill {
+      display: inline-block;
+      padding: 1px 8px;
+      border-radius: 9px;
+      font-size: 10.5px;
+      font-weight: 700;
+      color: #fff;
+      vertical-align: middle;
+      /* Keep pill fills when saving to PDF (browsers drop backgrounds otherwise). */
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+    .pill-now { background: #27ae60; }
+    .pill-s { background: #16a085; }
+    .pill-m { background: #e67e22; }
+    .pill-l { background: #c0392b; }
+    .pill-xl { background: #8e44ad; }
+    .doc-footer {
+      margin-top: 22px;
+      padding-top: 8px;
+      border-top: 1px solid var(--rule);
+      font-size: 10.5px;
+      color: #888;
     }
     .loading, .err { text-align: center; padding: 48px 24px; color: var(--muted); }
-    .err { color: #f87171; }
+    .err { color: #c0392b; }
+
+    @media print {
+      html, body { background: #fff; }
+      .toolbar { display: none !important; }
+      .sheet {
+        max-width: none;
+        margin: 0;
+        padding: 0;
+        box-shadow: none;
+        border-radius: 0;
+      }
+    }
+    @page { size: Letter; margin: 0.75in; }
   </style>
 </head>
 <body>
   <div class="toolbar">
     <a class="btn-back" id="back-link" href="index.html">← Back to Tracker Brief</a>
-    <button type="button" class="btn-pdf" id="pdf-btn">Download complete PRD now</button>
+    <button type="button" class="btn-pdf" id="pdf-btn">Download PDF (Save as PDF)</button>
     <p class="status" id="status" aria-live="polite"></p>
   </div>
-  <main>
+  <main class="sheet">
     <div id="content" class="loading">Loading PRD…</div>
   </main>
   <script>
     const params = new URLSearchParams(location.search);
     const src = params.get('src');
     const back = params.get('back');
-    const autoPdf = params.get('auto') === 'pdf';
-
-    let loadedMd = '';
 
     if (back) document.getElementById('back-link').href = back;
-
-    function pdfFilename() {
-      const base = (src || 'prd.md').split('/').pop() || 'prd.md';
-      return base.replace(/\.md$/i, '') + '.pdf';
-    }
-
-    function mdToPlainBlocks(md) {
-      const lines = md.replace(/\r\n/g, '\n').split('\n');
-      const blocks = [];
-      for (const line of lines) {
-        const t = line.trim();
-        if (!t) {
-          blocks.push({ text: '', size: 8, bold: false, gap: true });
-          continue;
-        }
-        if (/^### (.+)/.test(t)) {
-          blocks.push({ text: RegExp.$1, size: 12, bold: true });
-        } else if (/^## (.+)/.test(t)) {
-          blocks.push({ text: RegExp.$1, size: 14, bold: true });
-        } else if (/^# (.+)/.test(t)) {
-          blocks.push({ text: RegExp.$1, size: 18, bold: true });
-        } else if (/^[-*] (.+)/.test(t)) {
-          const item = RegExp.$1.replace(/\*\*(.+?)\*\*/g, '$1').replace(/`([^`]+)`/g, '$1');
-          blocks.push({ text: `• ${item}`, size: 11, bold: false });
-        } else {
-          const p = t.replace(/\*\*(.+?)\*\*/g, '$1').replace(/`([^`]+)`/g, '$1');
-          blocks.push({ text: p, size: 11, bold: false });
-        }
-      }
-      return blocks;
-    }
-
-    function downloadPdf() {
-      if (!loadedMd || !window.jspdf) {
-        setStatus('PDF not ready — wait for PRD to load.', true);
-        return;
-      }
-      const { jsPDF } = window.jspdf;
-      const doc = new jsPDF({ unit: 'pt', format: 'letter' });
-      const margin = 48;
-      const pageH = doc.internal.pageSize.getHeight();
-      const maxW = doc.internal.pageSize.getWidth() - margin * 2;
-      let y = margin;
-
-      for (const block of mdToPlainBlocks(loadedMd)) {
-        if (block.gap) {
-          y += 8;
-          continue;
-        }
-        if (!block.text) continue;
-        doc.setFontSize(block.size);
-        doc.setFont('helvetica', block.bold ? 'bold' : 'normal');
-        const wrapped = doc.splitTextToSize(block.text, maxW);
-        const lineH = block.size * 1.35;
-        for (const line of wrapped) {
-          if (y > pageH - margin) {
-            doc.addPage();
-            y = margin;
-          }
-          doc.text(line, margin, y);
-          y += lineH;
-        }
-        y += 4;
-      }
-
-      const name = pdfFilename();
-      doc.save(name);
-      setStatus(`Downloaded ${name}`);
-    }
 
     function setStatus(msg, isErr) {
       const el = document.getElementById('status');
       el.textContent = msg;
-      el.style.color = isErr ? '#f87171' : 'var(--ok)';
+      el.style.color = isErr ? '#f87171' : '#9b9ba7';
     }
 
-    document.getElementById('pdf-btn').addEventListener('click', downloadPdf);
+    // Inline markdown: escape HTML first, then apply code / bold / italic.
+    function inline(s) {
+      let t = String(s)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+      t = t.replace(/`([^`]+)`/g, '<code>$1</code>');
+      t = t.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+      t = t.replace(/\*([^*]+)\*/g, '<em>$1</em>');
+      return t;
+    }
 
+    /**
+     * Renders the tracker PRD markdown shape:
+     *   #### PRD: <title>            → <h1>
+     *   - **Field:** value           → <h2>Field</h2> + <p>value</p>
+     *   <indent>- sub-bullet         → <li> under the field's <ul>
+     *   ## / ### headers             → <h2>/<h3>  (polished-format compatibility)
+     */
     function mdToHtml(md) {
       const lines = md.replace(/\r\n/g, '\n').split('\n');
       const out = [];
       let inList = false;
+      const openList = () => { if (!inList) { out.push('<ul>'); inList = true; } };
+      const closeList = () => { if (inList) { out.push('</ul>'); inList = false; } };
 
-      function closeList() {
-        if (inList) { out.push('</ul>'); inList = false; }
-      }
+      for (const raw of lines) {
+        const line = raw.replace(/\s+$/, '');
+        let m;
+        if (line.trim() === '') { closeList(); continue; }
 
-      for (const line of lines) {
-        if (/^### (.+)/.test(line)) {
+        if ((m = line.match(/^#{4,6}\s+(.+)/))) { closeList(); out.push(`<h1>${inline(m[1])}</h1>`); continue; }
+        if ((m = line.match(/^#\s+(.+)/))) { closeList(); out.push(`<h1>${inline(m[1])}</h1>`); continue; }
+        if ((m = line.match(/^##\s+(.+)/))) { closeList(); out.push(`<h2>${inline(m[1])}</h2>`); continue; }
+        if ((m = line.match(/^###\s+(.+)/))) { closeList(); out.push(`<h3>${inline(m[1])}</h3>`); continue; }
+
+        // Indented sub-bullet → list item under the current section.
+        if ((m = line.match(/^\s{2,}[-*]\s+(.+)/))) { openList(); out.push(`<li>${inline(m[1])}</li>`); continue; }
+
+        // Top-level field bullet: - **Label:** optional value
+        if ((m = line.match(/^[-*]\s+\*\*(.+?):\*\*\s*(.*)$/))) {
           closeList();
-          out.push(`<h3>${RegExp.$1}</h3>`);
-        } else if (/^## (.+)/.test(line)) {
-          closeList();
-          out.push(`<h2>${RegExp.$1}</h2>`);
-        } else if (/^# (.+)/.test(line)) {
-          closeList();
-          out.push(`<h1>${RegExp.$1}</h1>`);
-        } else if (/^[-*] (.+)/.test(line)) {
-          if (!inList) { out.push('<ul>'); inList = true; }
-          let item = RegExp.$1
-            .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-            .replace(/`([^`]+)`/g, '<code>$1</code>');
-          out.push(`<li>${item}</li>`);
-        } else if (line.trim() === '') {
-          closeList();
-        } else {
-          closeList();
-          let p = line
-            .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-            .replace(/`([^`]+)`/g, '<code>$1</code>');
-          out.push(`<p>${p}</p>`);
+          out.push(`<h2>${inline(m[1])}</h2>`);
+          if (m[2] && m[2].trim()) out.push(`<p>${inline(m[2])}</p>`);
+          continue;
         }
+
+        // Generic top-level bullet.
+        if ((m = line.match(/^[-*]\s+(.+)/))) { openList(); out.push(`<li>${inline(m[1])}</li>`); continue; }
+
+        closeList();
+        out.push(`<p>${inline(line.trim())}</p>`);
       }
       closeList();
       return out.join('\n');
     }
+
+    // Tier/effort pills + drop code, mirroring the tracker-decks meta line.
+    function metaHtml(md) {
+      const parts = [];
+      const dm = (src || '').match(/runs\/([^/]+)\//);
+      if (dm) parts.push(`Drop: <code>${dm[1]}</code>`);
+      // Brief PRDs are produced only for Tier — Now features.
+      parts.push('Tier <span class="pill pill-now">Now</span>');
+      const em = md.match(/^[-*]\s+\*\*Effort estimate:\*\*\s*(XL|L|M|S)\b/im);
+      if (em) {
+        const e = em[1].toUpperCase();
+        parts.push(`Effort <span class="pill pill-${e.toLowerCase()}">${e}</span>`);
+      }
+      return parts.join(' &middot; ');
+    }
+
+    function downloadPdf() {
+      if (!document.querySelector('#content h1, #content h2')) {
+        setStatus('PDF not ready — wait for PRD to load.', true);
+        return;
+      }
+      setStatus('Opening print dialog — choose “Save as PDF”.');
+      window.print();
+    }
+
+    document.getElementById('pdf-btn').addEventListener('click', downloadPdf);
 
     async function load() {
       const el = document.getElementById('content');
@@ -228,15 +250,23 @@
       try {
         const res = await fetch(src);
         if (!res.ok) throw new Error(`${res.status}`);
-        loadedMd = await res.text();
+        const md = await res.text();
         el.className = '';
-        el.innerHTML = mdToHtml(loadedMd);
-        document.title = (loadedMd.match(/^#\s+(.+)/m) || [])[1] || 'PRD — Tracker Brief';
+        el.innerHTML = mdToHtml(md);
 
-        if (autoPdf) {
-          setStatus('Preparing PDF…');
-          setTimeout(() => downloadPdf(), 300);
+        const h1 = el.querySelector('h1');
+        if (h1) {
+          document.title = h1.textContent || 'PRD — Tracker Brief';
+          const meta = document.createElement('div');
+          meta.className = 'meta';
+          meta.innerHTML = metaHtml(md);
+          h1.insertAdjacentElement('afterend', meta);
         }
+
+        const footer = document.createElement('div');
+        footer.className = 'doc-footer';
+        footer.textContent = 'Generated by tracker-drop-cycle skill · Tracker Competitors Bot';
+        el.appendChild(footer);
       } catch (e) {
         el.className = 'err';
         el.textContent = `Failed to load PRD: ${e.message}`;

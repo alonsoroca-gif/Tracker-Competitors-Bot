@@ -1,0 +1,22 @@
+[
+  {
+    "id": 1,
+    "competitor_id": "jonah-digital",
+    "competitor": "Jonah Digital Agency",
+    "headline": "Multifamily Website Add-Ons | JONAH®",
+    "classification": "Product",
+    "classification_detail": "capability",
+    "parity": "Partial",
+    "parity_l1": "Partial",
+    "parity_l2": "Partial",
+    "routing": "Tier — Now",
+    "why_routing": "[Carryover] We found a change on the features page. Jonah Digital updated their product messaging: Engrain SightMap® Experience • Retail Page • Tour Scheduler Integration. → Core has CEngrainSightMapWidget embed with availability/rents but no live per-unit pin overlay with tour-scheduler handoff — delta is live PMS pricing on map pins.",
+    "signal_summary": "[Carryover] We found a change on the features page. Jonah Digital updated their product messaging: Engrain SightMap® Experience • Retail Page • Tour Scheduler Integration. → Core has CEngrainSightMapWidget embed with availability/rents but no live per-unit pin overlay with tour-scheduler handoff — delta is live PMS pricing on map pins.",
+    "tier": "Now",
+    "source_url": "https://jonahdigital.com/add-ons/",
+    "content_hash": "892d4fa9486fca30",
+    "prototype_path": "tracker-briefs/runs/2026-06-23T14-08-52Z/prototypes/sightmap-live-pricing.html",
+    "prd_path": "tracker-briefs/runs/2026-06-23T14-08-52Z/prds/sightmap-live-pricing-prd.md",
+    "carried_forward_from": "2026-06-21T13-27-53Z"
+  }
+]

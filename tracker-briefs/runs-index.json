@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-06-22T15:28:26.545Z",
+  "updated_at": "2026-06-23T17:27:15.561Z",
   "runs": [
     {
       "run_id": "_sample-product-day",
@@ -9,6 +9,15 @@
       "prototype_count": 2,
       "summary": "Sample Product day for viewer QA — not wired to latest.json.",
       "fixture": true
+    },
+    {
+      "run_id": "2026-06-23T14-08-52Z",
+      "published_at": null,
+      "day_type": "product",
+      "net_new_count": 0,
+      "prototype_count": 1,
+      "summary": "0 net-new URLs · 1 carryover (Jonah SightMap Tier — Now) · 2d since last brief · 1 row · 1 prototype retained from 2026-06-21.",
+      "fixture": false
     },
     {
       "run_id": "2026-06-21T13-27-53Z",

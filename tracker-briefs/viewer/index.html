@@ -452,7 +452,7 @@
         const src = assetUrl(htmlPath) + '?v=roi-v11';
         const protoShell = viewerShellUrl('prototype.html', htmlPath, p.title, runId, p.id);
         const prdShell = p.prd_path
-          ? `prd.html?src=${encodeURIComponent(assetUrl(p.prd_path))}&back=${encodeURIComponent(window.location.href)}&auto=pdf`
+          ? `prd.html?src=${encodeURIComponent(assetUrl(p.prd_path))}&back=${encodeURIComponent(window.location.href)}`
           : '';
 
         const card = document.createElement('article');
@@ -504,7 +504,7 @@
           btnPrd.href = prdShell;
           btnPrd.target = '_blank';
           btnPrd.rel = 'noopener';
-          btnPrd.textContent = 'Download complete PRD now';
+          btnPrd.textContent = 'View / download PRD';
           links.appendChild(btnPrd);
         }
 

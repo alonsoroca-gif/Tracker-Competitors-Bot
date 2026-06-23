@@ -1,0 +1,21 @@
+{
+  "run_id": "2026-06-23T14-08-52Z",
+  "drop_run_id": "2026-06-23T14-08-52Z",
+  "published_at": null,
+  "source": "tracker-publish",
+  "day_type": "product",
+  "net_new_count": 0,
+  "weekend_mandatory_count": 0,
+  "weekend_drop_ids": [],
+  "catch_up_count": 0,
+  "content_refreshed_count": 0,
+  "carryover_count": 1,
+  "calendar_gap_days": 2,
+  "product_row_count": 1,
+  "tier_now_product_count": 1,
+  "prototype_count": 1,
+  "carried_forward_count": 1,
+  "interpretation_pointer": "2026-06-23T14-08-52Z",
+  "prior_brief_run_id": "2026-06-21T13-27-53Z",
+  "summary": "0 net-new URLs · 1 carryover (Jonah SightMap Tier — Now) · 2d since last brief · 1 row · 1 prototype retained from 2026-06-21."
+}
