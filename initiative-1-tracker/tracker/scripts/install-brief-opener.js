@@ -11,8 +11,11 @@ const os = require('os');
 
 const EXT_ID = 'entrata.tracker-brief-opener';
 const trackerRoot = path.join(__dirname, '..');
-const vsixPath = path.join(trackerRoot, 'extensions', 'tracker-brief-opener-1.0.0.vsix');
 const extSourceDir = path.join(trackerRoot, 'extensions', 'tracker-brief-opener');
+// Derive the .vsix name from the source version so a version bump forces a
+// rebuild instead of silently reinstalling a stale cached package.
+const extVersion = require(path.join(extSourceDir, 'package.json')).version;
+const vsixPath = path.join(trackerRoot, 'extensions', `tracker-brief-opener-${extVersion}.vsix`);
 
 function findCursorBin() {
   const candidates = [

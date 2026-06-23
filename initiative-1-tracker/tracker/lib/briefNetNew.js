@@ -147,6 +147,44 @@ function contentChangedVsPublished(currentSignals, publishedTableRows) {
   return out;
 }
 
+/**
+ * Tag each current brief row as 'new' (URL not in prior brief), 'changed' (URL
+ * present but content moved), or 'unchanged' (already shown, no change). The
+ * renderer shows new + changed and suppresses unchanged so the manager only sees
+ * fresh intel. Legacy prior rows without a content_hash fall back to a headline
+ * comparison.
+ */
+function classifySignalChanges(currentRows, priorRows) {
+  const priorByUrl = new Map();
+  for (const r of priorRows || []) {
+    const key = signalKey(r.source_url || '');
+    if (key) priorByUrl.set(key, r);
+  }
+  return (currentRows || []).map((r) => {
+    const key = signalKey(r.source_url || '');
+    const prior = key ? priorByUrl.get(key) : null;
+    if (!prior) return { ...r, change_status: 'new' };
+    let changed;
+    if (prior.content_hash && r.content_hash) {
+      changed = r.content_hash !== prior.content_hash;
+    } else {
+      changed =
+        String(r.headline || '').trim().toLowerCase() !==
+        String(prior.headline || '').trim().toLowerCase();
+    }
+    if (!changed) return { ...r, change_status: 'unchanged' };
+    // Describe what moved so the brief can highlight the actual change, not just
+    // flag "(updated)". Headline diffs are shown verbatim; sub-headline content
+    // moves (hash changed, headline same) are reported honestly as such.
+    const headlineMoved =
+      String(r.headline || '').trim() !== String(prior.headline || '').trim();
+    const change_detail = headlineMoved
+      ? `headline: “${prior.headline || '—'}” → “${r.headline || '—'}”`
+      : 'page content changed beneath the headline';
+    return { ...r, change_status: 'changed', prev_headline: prior.headline || '', change_detail };
+  });
+}
+
 /** Calendar days between last brief ready_at and now (America/Denver date). */
 function calendarDaysSinceBriefReady(readyAtIso, mtCalendarDayFn) {
   if (!readyAtIso) return 999;
@@ -277,6 +315,7 @@ module.exports = {
   netNewVsPublished,
   catchUpNetNewInDropWindow,
   contentChangedVsPublished,
+  classifySignalChanges,
   calendarDaysSinceBriefReady,
   weekendDropIds,
   allSignalsFromDrops,

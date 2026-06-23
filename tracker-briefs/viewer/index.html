@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Tracker Brief Viewer</title>
   <!-- viewer-build: 2026-06-10-responsive-v11 -->
-  <link rel="stylesheet" href="roi-styles.css?v=roi-v11" />
-  <script src="roi-shared.js?v=roi-v11"></script>
+  <link rel="stylesheet" href="roi-styles.css?v=roi-v12" />
+  <script src="roi-shared.js?v=roi-v12"></script>
   <style>
     :root {
       --bg: #0c0c0f;
@@ -282,13 +282,28 @@
     }
     .empty { color: var(--muted); font-style: italic; }
     .err { color: #f87171; padding: 12px; background: #1a1010; border-radius: 8px; }
+    .carryover { margin-top: 14px; border-top: 1px dashed var(--border); padding-top: 10px; grid-column: 1 / -1; }
+    .carryover > summary {
+      cursor: pointer; color: var(--muted); font-size: 13px; list-style: none;
+      user-select: none; padding: 4px 0;
+    }
+    .carryover > summary:hover { color: var(--fg); }
+    .carryover > summary::before { content: '▸ '; }
+    .carryover[open] > summary::before { content: '▾ '; }
+    .carryover-proto { margin: 8px 0 0; padding: 0; list-style: none; }
+    .carryover-proto li {
+      display: flex; flex-wrap: wrap; gap: 8px; align-items: baseline;
+      padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 13px;
+    }
+    .carryover-proto .meta { color: var(--muted); }
+    .carryover-proto a { color: var(--accent); font-weight: 600; }
   </style>
 </head>
 <body>
   <header>
     <h1>Tracker Brief Viewer</h1>
     <span class="meta" id="run-meta">Loading…</span>
-    <span class="meta" title="Hard-refresh if layout looks stale">viewer roi-v11</span>
+    <span class="meta" title="Hard-refresh if layout looks stale">viewer roi-v12</span>
     <select id="run-select" aria-label="Select run"></select>
     <button type="button" id="reload-btn">Reload</button>
   </header>
@@ -341,7 +356,7 @@
 
     async function fetchJson(path) {
       const url = new URL(path, window.location.href);
-      url.searchParams.set('v', typeof VIEWER_BUILD !== 'undefined' ? VIEWER_BUILD : 'roi-v11');
+      url.searchParams.set('v', typeof VIEWER_BUILD !== 'undefined' ? VIEWER_BUILD : 'roi-v12');
       const res = await fetch(url);
       if (!res.ok) throw new Error(`${path} → ${res.status}`);
       return res.json();
@@ -429,17 +444,44 @@
       return `${renderTable(rows)}<div class="signals-cards">${renderSignalCards(rows)}</div>`;
     }
 
-    function renderPrototypes(protos, manifest, runId) {
+    function renderCarryoverSignals(rows) {
+      if (!rows.length) return '';
+      return `<details class="carryover"><summary>${rows.length} carried-over signal(s) — unchanged since last brief</summary>${renderSignals(rows)}</details>`;
+    }
+
+    function renderCarryoverProtos(protos, runId) {
+      if (!protos.length) return '';
+      const items = protos.map((p) => {
+        const htmlPath = p.preview_path || p.html_path || '';
+        const protoShell = viewerShellUrl('prototype.html', htmlPath, p.title, runId, p.id);
+        const prdShell = p.prd_path
+          ? `prd.html?src=${encodeURIComponent(assetUrl(p.prd_path))}&back=${encodeURIComponent(window.location.href)}`
+          : '';
+        const since = p.first_shipped_run ? ` since ${esc(String(p.first_shipped_run).slice(0, 10))}` : '';
+        return `<li><strong>${esc(p.title)}</strong>`
+          + `<span class="meta">${esc(p.competitor || p.competitor_id || '')} · carried over${since}</span>`
+          + `<a href="${esc(protoShell)}" target="_blank" rel="noopener">Open ↗</a>`
+          + (prdShell ? `<a href="${esc(prdShell)}" target="_blank" rel="noopener">PRD ↗</a>` : '')
+          + `</li>`;
+      }).join('');
+      return `<details class="carryover"><summary>${protos.length} carried-over prototype(s) — unchanged since last brief</summary><ul class="carryover-proto">${items}</ul></details>`;
+    }
+
+    function renderPrototypes(protos, manifest, runId, hiddenProtos) {
       const el = document.getElementById('prototypes');
       protos = normalizePrototypes(protos);
+      const hidden = normalizePrototypes(hiddenProtos || []);
       if (!protos.length) {
         const isPmm = (manifest?.product_row_count ?? manifest?.prototype_count ?? 0) === 0;
-        el.innerHTML = `
-          <p class="empty">No prototypes this run${isPmm ? ' (PMM-only day)' : ''}.</p>
+        el.className = '';
+        const head = hidden.length
+          ? `<p class="empty">No new prototypes today — ${hidden.length} carried over (unchanged).</p>`
+          : `<p class="empty">No prototypes this run${isPmm ? ' (PMM-only day)' : ''}.</p>
           <p class="demo-hint">
             Prototypes and <strong>ROI</strong> appear on Product signal days.
             <a href="?run=_sample-product-day">Open Product-day demo</a> to preview what Billy sees when there are Tier — Now Product rows.
           </p>`;
+        el.innerHTML = head + renderCarryoverProtos(hidden, runId);
         return;
       }
       el.className = 'proto-grid';
@@ -449,7 +491,7 @@
       el.innerHTML = '';
       protos.forEach((p) => {
         const htmlPath = p.preview_path || p.html_path || '';
-        const src = assetUrl(htmlPath) + '?v=roi-v11';
+        const src = assetUrl(htmlPath) + '?v=roi-v12';
         const protoShell = viewerShellUrl('prototype.html', htmlPath, p.title, runId, p.id);
         const prdShell = p.prd_path
           ? `prd.html?src=${encodeURIComponent(assetUrl(p.prd_path))}&back=${encodeURIComponent(window.location.href)}`
@@ -511,23 +553,42 @@
         card.append(head, roiSection, previewWrap, links);
         el.appendChild(card);
       });
+      if (hidden.length) el.insertAdjacentHTML('beforeend', renderCarryoverProtos(hidden, runId));
     }
 
     async function loadRun(runId) {
       const base = `${BRIEF_PREFIX}runs/${runId}/`;
-      const [manifest, table, protosRaw] = await Promise.all([
+      const [manifest, table, protosRaw, ann] = await Promise.all([
         fetchJson(base + 'manifest.json'),
         fetchJson(base + 'signals-table.json'),
         fetchJson(base + 'prototypes.json').catch(() => []),
+        fetchJson(base + 'viewer-annotations.json').catch(() => null),
       ]);
-      const protos = normalizePrototypes(protosRaw);
 
       document.getElementById('run-meta').textContent =
         `${manifest.run_id} · ${manifest.net_new_count ?? 0} net-new · ${manifest.prototype_count ?? 0} prototypes`;
       document.getElementById('summary-text').textContent =
         manifest.summary || '(no summary)';
-      document.getElementById('table-wrap').innerHTML = renderSignals(table);
-      renderPrototypes(protos, manifest, runId);
+
+      // Prefer the feed's new/changed/unchanged classification so unchanged
+      // carryover is hidden by default (matches the chat feed). Older runs that
+      // predate the annotation file fall back to showing every row.
+      const sigSource = (ann && Array.isArray(ann.signals) && ann.signals.length) ? ann.signals : table;
+      const sigAnnotated = sigSource.some((r) => r.change_status);
+      const shownSig = sigAnnotated
+        ? sigSource.filter((r) => r.change_status === 'new' || r.change_status === 'changed')
+        : sigSource;
+      const hiddenSig = sigAnnotated ? sigSource.filter((r) => r.change_status === 'unchanged') : [];
+      const sigHtml = shownSig.length
+        ? renderSignals(shownSig)
+        : `<p class="empty">No new or changed signals today${hiddenSig.length ? ` — ${hiddenSig.length} carried over (unchanged)` : ''}.</p>`;
+      document.getElementById('table-wrap').innerHTML = sigHtml + renderCarryoverSignals(hiddenSig);
+
+      const protoSource = (ann && Array.isArray(ann.prototypes) && ann.prototypes.length) ? ann.prototypes : protosRaw;
+      const protoAnnotated = protoSource.some((p) => 'carried_over' in p);
+      const shownProto = protoAnnotated ? protoSource.filter((p) => !p.carried_over || p.changed) : protoSource;
+      const hiddenProto = protoAnnotated ? protoSource.filter((p) => p.carried_over && !p.changed) : [];
+      renderPrototypes(shownProto, manifest, runId, hiddenProto);
     }
 
     function ensureRoiLib() {

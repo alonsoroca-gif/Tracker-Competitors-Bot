@@ -16,7 +16,7 @@
 const net = require('net');
 const fs = require('fs');
 const os = require('os');
-const { spawn, spawnSync, execSync } = require('child_process');
+const { spawn, execSync } = require('child_process');
 const path = require('path');
 const { loadLatest } = require('../lib/briefPaths.js');
 
@@ -54,12 +54,21 @@ function findCursorBin() {
   return null;
 }
 
+/**
+ * Returns false only when the CLI confirms the opener is absent. A stalled/failed
+ * CLI returns true ("unknown — proceed"): the request-file watcher is the real open
+ * path and harmlessly no-ops if the extension truly isn't installed. This keeps a
+ * slow `--list-extensions` from blocking the run or suppressing the open.
+ */
 function isOpenerExtensionInstalled(cursorBin) {
   try {
-    const listed = execSync(`"${cursorBin}" --list-extensions`, { encoding: 'utf8' });
+    const listed = execSync(`"${cursorBin}" --list-extensions`, {
+      encoding: 'utf8',
+      timeout: 3000,
+    });
     return listed.split('\n').some((line) => line.trim() === EXT_ID);
   } catch {
-    return false;
+    return true;
   }
 }
 
@@ -98,7 +107,13 @@ function viewerUrl(port, runId) {
 function activateCursor() {
   if (process.platform !== 'darwin') return;
   try {
-    execSync('osascript -e \'tell application "Cursor" to activate\'', { stdio: 'ignore' });
+    // Fire-and-forget: `osascript ... activate` can take several seconds when Cursor
+    // is busy. Bringing the app forward is cosmetic, so it must never block the open.
+    const child = spawn('osascript', ['-e', 'tell application "Cursor" to activate'], {
+      detached: true,
+      stdio: 'ignore',
+    });
+    child.unref();
   } catch {
     /* Cursor not installed or not running */
   }
@@ -120,46 +135,43 @@ function extensionOpenerUri(url) {
   return `cursor://${EXT_ID}/open?${query}`;
 }
 
-/** Cursor CLI writes under ~/Library/Application Support/Cursor/logs — blocked in agent sandbox. */
-function isCursorCliBlocked() {
-  if (process.platform !== 'darwin') return false;
-  const probeDir = path.join(
-    os.homedir(),
-    'Library',
-    'Application Support',
-    'Cursor',
-    'logs',
-    `.open-probe-${process.pid}`,
-  );
-  try {
-    fs.mkdirSync(probeDir, { recursive: true });
-    fs.rmdirSync(probeDir);
-    return false;
-  } catch (err) {
-    return err.code === 'EPERM' || err.code === 'EACCES';
-  }
-}
-
+/**
+ * Fire-and-forget secondary. The watched request file is the reliable open path,
+ * so this CLI nudge must never block: detach it and don't wait. Setups where
+ * cursor:// routing already works get an extra (harmless, idempotent) open.
+ */
 function openViaCursorCli(cursorBin, targetUrl) {
-  const result = spawnSync(cursorBin, ['--open-url', targetUrl], {
-    encoding: 'utf8',
-    timeout: 15000,
+  const child = spawn(cursorBin, ['--open-url', targetUrl], {
+    detached: true,
+    stdio: 'ignore',
   });
-  const combined = `${result.stderr || ''}${result.stdout || ''}${result.error?.message || ''}`;
-  if (/EPERM|operation not permitted/i.test(combined)) {
-    const err = new Error('CURSOR_CLI_SANDBOX_BLOCKED');
-    err.detail = combined.trim();
-    throw err;
-  }
-  if (result.status !== 0) {
-    throw new Error(`cursor --open-url exited ${result.status ?? 'unknown'}`);
-  }
+  child.unref();
 }
 
-/** Default — Cursor Simple Browser tab via local extension + cursor --open-url. */
+const REQUEST_PATH = path.join(os.homedir(), '.tracker-brief-open-request.json');
+
+/**
+ * Primary open path: write a request file the extension watches. This works from
+ * any context (agent shell, integrated terminal, any window) because it does not
+ * depend on `cursor --open-url` URI routing, which is not delivered to the
+ * extension handler when invoked outside the active window's context.
+ */
+function writeOpenRequest(url) {
+  fs.writeFileSync(REQUEST_PATH, JSON.stringify({ url, ts: Date.now() }), 'utf8');
+}
+
+/** Default — Cursor Simple Browser tab via the watched request file (+ CLI best-effort). */
 function openInCursorSimpleBrowser(url, cursorBin) {
+  // Reliable path first: the watcher opens within ~1s regardless of CLI latency.
+  writeOpenRequest(url);
+  // Best-effort, non-blocking extras: bring Cursor forward and nudge the URI handler
+  // for setups where cursor:// routing already works.
   activateCursor();
-  openViaCursorCli(cursorBin, extensionOpenerUri(url));
+  try {
+    openViaCursorCli(cursorBin, extensionOpenerUri(url));
+  } catch {
+    /* request file is the reliable path; CLI is optional */
+  }
 }
 
 function openInExternalBrowser(url) {
@@ -168,12 +180,6 @@ function openInExternalBrowser(url) {
 
 function printManualFallback() {
   process.stdout.write('  Manual: Cmd+Shift+P → "Simple Browser: Show" → Cmd+V (URL in clipboard)\n');
-}
-
-function printSandboxBlockedHelp() {
-  process.stdout.write('\nopen-brief-viewer: auto-open blocked — agent sandbox cannot run cursor --open-url.\n');
-  process.stdout.write('  Agent: re-run with Shell required_permissions ["all"].\n');
-  printManualFallback();
 }
 
 async function main() {
@@ -215,32 +221,32 @@ async function main() {
     return;
   }
 
-  if (isCursorCliBlocked()) {
-    printSandboxBlockedHelp();
+  // Fire the open immediately: writing the watched request file is the reliable path
+  // and the extension opens the Simple Browser within ~1s. Slow Cursor-CLI probes are
+  // deferred below so they never delay the actual open.
+  try {
+    openInCursorSimpleBrowser(url, cursorBin);
+    process.stdout.write('open-brief-viewer: requested Simple Browser open via watched request file.\n');
+  } catch (err) {
+    process.stdout.write(`open-brief-viewer: auto-open failed — ${err.message}\n`);
+    printManualFallback();
     process.exit(1);
   }
 
+  // Advisory only (post-open): if the CLI confirms the opener is missing, tell the
+  // user how to install it. A slow/blocked CLI is treated as "present" and skipped.
   if (!isOpenerExtensionInstalled(cursorBin)) {
     process.stdout.write(`\nopen-brief-viewer: ${EXT_ID} not installed (required once).\n`);
     process.stdout.write('  Run: npm run brief:install-opener --prefix initiative-1-tracker/tracker\n');
     process.stdout.write('  Then reload Cursor and re-run this command.\n');
     printManualFallback();
-    return;
+  } else {
+    process.stdout.write('  If nothing appeared: ensure the window is reloaded after install, then retry.\n');
   }
 
-  try {
-    openInCursorSimpleBrowser(url, cursorBin);
-    process.stdout.write('open-brief-viewer: sent to Cursor Simple Browser via local extension.\n');
-    process.stdout.write('  If nothing appeared: reload Cursor window, then retry.\n');
-  } catch (err) {
-    if (err.message === 'CURSOR_CLI_SANDBOX_BLOCKED') {
-      printSandboxBlockedHelp();
-    } else {
-      process.stdout.write(`open-brief-viewer: auto-open failed — ${err.message}\n`);
-      printManualFallback();
-    }
-    process.exit(1);
-  }
+  // The request file is written and detached helpers are launched; nothing else needs
+  // the event loop. Exit now so a slow Cursor CLI can never stall the morningbrief run.
+  process.exit(0);
 }
 
 main().catch((err) => {

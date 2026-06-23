@@ -13,9 +13,14 @@ const {
   loadRunManifest,
   loadSignalsTable,
   loadPrototypes,
+  annotateCarriedOver,
+  priorPublishedRunId,
   mtCalendarDay,
   isBriefFreshForToday,
+  runDir,
+  writeJson,
 } = require('../lib/briefPaths.js');
+const { classifySignalChanges } = require('../lib/briefNetNew.js');
 const { formatFeedMarkdown, formatNotReady } = require('../lib/briefFeed.js');
 
 function parseArgs(argv) {
@@ -57,13 +62,24 @@ function main() {
   }
 
   const manifest = loadRunManifest(runId);
-  const signalsTable = loadSignalsTable(runId);
-  const prototypes = loadPrototypes(runId);
+  const priorRunId = priorPublishedRunId(runId);
+  const priorSignals = priorRunId ? loadSignalsTable(priorRunId) : [];
+  const signalsTable = classifySignalChanges(loadSignalsTable(runId), priorSignals);
+  const prototypes = annotateCarriedOver(runId, loadPrototypes(runId));
 
   if (!manifest) {
     process.stderr.write(`tracker-feed-render: missing manifest for ${runId}\n`);
     process.exit(2);
   }
+
+  // Persist the same new/changed/unchanged classification the feed uses so the
+  // viewer can hide unchanged carryover instead of re-showing old rows every day.
+  writeJson(path.join(runDir(runId), 'viewer-annotations.json'), {
+    generated_at: new Date().toISOString(),
+    prior_run_id: priorRunId,
+    signals: signalsTable,
+    prototypes,
+  });
 
   process.stdout.write(
     formatFeedMarkdown({

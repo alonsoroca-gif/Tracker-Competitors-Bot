@@ -3,13 +3,17 @@
   "displayName": "Tracker Brief Opener",
   "description": "Opens Tracker Brief Viewer URLs in Cursor Simple Browser (used by open-brief-viewer.js).",
   "publisher": "entrata",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "license": "MIT",
   "engines": {
     "vscode": "^1.70.0"
   },
   "categories": ["Other"],
-  "activationEvents": ["onUri", "onCommand:entrata.tracker-brief-opener.open"],
+  "activationEvents": [
+    "onStartupFinished",
+    "onUri",
+    "onCommand:entrata.tracker-brief-opener.open"
+  ],
   "main": "./extension.js",
   "contributes": {
     "commands": [

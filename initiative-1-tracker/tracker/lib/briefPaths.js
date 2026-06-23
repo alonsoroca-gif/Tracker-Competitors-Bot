@@ -4,6 +4,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const crypto = require('crypto');
 
 const trackerRoot = path.join(__dirname, '..');
 const initiativeRoot = path.join(trackerRoot, '..');
@@ -157,6 +158,82 @@ function isBriefFreshForToday(readyAtIso) {
   return mtCalendarDay(readyAtIso) === mtCalendarDay(new Date());
 }
 
+/**
+ * Run id of the most recent real brief published strictly before currentRunId.
+ * Used as the baseline for "what did the manager already see" diffing.
+ */
+function priorPublishedRunId(currentRunId) {
+  const currentManifest = loadRunManifest(currentRunId) || {};
+  const currentPublishedAt = currentManifest.published_at || null;
+  // listBriefRunIds() is newest-first.
+  for (const runId of listBriefRunIds()) {
+    if (runId === currentRunId || runId.startsWith('_')) continue;
+    const publishedAt = (loadRunManifest(runId) || {}).published_at || null;
+    if (!currentPublishedAt || !publishedAt || publishedAt < currentPublishedAt) {
+      return runId;
+    }
+  }
+  return null;
+}
+
+/**
+ * Map of prototype id -> { run_id, published_at } for the EARLIEST published run
+ * that shipped it, considering only runs published strictly before `currentRunId`.
+ * Lets the renderer tell a net-new prototype from one carried forward across days
+ * without trusting a flag the publish agent may forget to set.
+ */
+function prototypeFirstSeenBefore(currentRunId) {
+  const currentManifest = loadRunManifest(currentRunId) || {};
+  const currentPublishedAt = currentManifest.published_at || null;
+  const firstSeen = {};
+  // listBriefRunIds() is newest-first; iterate oldest-first so the first write wins.
+  for (const runId of listBriefRunIds().reverse()) {
+    if (runId === currentRunId || runId.startsWith('_')) continue;
+    const manifest = loadRunManifest(runId) || {};
+    const publishedAt = manifest.published_at || null;
+    // Only count runs that were published before this one.
+    if (currentPublishedAt && publishedAt && publishedAt >= currentPublishedAt) continue;
+    for (const proto of loadPrototypes(runId) || []) {
+      if (proto?.id && !firstSeen[proto.id]) {
+        firstSeen[proto.id] = { run_id: runId, published_at: publishedAt };
+      }
+    }
+  }
+  return firstSeen;
+}
+
+/** Content fingerprint of a prototype, excluding run-id-bearing paths. */
+function prototypeContentFingerprint(p) {
+  const blob = JSON.stringify({ title: p?.title, brief: p?.brief, roi: p?.roi });
+  return crypto.createHash('sha1').update(blob).digest('hex').slice(0, 16);
+}
+
+/**
+ * Annotate prototypes with carried_over / changed / first_shipped. A prototype
+ * re-surfaced from an earlier run is `carried_over`; if its content differs from
+ * the first-shipped version it is also `changed` (an update worth showing). An
+ * unchanged carry-forward is noise and gets suppressed by the renderer.
+ */
+function annotateCarriedOver(currentRunId, prototypes) {
+  const firstSeen = prototypeFirstSeenBefore(currentRunId);
+  return (prototypes || []).map((p) => {
+    const prior = p?.id ? firstSeen[p.id] : null;
+    if (!prior) return { ...p, carried_over: false, changed: true };
+    // Compare the current prototype against the version first shipped.
+    const firstProto = (loadPrototypes(prior.run_id) || []).find((x) => x.id === p.id);
+    const changed = !firstProto
+      ? true
+      : prototypeContentFingerprint(p) !== prototypeContentFingerprint(firstProto);
+    return {
+      ...p,
+      carried_over: true,
+      changed,
+      first_shipped_run: prior.run_id,
+      first_shipped_at: prior.published_at,
+    };
+  });
+}
+
 /** Drop id the last published brief was built from (kickoff net-new baseline). */
 function lastPublishedBriefDropId(latest) {
   const brief = latest || loadLatest();
@@ -192,5 +269,8 @@ module.exports = {
   isMondayMt,
   isWeekendMt,
   isBriefFreshForToday,
+  priorPublishedRunId,
+  prototypeFirstSeenBefore,
+  annotateCarriedOver,
   lastPublishedBriefDropId,
 };
