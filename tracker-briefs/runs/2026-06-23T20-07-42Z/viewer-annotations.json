@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-23T22:31:52.891Z",
+  "generated_at": "2026-06-23T23:15:32.957Z",
   "prior_run_id": "2026-06-23T14-08-52Z",
   "baseline_run_count": 14,
   "signals": [
@@ -264,7 +264,13 @@
       "prd_path": null,
       "change_status": "changed",
       "prev_headline": "26 Funnel Leasing Customer Reviews & References",
-      "change_detail": "page content changed beneath the headline"
+      "change_detail": "page content changed beneath the headline",
+      "change_significance": "trivial",
+      "significance_score": -20,
+      "significance_reasons": [
+        "no prior excerpt to verify",
+        "non-product (PMM)"
+      ]
     },
     {
       "id": 14,

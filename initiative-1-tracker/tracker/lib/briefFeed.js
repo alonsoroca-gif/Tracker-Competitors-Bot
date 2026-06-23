@@ -27,14 +27,25 @@ function escapeCell(text) {
   return String(text || '—').replace(/\|/g, '\\|').replace(/\n/g, ' ');
 }
 
-/** Split annotated signal rows into what to show (new+changed) vs hide (unchanged). */
+/** A "changed" row whose delta scored trivial (count drift, formatting). */
+function isTrivialChange(r) {
+  return r.change_status === 'changed' && r.change_significance === 'trivial';
+}
+
+/**
+ * Split annotated signal rows into shown vs hidden. Shown = new + material/minor
+ * changes. Hidden = unchanged + trivial changes (verification gate suppresses
+ * churn that does not clear the significance threshold).
+ */
 function splitSignalRows(rows) {
   const list = rows || [];
   const annotated = list.some((r) => r.change_status);
   if (!annotated) return { shown: list, hidden: [] };
   return {
-    shown: list.filter((r) => r.change_status === 'new' || r.change_status === 'changed'),
-    hidden: list.filter((r) => r.change_status === 'unchanged'),
+    shown: list.filter(
+      (r) => r.change_status === 'new' || (r.change_status === 'changed' && !isTrivialChange(r)),
+    ),
+    hidden: list.filter((r) => r.change_status === 'unchanged' || isTrivialChange(r)),
   };
 }
 
@@ -55,12 +66,13 @@ function formatSummary(manifest, latest, prototypes = null, signalsTable = null)
   let signalSegment;
   let newCount = manifest.net_new_count ?? 0;
   if (Array.isArray(signalsTable) && signalsTable.some((r) => r.change_status)) {
-    newCount = signalsTable.filter((r) => r.change_status === 'new').length;
-    const changed = signalsTable.filter((r) => r.change_status === 'changed').length;
-    const hidden = signalsTable.filter((r) => r.change_status === 'unchanged').length;
+    const { shown, hidden: hiddenRows } = splitSignalRows(signalsTable);
+    newCount = shown.filter((r) => r.change_status === 'new').length;
+    const changed = shown.filter((r) => r.change_status === 'changed').length;
+    const hidden = hiddenRows.length;
     signalSegment = `**${newCount}** new signal(s)`;
     if (changed) signalSegment += ` · ${changed} changed`;
-    if (hidden) signalSegment += ` · ${hidden} unchanged hidden`;
+    if (hidden) signalSegment += ` · ${hidden} hidden`;
   } else {
     signalSegment = `**${newCount}** net-new signal(s)`;
   }
@@ -94,7 +106,7 @@ function formatChatTable(rows) {
 
   if (!shown.length) {
     const quiet = hidden.length
-      ? `_No new or changed signals today — ${hidden.length} unchanged page(s) hidden (already shown)._`
+      ? `_No new or significant changes today — ${hidden.length} page(s) hidden (unchanged or low-signal)._`
       : '_No classified rows in this brief — competitors quiet or carryover empty._';
     return [header, sep, '', quiet].join('\n');
   }
@@ -119,12 +131,13 @@ function formatChatTable(rows) {
   if (changedRows.length) {
     out.push('', '**What changed**');
     for (const r of changedRows) {
-      out.push(`- ${competitorLabel(r)}: ${truncate(r.change_detail, 160)}`);
+      const tier = r.change_significance ? ` (${r.change_significance})` : '';
+      out.push(`- ${competitorLabel(r)}${tier}: ${truncate(r.change_detail, 160)}`);
     }
   }
 
   if (hidden.length) {
-    out.push('', `_${hidden.length} unchanged page(s) hidden — already shown, no change._`);
+    out.push('', `_${hidden.length} page(s) hidden — unchanged or low-signal (e.g. count drift)._`);
   }
   return out.join('\n');
 }
@@ -219,6 +232,7 @@ function formatNotReady(latest, { stale = false, todayMt = null, readyDayMt = nu
 
 module.exports = {
   competitorLabel,
+  splitSignalRows,
   formatSummary,
   formatChatTable,
   formatPrototypeCards,

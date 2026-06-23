@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Tracker Brief Viewer</title>
   <!-- viewer-build: 2026-06-10-responsive-v11 -->
-  <link rel="stylesheet" href="roi-styles.css?v=roi-v12" />
-  <script src="roi-shared.js?v=roi-v12"></script>
+  <link rel="stylesheet" href="roi-styles.css?v=roi-v13" />
+  <script src="roi-shared.js?v=roi-v13"></script>
   <style>
     :root {
       --bg: #0c0c0f;
@@ -303,7 +303,7 @@
   <header>
     <h1>Tracker Brief Viewer</h1>
     <span class="meta" id="run-meta">Loading…</span>
-    <span class="meta" title="Hard-refresh if layout looks stale">viewer roi-v12</span>
+    <span class="meta" title="Hard-refresh if layout looks stale">viewer roi-v13</span>
     <select id="run-select" aria-label="Select run"></select>
     <button type="button" id="reload-btn">Reload</button>
   </header>
@@ -356,7 +356,7 @@
 
     async function fetchJson(path) {
       const url = new URL(path, window.location.href);
-      url.searchParams.set('v', typeof VIEWER_BUILD !== 'undefined' ? VIEWER_BUILD : 'roi-v12');
+      url.searchParams.set('v', typeof VIEWER_BUILD !== 'undefined' ? VIEWER_BUILD : 'roi-v13');
       const res = await fetch(url);
       if (!res.ok) throw new Error(`${path} → ${res.status}`);
       return res.json();
@@ -491,7 +491,7 @@
       el.innerHTML = '';
       protos.forEach((p) => {
         const htmlPath = p.preview_path || p.html_path || '';
-        const src = assetUrl(htmlPath) + '?v=roi-v12';
+        const src = assetUrl(htmlPath) + '?v=roi-v13';
         const protoShell = viewerShellUrl('prototype.html', htmlPath, p.title, runId, p.id);
         const prdShell = p.prd_path
           ? `prd.html?src=${encodeURIComponent(assetUrl(p.prd_path))}&back=${encodeURIComponent(window.location.href)}`
@@ -575,10 +575,13 @@
       // predate the annotation file fall back to showing every row.
       const sigSource = (ann && Array.isArray(ann.signals) && ann.signals.length) ? ann.signals : table;
       const sigAnnotated = sigSource.some((r) => r.change_status);
+      const isTrivial = (r) => r.change_status === 'changed' && r.change_significance === 'trivial';
       const shownSig = sigAnnotated
-        ? sigSource.filter((r) => r.change_status === 'new' || r.change_status === 'changed')
+        ? sigSource.filter((r) => r.change_status === 'new' || (r.change_status === 'changed' && !isTrivial(r)))
         : sigSource;
-      const hiddenSig = sigAnnotated ? sigSource.filter((r) => r.change_status === 'unchanged') : [];
+      const hiddenSig = sigAnnotated
+        ? sigSource.filter((r) => r.change_status === 'unchanged' || isTrivial(r))
+        : [];
       const sigHtml = shownSig.length
         ? renderSignals(shownSig)
         : `<p class="empty">No new or changed signals today${hiddenSig.length ? ` — ${hiddenSig.length} carried over (unchanged)` : ''}.</p>`;

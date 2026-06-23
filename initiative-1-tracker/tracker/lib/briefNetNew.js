@@ -12,16 +12,95 @@ function signalKey(s) {
   return ((s && s.source_url) || '').trim().toLowerCase();
 }
 
+/** Collapse whitespace + lowercase so formatting jitter never counts as change. */
+function normalizeText(t) {
+  return String(t || '').replace(/\s+/g, ' ').trim().toLowerCase();
+}
+
 /**
  * Stable content fingerprint for a signal or published row.
  * Hashes the page's own content (headline + snippet) so the same unchanged
  * page produces the same hash across drops. Used to tell a real content
- * refresh apart from a page we already published verbatim.
+ * refresh apart from a page we already published verbatim. The snippet window
+ * is widened (1000 chars) and whitespace-normalized so the hash catches changes
+ * deeper in the body without flipping on reflowed formatting.
  */
 function contentFingerprint(s) {
-  const headline = String((s && s.headline) || '').trim().toLowerCase();
-  const snippet = String((s && s.snippet) || '').trim().toLowerCase().slice(0, 200);
+  const headline = normalizeText(s && s.headline);
+  const snippet = normalizeText(s && s.snippet).slice(0, 1000);
   return crypto.createHash('sha1').update(`${headline}|${snippet}`).digest('hex').slice(0, 16);
+}
+
+const HIGH_VALUE = /^(pricing|price|launch|launched|integration|integrations|integrate|ai|api|gpt|llm|partner|partnership|acquired|acquisition|merger|funding|raise|series)$/;
+
+function tokenSet(t) {
+  return new Set(normalizeText(t).split(' ').filter(Boolean));
+}
+
+function jaccard(a, b) {
+  if (!a.size && !b.size) return 1;
+  let inter = 0;
+  for (const x of a) if (b.has(x)) inter += 1;
+  const union = new Set([...a, ...b]).size;
+  return union ? inter / union : 1;
+}
+
+/**
+ * Score how significant a content change is so trivial churn (review-count
+ * drift, formatting, dates) can be suppressed while real moves surface. Returns
+ * a tier (material | minor | trivial), a numeric score, and human reasons.
+ * This is the verification gate: a "changed" row is only posted if it clears
+ * the trivial threshold.
+ */
+function scoreSignalChange(prior, current) {
+  const reasons = [];
+  let score = 0;
+
+  const ph = normalizeText(prior && prior.headline);
+  const ch = normalizeText(current && current.headline);
+  if (ph !== ch) {
+    score += 50;
+    reasons.push('headline changed');
+  }
+
+  const ps = normalizeText(prior && prior.snippet);
+  const cs = normalizeText(current && current.snippet);
+  if (ps && cs) {
+    const delta = Math.round((1 - jaccard(tokenSet(ps), tokenSet(cs))) * 100);
+    if (delta) {
+      score += delta;
+      reasons.push(`body ${delta}% different`);
+    }
+    // Only digits/counts/dates moved (review tallies) → cap to trivial.
+    const stripNums = (t) => t.replace(/[\d.,/%()$-]+/g, '').replace(/\s+/g, ' ').trim();
+    if (ps !== cs && stripNums(ps) === stripNums(cs)) {
+      score = Math.min(score, 10);
+      reasons.push('count/number drift only');
+    }
+    const pset = tokenSet(ps);
+    const added = [...tokenSet(cs)].filter((w) => !pset.has(w));
+    if (added.some((w) => HIGH_VALUE.test(w))) {
+      score += 20;
+      reasons.push('high-value term added');
+    }
+  } else if (ph === ch) {
+    // No prior excerpt to diff against and the headline didn't move — we cannot
+    // VERIFY a real change, so don't cry wolf. Resolves once snippets persist.
+    reasons.push('no prior excerpt to verify');
+  }
+
+  const cls = normalizeText(current && current.classification);
+  const routing = normalizeText((current && current.why_routing) || (current && current.routing));
+  if (cls === 'product') {
+    score += 30;
+    reasons.push('Product page');
+  } else if (/won't chase|wont chase|pmm|positioning/.test(routing)) {
+    score -= 20;
+    reasons.push('non-product (PMM)');
+  }
+
+  const tier = score >= 50 ? 'material' : score >= 20 ? 'minor' : 'trivial';
+  return { score, tier, reasons };
 }
 
 function netNewBetween(currentSignals, priorSignals) {
@@ -213,7 +292,16 @@ function classifySignalChanges(currentRows, priorRows) {
     } else {
       change_detail = 'page content changed beneath the headline';
     }
-    return { ...r, change_status: 'changed', prev_headline: prior.headline || '', change_detail };
+    const sig = scoreSignalChange(prior, r);
+    return {
+      ...r,
+      change_status: 'changed',
+      prev_headline: prior.headline || '',
+      change_detail,
+      change_significance: sig.tier,
+      significance_score: sig.score,
+      significance_reasons: sig.reasons,
+    };
   });
 }
 
@@ -340,7 +428,9 @@ function countProductRowsPendingParity(signalsTable) {
 
 module.exports = {
   signalKey,
+  normalizeText,
   contentFingerprint,
+  scoreSignalChange,
   netNewBetween,
   contentChangedBetween,
   publishedUrlKeys,

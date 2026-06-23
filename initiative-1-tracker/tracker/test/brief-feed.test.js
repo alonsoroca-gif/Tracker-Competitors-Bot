@@ -44,7 +44,7 @@ if (feed.status !== 0) {
   const checks = [
     ['Tracker brief', out.includes('Tracker brief')],
     ['signals table header', out.includes('| # | Competitor |')],
-    ['PMM row or intel empty day', out.includes('PMM') || out.includes('No classified rows') || out.includes('competitors quiet') || out.includes('No new or changed signals')],
+    ['PMM row or intel empty day', out.includes('PMM') || out.includes('No classified rows') || out.includes('competitors quiet') || out.includes('No new or significant changes')],
     ['viewer hint', out.includes('viewer/index.html')],
   ];
   for (const [name, ok] of checks) {
@@ -112,19 +112,20 @@ const sigChanged = { id: 2, competitor: 'Jonah', headline: 'Pricing moved', clas
 const sigUnchanged = { id: 3, competitor: 'Anyone Home', headline: 'Same as always', classification: 'PMM', change_status: 'unchanged' };
 
 const sigSummary = formatSummary({ run_id: 'r' }, { ready_at: 'x' }, [], [sigNew, sigChanged, sigUnchanged]);
-check('summary counts new + changed signals, hides unchanged', sigSummary.includes('**1** new signal(s)') && sigSummary.includes('1 changed') && sigSummary.includes('1 unchanged hidden'));
+check('summary counts new + changed signals, hides unchanged', sigSummary.includes('**1** new signal(s)') && sigSummary.includes('1 changed') && sigSummary.includes('1 hidden'));
 
 const table = formatChatTable([sigNew, sigChanged, sigUnchanged]);
 check('table shows new signal', table.includes('Brand new page'));
 check('table flags changed signal as (updated)', table.includes('(updated) Pricing moved'));
 check('table hides unchanged signal row', !table.includes('Same as always'));
-check('table notes unchanged count hidden', table.includes('1 unchanged page(s) hidden'));
+check('table notes unchanged count hidden', table.includes('1 page(s) hidden'));
 
 const allUnchangedTable = formatChatTable([sigUnchanged]);
-check('all-unchanged table shows quiet message', allUnchangedTable.includes('No new or changed signals today'));
+check('all-unchanged table shows quiet message', allUnchangedTable.includes('No new or significant changes today'));
 
 // --- classifySignalChanges (the diff that drives suppression) ---
-const { classifySignalChanges } = require('../lib/briefNetNew.js');
+const { classifySignalChanges, scoreSignalChange } = require('../lib/briefNetNew.js');
+const { splitSignalRows } = require('../lib/briefFeed.js');
 const current = [
   { source_url: 'https://a.com/new', headline: 'A', content_hash: 'h1' },
   { source_url: 'https://b.com/p', headline: 'B2', content_hash: 'h2new' },
@@ -185,6 +186,51 @@ check(
   diffClassified[0].change_detail.includes('excerpt:') &&
     diffClassified[0].change_detail.includes('old plain pricing copy') &&
     diffClassified[0].change_detail.includes('now mentions AI pricing'),
+);
+
+// --- significance scoring (the verification gate) ---
+
+// Review-count drift on a non-product (Won't chase / PMM) page → trivial.
+const countDrift = scoreSignalChange(
+  { headline: 'Reviews', snippet: 'based on 685 reference ratings 4.8/5.0 (685)' },
+  {
+    headline: 'Reviews',
+    snippet: 'based on 686 reference ratings 4.8/5.0 (686)',
+    why_routing: "Won't chase — PMM/positioning",
+  },
+);
+check('review-count drift scores trivial', countDrift.tier === 'trivial');
+
+// A real capability change on a Product page → material.
+const productMove = scoreSignalChange(
+  { headline: 'Features', snippet: 'manage leases and renewals', classification: 'Product' },
+  {
+    headline: 'Features',
+    snippet: 'manage leases and renewals with a new AI pricing engine and API',
+    classification: 'Product',
+  },
+);
+check('product capability change scores material', productMove.tier === 'material');
+
+// A headline move is always at least minor (surfaced).
+const headlineMove = scoreSignalChange(
+  { headline: 'Old title', snippet: '' },
+  { headline: 'Brand new title', snippet: '' },
+);
+check('headline change is not trivial', headlineMove.tier !== 'trivial');
+
+// Visibility: trivial changes are suppressed; material/new are shown.
+const split = splitSignalRows([
+  { id: 1, source_url: 'a', change_status: 'new' },
+  { id: 2, source_url: 'b', change_status: 'changed', change_significance: 'material' },
+  { id: 3, source_url: 'c', change_status: 'changed', change_significance: 'trivial' },
+  { id: 4, source_url: 'd', change_status: 'unchanged' },
+]);
+check(
+  'trivial change is hidden, material + new are shown',
+  split.shown.length === 2 &&
+    split.shown.every((r) => r.id === 1 || r.id === 2) &&
+    split.hidden.length === 2,
 );
 
 const viewer = path.join(repoRoot, 'tracker-briefs/viewer/index.html');
