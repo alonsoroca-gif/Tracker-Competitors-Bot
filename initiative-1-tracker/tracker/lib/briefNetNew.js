@@ -89,14 +89,14 @@ function scoreSignalChange(prior, current) {
     reasons.push('no prior excerpt to verify');
   }
 
+  // Product changes are highest-value (engineering follow-through) so they get a
+  // boost. We do NOT penalize non-product signals — competitor moves on PMM /
+  // positioning pages still matter for awareness. Real churn (review-count drift)
+  // is already filtered by the count-only cap above, not by classification.
   const cls = normalizeText(current && current.classification);
-  const routing = normalizeText((current && current.why_routing) || (current && current.routing));
   if (cls === 'product') {
     score += 30;
     reasons.push('Product page');
-  } else if (/won't chase|wont chase|pmm|positioning/.test(routing)) {
-    score -= 20;
-    reasons.push('non-product (PMM)');
   }
 
   const tier = score >= 50 ? 'material' : score >= 20 ? 'minor' : 'trivial';

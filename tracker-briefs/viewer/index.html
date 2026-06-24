@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Tracker Brief Viewer</title>
   <!-- viewer-build: 2026-06-10-responsive-v11 -->
-  <link rel="stylesheet" href="roi-styles.css?v=roi-v13" />
-  <script src="roi-shared.js?v=roi-v13"></script>
+  <link rel="stylesheet" href="roi-styles.css?v=roi-v14" />
+  <script src="roi-shared.js?v=roi-v14"></script>
   <style>
     :root {
       --bg: #0c0c0f;
@@ -303,7 +303,7 @@
   <header>
     <h1>Tracker Brief Viewer</h1>
     <span class="meta" id="run-meta">Loading…</span>
-    <span class="meta" title="Hard-refresh if layout looks stale">viewer roi-v13</span>
+    <span class="meta" title="Hard-refresh if layout looks stale">viewer roi-v14</span>
     <select id="run-select" aria-label="Select run"></select>
     <button type="button" id="reload-btn">Reload</button>
   </header>
@@ -356,7 +356,7 @@
 
     async function fetchJson(path) {
       const url = new URL(path, window.location.href);
-      url.searchParams.set('v', typeof VIEWER_BUILD !== 'undefined' ? VIEWER_BUILD : 'roi-v13');
+      url.searchParams.set('v', typeof VIEWER_BUILD !== 'undefined' ? VIEWER_BUILD : 'roi-v14');
       const res = await fetch(url);
       if (!res.ok) throw new Error(`${path} → ${res.status}`);
       return res.json();
@@ -391,6 +391,8 @@
         <article class="signal-card">
           <div class="signal-card-head">
             <strong>#${esc(r.id)} · ${esc(r.competitor)}</strong>
+            ${r.change_status === 'new' ? '<span class="badge">new</span>' : ''}
+            ${r.change_status === 'changed' && r.change_significance ? `<span class="badge">changed · ${esc(r.change_significance)}</span>` : ''}
             <span class="badge">${esc(classLabel(r))}</span>
             ${r.routing ? `<span class="badge">${esc(r.routing)}</span>` : ''}
             ${parityLabel(r) !== '—' ? `<span class="badge">Parity ${esc(parityLabel(r))}</span>` : ''}
@@ -444,9 +446,29 @@
       return `${renderTable(rows)}<div class="signals-cards">${renderSignalCards(rows)}</div>`;
     }
 
+    // Why the significance gate kept a row out of Billy's brief — surfaced so the
+    // supervisor (you) can audit that the gate is classifying correctly.
+    function suppressionReason(r) {
+      if (r.change_status === 'unchanged') return 'unchanged — same content as a prior brief';
+      if (r.change_status === 'changed' && r.change_significance === 'trivial') {
+        const why = Array.isArray(r.significance_reasons) && r.significance_reasons.length
+          ? r.significance_reasons.join(', ')
+          : 'low-signal';
+        return `low-signal change — ${why}`;
+      }
+      return r.change_status || '';
+    }
+
     function renderCarryoverSignals(rows) {
       if (!rows.length) return '';
-      return `<details class="carryover"><summary>${rows.length} carried-over signal(s) — unchanged since last brief</summary>${renderSignals(rows)}</details>`;
+      const items = rows.map((r) => `
+        <li>
+          ${r.source_url ? `<a href="${esc(r.source_url)}" target="_blank" rel="noopener">${esc(r.competitor)}</a>` : `<span>${esc(r.competitor)}</span>`}
+          <span>${esc(r.headline)}</span>
+          <span class="meta">${esc(suppressionReason(r))}</span>
+        </li>
+      `).join('');
+      return `<details class="carryover"><summary>${rows.length} suppressed from Billy’s brief — unchanged or low-signal (your supervision)</summary><ul class="carryover-proto">${items}</ul></details>`;
     }
 
     function renderCarryoverProtos(protos, runId) {
@@ -491,7 +513,7 @@
       el.innerHTML = '';
       protos.forEach((p) => {
         const htmlPath = p.preview_path || p.html_path || '';
-        const src = assetUrl(htmlPath) + '?v=roi-v13';
+        const src = assetUrl(htmlPath) + '?v=roi-v14';
         const protoShell = viewerShellUrl('prototype.html', htmlPath, p.title, runId, p.id);
         const prdShell = p.prd_path
           ? `prd.html?src=${encodeURIComponent(assetUrl(p.prd_path))}&back=${encodeURIComponent(window.location.href)}`

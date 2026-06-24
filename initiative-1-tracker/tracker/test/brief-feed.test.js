@@ -212,6 +212,22 @@ const productMove = scoreSignalChange(
 );
 check('product capability change scores material', productMove.tier === 'material');
 
+// Non-product signals still surface when they genuinely change — we care about
+// competitor moves for awareness even when we won't build from them.
+const pmmRealChange = scoreSignalChange(
+  {
+    headline: 'About',
+    snippet: 'we serve garden-style communities',
+    why_routing: "Won't chase — PMM/positioning",
+  },
+  {
+    headline: 'About',
+    snippet: 'we now serve garden-style and high-rise communities nationwide',
+    why_routing: "Won't chase — PMM/positioning",
+  },
+);
+check('non-product real change is not hidden', pmmRealChange.tier !== 'trivial');
+
 // A headline move is always at least minor (surfaced).
 const headlineMove = scoreSignalChange(
   { headline: 'Old title', snippet: '' },
