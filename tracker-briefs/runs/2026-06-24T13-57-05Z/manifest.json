@@ -1,0 +1,25 @@
+{
+  "run_id": "2026-06-24T13-57-05Z",
+  "drop_run_id": "2026-06-24T13-57-05Z",
+  "published_at": "2026-06-24T16:33:56.041Z",
+  "source": "tracker-publish",
+  "day_type": "carryover",
+  "net_new_count": 0,
+  "weekend_mandatory_count": 0,
+  "weekend_drop_ids": [],
+  "catch_up_count": 0,
+  "content_refreshed_count": 0,
+  "carryover_count": 2,
+  "calendar_gap_days": 1,
+  "product_row_count": 2,
+  "tier_now_product_count": 1,
+  "prototype_count": 1,
+  "carried_forward_count": 1,
+  "interpretation_pointer": "2026-06-24T13-57-05Z",
+  "prior_brief_run_id": "2026-06-23T20-07-42Z",
+  "summary": "0 net-new URLs · 2 carryovers (Anyone Home June release + Jonah SightMap Tier — Now) · 2 Product rows (1 Tier — Now) · 1 prototype.",
+  "parity_notes": {
+    "anyone_home_june_release": "Existing (L2) — CRM admin tweaks already in Core",
+    "jonah_sightmap": "Partial (L2 overrides L1 Existing) — live pin pricing + tour handoff delta"
+  }
+}

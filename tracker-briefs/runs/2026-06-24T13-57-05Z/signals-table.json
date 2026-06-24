@@ -1,0 +1,43 @@
+[
+  {
+    "id": 1,
+    "competitor_id": "anyone-home",
+    "competitor": "Anyone Home",
+    "headline": "30 June 2026 Release",
+    "classification": "Product",
+    "classification_detail": "capability",
+    "parity": "Existing",
+    "parity_l1": "Existing",
+    "parity_l2": "Existing",
+    "routing": "Won't chase",
+    "why_routing": "[Carryover] Anyone Home June release — service outage expiration, calendar Open Guest Card, My Leads display default, secondary source capture. L1 Existing (1933/326/19); L2: Entrata ships calendar↔guest-card flows (`CEntrataCalendarController`), lead source attribution reports, and lead-management admin settings — incremental CRM parity, not a platform gap.",
+    "signal_summary": "[Carryover] Anyone Home June release — CRM admin tweaks (service outage expiration, calendar guest card, My Leads display, secondary source). L2 Existing; no net-new engineering gap.",
+    "tier": "Won't chase",
+    "source_url": "https://anyonehome-updates.com/30-june-2026-release/",
+    "content_hash": "ec7dd88758567dd0",
+    "prototype_path": null,
+    "prd_path": null,
+    "change_status": "carryover"
+  },
+  {
+    "id": 2,
+    "competitor_id": "jonah-digital",
+    "competitor": "Jonah Digital Agency",
+    "headline": "Multifamily Website Add-Ons | JONAH®",
+    "classification": "Product",
+    "classification_detail": "capability",
+    "parity": "Partial",
+    "parity_l1": "Existing",
+    "parity_l2": "Partial",
+    "routing": "Tier — Now",
+    "why_routing": "[Carryover] Jonah SightMap + Tour Scheduler add-on messaging unchanged. L1 Existing (47/13/5); L2: `CEngrainSightMapWidget` embed + rent arrays confirmed — delta remains live per-unit pricing pins + tour handoff UX.",
+    "signal_summary": "[Carryover] Jonah Digital Engrain SightMap Experience + Tour Scheduler Integration — Core has embed foundation; delta is live per-unit pricing pins and tour scheduler handoff.",
+    "tier": "Now",
+    "source_url": "https://jonahdigital.com/add-ons/",
+    "content_hash": "892d4fa9486fca30",
+    "prototype_path": "tracker-briefs/runs/2026-06-24T13-57-05Z/prototypes/sightmap-live-pricing.html",
+    "prd_path": "tracker-briefs/runs/2026-06-24T13-57-05Z/prds/sightmap-live-pricing-prd.md",
+    "carried_forward_from": "2026-06-23T20-07-42Z",
+    "change_status": "carryover"
+  }
+]

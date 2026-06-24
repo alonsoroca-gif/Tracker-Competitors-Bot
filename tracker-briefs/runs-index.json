@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-06-23T21:19:29.468Z",
+  "updated_at": "2026-06-24T16:33:56.046Z",
   "runs": [
     {
       "run_id": "_sample-product-day",
@@ -9,6 +9,15 @@
       "prototype_count": 2,
       "summary": "Sample Product day for viewer QA — not wired to latest.json.",
       "fixture": true
+    },
+    {
+      "run_id": "2026-06-24T13-57-05Z",
+      "published_at": "2026-06-24T16:45:00.000Z",
+      "day_type": "carryover",
+      "net_new_count": 0,
+      "prototype_count": 1,
+      "summary": "0 net-new URLs · 2 carryovers (Anyone Home June release + Jonah SightMap Tier — Now) · 2 Product rows (1 Tier — Now) · 1 prototype.",
+      "fixture": false
     },
     {
       "run_id": "2026-06-23T20-07-42Z",

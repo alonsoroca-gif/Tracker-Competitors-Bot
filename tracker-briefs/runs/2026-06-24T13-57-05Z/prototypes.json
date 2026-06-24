@@ -1,0 +1,42 @@
+[
+  {
+    "id": "sightmap-live-pricing",
+    "title": "Live-PMS Siteplan — SightMap delta",
+    "competitor_id": "jonah-digital",
+    "competitor": "Jonah Digital Agency",
+    "signal_id": 2,
+    "html_path": "tracker-briefs/runs/2026-06-24T13-57-05Z/prototypes/sightmap-live-pricing.html",
+    "preview_path": "tracker-briefs/runs/2026-06-24T13-57-05Z/prototypes/sightmap-live-pricing.html",
+    "prd_path": "tracker-briefs/runs/2026-06-24T13-57-05Z/prds/sightmap-live-pricing-prd.md",
+    "carried_forward_from": "2026-06-23T20-07-42Z",
+    "brief": {
+      "what": "SightMap siteplan with unit pins wired to live Entrata PMS rent and tour scheduler — not a static Engrain embed.",
+      "benefits": "Prospect Portal · Leasing Websites · Tour Scheduler · Open API pricing feed",
+      "why_build": "Jonah sells SightMap + tour booking as an add-on; Entrata can ship live unit economics competitors cannot without owning the PMS."
+    },
+    "roi": {
+      "verdict": "pursue",
+      "lever": "Conversion / vacancy days",
+      "summary": "Live unit pricing on the siteplan lifts high-intent apply starts; delta is PMS-tied map UX atop existing Engrain widget.",
+      "per_unit_annual": "~$22/unit/yr NOI",
+      "property_250": "~$5.5K/yr",
+      "portfolio_10k": "~$220K/yr",
+      "confidence": "modeled",
+      "numbers": {
+        "type": "modeled_approximation",
+        "formula": "(Δ apply-start rate × avg monthly rent × vacancy days avoided per start) ÷ units",
+        "inputs": [
+          "+0.5–1.0% lift on siteplan sessions that reach apply (roi-analyst midpoint)",
+          "$1,800 blended avg rent · 3 vacancy days avoided per incremental start",
+          "Vacancy-day cost ≈ daily rent (industry norm — not client-specific)"
+        ],
+        "scaling": "Per-unit annual → ×250 for single-property chunk → ×10,000 for portfolio chunk. Portfolio figure is directional scale, not a forecast.",
+        "disclaimer": "Modeled approximation for prioritization — not measured client ROI or a finance sign-off number."
+      },
+      "brief": {
+        "advantage": "Jonah/Engrain ship partner embeds; Entrata pins read the same live rent engine that powers apply and tour scheduling.",
+        "why_pursue": "High-intent shoppers self-serve on the map; stale third-party pricing loses tours before the agent sees the lead."
+      }
+    }
+  }
+]
