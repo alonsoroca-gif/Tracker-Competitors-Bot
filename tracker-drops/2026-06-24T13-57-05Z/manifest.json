@@ -1,0 +1,19 @@
+{
+  "run_id": "2026-06-24T13-57-05Z",
+  "created_at": "2026-06-24T13:57:05.044Z",
+  "new_signals_added": 143,
+  "retention_days": 7,
+  "signals_kept_after_prune": 143,
+  "signals_removed_retention": 0,
+  "source": "tracker-publish-drop.js",
+  "collect_health": {
+    "ok": false,
+    "regressions": [
+      {
+        "competitor_id": "jonah-digital",
+        "prior": 33,
+        "current": 0
+      }
+    ]
+  }
+}
