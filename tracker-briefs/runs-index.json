@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-06-24T16:33:56.046Z",
+  "updated_at": "2026-06-25T16:45:28.578Z",
   "runs": [
     {
       "run_id": "_sample-product-day",
@@ -11,8 +11,17 @@
       "fixture": true
     },
     {
+      "run_id": "2026-06-25T13-53-06Z",
+      "published_at": "2026-06-25T16:45:23.486Z",
+      "day_type": "mixed",
+      "net_new_count": 13,
+      "prototype_count": 1,
+      "summary": "13 net-new URLs · 1 carryover (Jonah SightMap Tier — Now) · 4 Product rows (1 Tier — Now) · 1 prototype(s).",
+      "fixture": false
+    },
+    {
       "run_id": "2026-06-24T13-57-05Z",
-      "published_at": "2026-06-24T16:45:00.000Z",
+      "published_at": "2026-06-24T16:33:56.041Z",
       "day_type": "carryover",
       "net_new_count": 0,
       "prototype_count": 1,

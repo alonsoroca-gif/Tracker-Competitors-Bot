@@ -1,0 +1,27 @@
+{
+  "run_id": "2026-06-25T13-53-06Z",
+  "drop_run_id": "2026-06-25T13-53-06Z",
+  "published_at": "2026-06-25T16:45:23.486Z",
+  "source": "tracker-publish",
+  "day_type": "mixed",
+  "net_new_count": 13,
+  "weekend_mandatory_count": 0,
+  "weekend_drop_ids": [],
+  "catch_up_count": 13,
+  "content_refreshed_count": 0,
+  "carryover_count": 1,
+  "calendar_gap_days": 1,
+  "product_row_count": 4,
+  "tier_now_product_count": 1,
+  "prototype_count": 1,
+  "carried_forward_count": 1,
+  "interpretation_pointer": "2026-06-25T13-53-06Z",
+  "prior_brief_run_id": "2026-06-24T13-57-05Z",
+  "summary": "13 net-new URLs · 1 carryover (Jonah SightMap Tier — Now) · 4 Product rows (1 Tier — Now) · 1 prototype(s).",
+  "parity_notes": {
+    "eliseai_homepage": "Existing (L2) — generic AI leasing positioning",
+    "funnel_homepage": "Existing (L2 overrides L1 Partial) — CRM/contact center parity",
+    "anyone_home_solutions": "Existing (L2) — SGT + live chat + contact center in Core",
+    "jonah_sightmap": "Partial (L2 overrides L1 Existing) — live pin pricing + tour handoff delta"
+  }
+}
