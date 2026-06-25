@@ -1,0 +1,13 @@
+{
+  "run_id": "2026-06-25T00-07-17Z",
+  "created_at": "2026-06-25T00:07:17.431Z",
+  "new_signals_added": 143,
+  "retention_days": 7,
+  "signals_kept_after_prune": 143,
+  "signals_removed_retention": 0,
+  "source": "tracker-publish-drop.js",
+  "collect_health": {
+    "ok": true,
+    "regressions": []
+  }
+}
