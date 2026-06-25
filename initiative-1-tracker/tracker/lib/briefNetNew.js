@@ -242,6 +242,10 @@ function contentChangedVsPublished(currentSignals, publishedTableRows) {
  */
 function classifySignalChanges(currentRows, priorRows) {
   const priorByUrl = new Map();
+  // hash → run id where that exact content first appeared. Lets the viewer prove
+  // an "unchanged" row really is byte-identical to a specific prior brief, rather
+  // than asking the supervisor to take "unchanged" on faith.
+  const firstRunByHash = new Map();
   for (const r of priorRows || []) {
     const key = signalKey(r.source_url || '');
     if (!key) continue;
@@ -255,7 +259,13 @@ function classifySignalChanges(currentRows, priorRows) {
     // field that reflects a change beneath the headline, so it is the source of
     // truth for "did this page change?". We remember every hash a URL has ever
     // shown so a page byte-identical to ANY earlier brief stays unchanged.
-    if (r.content_hash) entry.hashes.add(r.content_hash);
+    if (r.content_hash) {
+      entry.hashes.add(r.content_hash);
+      // priorRows is oldest→newest, so the first time we see a hash is its debut.
+      if (r._run_id && !firstRunByHash.has(r.content_hash)) {
+        firstRunByHash.set(r.content_hash, r._run_id);
+      }
+    }
     entry.headlines.add(String(r.headline || '').trim().toLowerCase());
     entry.last = r; // priorRows is oldest→newest, so this ends on the most recent
   }
@@ -270,7 +280,16 @@ function classifySignalChanges(currentRows, priorRows) {
     const unchanged = entry.hashes.size && r.content_hash
       ? entry.hashes.has(r.content_hash)
       : entry.headlines.has(String(r.headline || '').trim().toLowerCase());
-    if (unchanged) return { ...r, change_status: 'unchanged' };
+    if (unchanged) {
+      // Carry the audit trail: a byte-identical row has no diff to show, so we
+      // instead say WHICH brief it matched and the fingerprint that matched.
+      return {
+        ...r,
+        change_status: 'unchanged',
+        unchanged_hash: r.content_hash || null,
+        first_seen_run: r.content_hash ? firstRunByHash.get(r.content_hash) || null : null,
+      };
+    }
     // Describe what moved so the brief can highlight the actual change, not just
     // flag "(updated)". Headline diffs are shown verbatim; sub-headline content
     // moves (hash changed, headline same) are reported honestly as such.

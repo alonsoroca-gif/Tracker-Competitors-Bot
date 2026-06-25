@@ -76,7 +76,9 @@ function main() {
     })
     .slice(0, 60) // bound the window (newest-first) so history stays manageable
     .reverse(); // oldest→newest so the most recent prior wins as `last`
-  const priorSignals = priorRunIds.flatMap((id) => loadSignalsTable(id));
+  const priorSignals = priorRunIds.flatMap((id) =>
+    loadSignalsTable(id).map((r) => ({ ...r, _run_id: id })),
+  );
   const signalsTable = classifySignalChanges(loadSignalsTable(runId), priorSignals);
   const prototypes = annotateCarriedOver(runId, loadPrototypes(runId));
 

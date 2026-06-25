@@ -165,6 +165,18 @@ check(
   historyClassified[0].change_status === 'unchanged',
 );
 
+// Unchanged rows carry an audit trail so the viewer can prove "byte-identical"
+// by naming the brief the content first appeared in (no diff to show).
+const auditClassified = classifySignalChanges(
+  [{ source_url: 'https://audit.com/p', headline: 'Z', content_hash: 'hZ' }],
+  [{ source_url: 'https://audit.com/p', headline: 'Z', content_hash: 'hZ', _run_id: '2026-06-15T00-00-00Z' }],
+);
+check(
+  'unchanged row records first_seen_run for audit',
+  auditClassified[0].first_seen_run === '2026-06-15T00-00-00Z' &&
+    auditClassified[0].unchanged_hash === 'hZ',
+);
+
 // Body-aware: a new content_hash means the headline OR the body moved. Per the
 // project's purpose (track what competitors change day to day) this surfaces as
 // 'changed' even when the headline text is unchanged — the hash includes the

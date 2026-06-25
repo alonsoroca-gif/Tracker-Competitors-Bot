@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-24T16:33:56.085Z",
+  "generated_at": "2026-06-24T18:30:20.860Z",
   "prior_run_id": "2026-06-23T20-07-42Z",
   "baseline_run_count": 15,
   "signals": [
@@ -21,7 +21,9 @@
       "content_hash": "ec7dd88758567dd0",
       "prototype_path": null,
       "prd_path": null,
-      "change_status": "unchanged"
+      "change_status": "unchanged",
+      "unchanged_hash": "ec7dd88758567dd0",
+      "first_seen_run": "2026-06-21T13-27-53Z"
     },
     {
       "id": 2,
@@ -42,7 +44,9 @@
       "prototype_path": "tracker-briefs/runs/2026-06-24T13-57-05Z/prototypes/sightmap-live-pricing.html",
       "prd_path": "tracker-briefs/runs/2026-06-24T13-57-05Z/prds/sightmap-live-pricing-prd.md",
       "carried_forward_from": "2026-06-23T20-07-42Z",
-      "change_status": "unchanged"
+      "change_status": "unchanged",
+      "unchanged_hash": "892d4fa9486fca30",
+      "first_seen_run": "2026-06-21T13-27-53Z"
     }
   ],
   "prototypes": [

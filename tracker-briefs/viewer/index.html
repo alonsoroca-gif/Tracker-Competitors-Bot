@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Tracker Brief Viewer</title>
   <!-- viewer-build: 2026-06-10-responsive-v11 -->
-  <link rel="stylesheet" href="roi-styles.css?v=roi-v14" />
-  <script src="roi-shared.js?v=roi-v14"></script>
+  <link rel="stylesheet" href="roi-styles.css?v=roi-v16" />
+  <script src="roi-shared.js?v=roi-v16"></script>
   <style>
     :root {
       --bg: #0c0c0f;
@@ -303,7 +303,7 @@
   <header>
     <h1>Tracker Brief Viewer</h1>
     <span class="meta" id="run-meta">Loading…</span>
-    <span class="meta" title="Hard-refresh if layout looks stale">viewer roi-v14</span>
+    <span class="meta" title="Hard-refresh if layout looks stale">viewer roi-v16</span>
     <select id="run-select" aria-label="Select run"></select>
     <button type="button" id="reload-btn">Reload</button>
   </header>
@@ -356,7 +356,7 @@
 
     async function fetchJson(path) {
       const url = new URL(path, window.location.href);
-      url.searchParams.set('v', typeof VIEWER_BUILD !== 'undefined' ? VIEWER_BUILD : 'roi-v14');
+      url.searchParams.set('v', typeof VIEWER_BUILD !== 'undefined' ? VIEWER_BUILD : 'roi-v16');
       const res = await fetch(url);
       if (!res.ok) throw new Error(`${path} → ${res.status}`);
       return res.json();
@@ -449,26 +449,41 @@
     // Why the significance gate kept a row out of Billy's brief — surfaced so the
     // supervisor (you) can audit that the gate is classifying correctly.
     function suppressionReason(r) {
-      if (r.change_status === 'unchanged') return 'unchanged — same content as a prior brief';
+      if (r.change_status === 'unchanged') {
+        // Byte-identical to a prior brief → there is no diff. Prove it instead:
+        // cite when this exact content first appeared and the fingerprint matched.
+        const since = r.first_seen_run ? ` (first published ${String(r.first_seen_run).slice(0, 10)})` : '';
+        const fp = r.unchanged_hash ? ` · body fingerprint ${String(r.unchanged_hash).slice(0, 8)} unchanged` : '';
+        return `unchanged — byte-identical to a prior brief${since}; no minimal change to show${fp}`;
+      }
       if (r.change_status === 'changed' && r.change_significance === 'trivial') {
         const why = Array.isArray(r.significance_reasons) && r.significance_reasons.length
           ? r.significance_reasons.join(', ')
           : 'low-signal';
-        return `low-signal change — ${why}`;
+        const score = Number.isFinite(r.significance_score) ? ` (score ${r.significance_score} < 20)` : '';
+        return `minimal change (hidden from Billy) — ${why}${score}`;
       }
       return r.change_status || '';
     }
 
     function renderCarryoverSignals(rows) {
       if (!rows.length) return '';
-      const items = rows.map((r) => `
+      const items = rows.map((r) => {
+        // When the reason is a (suppressed) minimal change, show the actual diff
+        // the gate scored — this is the "what changed" the supervisor needs.
+        const detail = (r.change_status === 'changed' && r.change_detail)
+          ? `<span class="meta change-detail">↳ what changed: ${esc(r.change_detail)}</span>`
+          : '';
+        return `
         <li>
           ${r.source_url ? `<a href="${esc(r.source_url)}" target="_blank" rel="noopener">${esc(r.competitor)}</a>` : `<span>${esc(r.competitor)}</span>`}
           <span>${esc(r.headline)}</span>
           <span class="meta">${esc(suppressionReason(r))}</span>
+          ${detail}
         </li>
-      `).join('');
-      return `<details class="carryover"><summary>${rows.length} suppressed from Billy’s brief — unchanged or low-signal (your supervision)</summary><ul class="carryover-proto">${items}</ul></details>`;
+      `;
+      }).join('');
+      return `<details class="carryover" open><summary>${rows.length} minimal change(s) below Billy’s threshold — shown for your supervision (hidden from Billy)</summary><ul class="carryover-proto">${items}</ul></details>`;
     }
 
     function renderCarryoverProtos(protos, runId) {
@@ -513,7 +528,7 @@
       el.innerHTML = '';
       protos.forEach((p) => {
         const htmlPath = p.preview_path || p.html_path || '';
-        const src = assetUrl(htmlPath) + '?v=roi-v14';
+        const src = assetUrl(htmlPath) + '?v=roi-v16';
         const protoShell = viewerShellUrl('prototype.html', htmlPath, p.title, runId, p.id);
         const prdShell = p.prd_path
           ? `prd.html?src=${encodeURIComponent(assetUrl(p.prd_path))}&back=${encodeURIComponent(window.location.href)}`
@@ -598,16 +613,24 @@
       const sigSource = (ann && Array.isArray(ann.signals) && ann.signals.length) ? ann.signals : table;
       const sigAnnotated = sigSource.some((r) => r.change_status);
       const isTrivial = (r) => r.change_status === 'changed' && r.change_significance === 'trivial';
+      // Supervisor (this viewer) sees ANY change, even minimal: new + every changed
+      // tier. Truly unchanged rows (byte-identical to a prior brief) are dropped —
+      // if nothing changed, it is not shown. Billy's chat feed keeps the stricter
+      // rule (trivial hidden) in briefFeed.js.
       const shownSig = sigAnnotated
         ? sigSource.filter((r) => r.change_status === 'new' || (r.change_status === 'changed' && !isTrivial(r)))
         : sigSource;
-      const hiddenSig = sigAnnotated
-        ? sigSource.filter((r) => r.change_status === 'unchanged' || isTrivial(r))
-        : [];
+      const minimalSig = sigAnnotated ? sigSource.filter(isTrivial) : [];
+      const unchangedCount = sigAnnotated
+        ? sigSource.filter((r) => r.change_status === 'unchanged').length
+        : 0;
       const sigHtml = shownSig.length
         ? renderSignals(shownSig)
-        : `<p class="empty">No new or changed signals today${hiddenSig.length ? ` — ${hiddenSig.length} carried over (unchanged)` : ''}.</p>`;
-      document.getElementById('table-wrap').innerHTML = sigHtml + renderCarryoverSignals(hiddenSig);
+        : `<p class="empty">No new or materially-changed signals today.</p>`;
+      const dedupNote = unchangedCount
+        ? `<p class="muted dedup-note">${unchangedCount} unchanged page(s) deduped — byte-identical to a prior brief, hidden.</p>`
+        : '';
+      document.getElementById('table-wrap').innerHTML = sigHtml + renderCarryoverSignals(minimalSig) + dedupNote;
 
       const protoSource = (ann && Array.isArray(ann.prototypes) && ann.prototypes.length) ? ann.prototypes : protosRaw;
       const protoAnnotated = protoSource.some((p) => 'carried_over' in p);
