@@ -25,10 +25,11 @@
     "significance_score": 0,
     "significance_reasons": [
       "no prior excerpt to verify"
-    ]
+    ],
+    "routing_reason": "Pricing or packaging page update — validate against Core fee disclosure before chasing."
   },
   {
-    "id": 3,
+    "id": 2,
     "competitor_id": "eliseai",
     "competitor": "EliseAI",
     "headline": "You're The Future of EliseAI",
@@ -53,10 +54,11 @@
     "significance_score": 0,
     "significance_reasons": [
       "no prior excerpt to verify"
-    ]
+    ],
+    "routing_reason": "Careers or hiring signal — talent move, not a product capability gap."
   },
   {
-    "id": 4,
+    "id": 3,
     "competitor_id": "funnel-leasing",
     "competitor": "Funnel Leasing",
     "headline": "Funnel Leasing careers - Jobs at Funnel",
@@ -81,10 +83,11 @@
     "significance_score": 0,
     "significance_reasons": [
       "no prior excerpt to verify"
-    ]
+    ],
+    "routing_reason": "Careers or hiring signal — talent move, not a product capability gap."
   },
   {
-    "id": 5,
+    "id": 4,
     "competitor_id": "jonah-digital",
     "competitor": "Jonah Digital Agency",
     "headline": "Apartment Websites for Multifamily | JONAH®",
@@ -109,10 +112,11 @@
     "significance_score": 0,
     "significance_reasons": [
       "no prior excerpt to verify"
-    ]
+    ],
+    "routing_reason": "Case study or testimonial content — channel-building, not platform engineering."
   },
   {
-    "id": 6,
+    "id": 5,
     "competitor_id": "eliseai",
     "competitor": "EliseAI",
     "headline": "EliseAI - Industry Leading AI for Housing and Healthcare",
@@ -123,8 +127,8 @@
     "parity_l1": "Existing",
     "parity_l2": "Existing",
     "routing": "Won't chase",
-    "why_routing": "EliseAI homepage AI/CRM positioning — L1 Existing (40/8/4); L2: Prospect Portal guest-card + live chat + CRM automation already ship multi-channel leasing; generic marketing page, no specific feature launch.",
-    "signal_summary": "EliseAI homepage — industry-leading AI leasing messaging. L2 Existing; Core ships comparable multi-channel leasing surfaces.",
+    "why_routing": "We found a change on the features page. Eliseai updated their product messaging: Driving the Future of Property Management and Healthcare with AI • AI That Improves How We Live • Intelligent AI Solutions for Top Housing & Healthcare Provide…. → Won't chase — Core already ships this; no prototype.",
+    "signal_summary": "We found a change on the features page. Eliseai updated their product messaging: Driving the Future of Property Management and Healthcare with AI • AI That Improves How We Live • Intelligent AI Solutions for Top Housing & Healthcare Provide…. → Won't chase — Core already ships this; no prototype.",
     "tier": "Won't chase",
     "source_url": "https://eliseai.com/",
     "content_hash": "c58198964aecad66",
@@ -138,10 +142,11 @@
     "significance_reasons": [
       "no prior excerpt to verify",
       "Product page"
-    ]
+    ],
+    "routing_reason": "Product-shaped signal — needs Core parity scan (run full tracker-publish or /trackerstart). Auto-classified only."
   },
   {
-    "id": 7,
+    "id": 6,
     "competitor_id": "funnel-leasing",
     "competitor": "Funnel Leasing",
     "headline": "#1 CRM and AI property management software | #1 Rental Experience",
@@ -152,8 +157,8 @@
     "parity_l1": "Partial",
     "parity_l2": "Existing",
     "routing": "Won't chase",
-    "why_routing": "Funnel Voice AI + CRM homepage — L1 Partial (27/5/4); L2: CallCenter + Prospect Portal contact/chat + lead CRM cover automation; no net-new Voice-AI module gap vs Core platform.",
-    "signal_summary": "Funnel homepage Voice AI + conversion claims — L2 Existing; Core contact center + CRM automation parity; marketing signal only.",
+    "why_routing": "We found a change on the features page. Funnel Leasing updated their product messaging: score in a Virtual Assistant secret shop • conversion for AI-handled prospects, compared to 19% tour conversion for non-AI handled prospects • “Funnel’s AI all…. → Won't chase — Core already ships this; no prototype.",
+    "signal_summary": "We found a change on the features page. Funnel Leasing updated their product messaging: score in a Virtual Assistant secret shop • conversion for AI-handled prospects, compared to 19% tour conversion for non-AI handled prospects • “Funnel’s AI all…. → Won't chase — Core already ships this; no prototype.",
     "tier": "Won't chase",
     "source_url": "https://funnelleasing.com/",
     "content_hash": "3737109f5615279f",
@@ -167,10 +172,11 @@
     "significance_reasons": [
       "no prior excerpt to verify",
       "Product page"
-    ]
+    ],
+    "routing_reason": "Product-shaped signal — needs Core parity scan (run full tracker-publish or /trackerstart). Auto-classified only."
   },
   {
-    "id": 8,
+    "id": 7,
     "competitor_id": "anyone-home",
     "competitor": "Anyone Home",
     "headline": "Leasing Management Software Solutions | Anyone Home",
@@ -181,8 +187,8 @@
     "parity_l1": "Existing",
     "parity_l2": "Existing",
     "routing": "Won't chase",
-    "why_routing": "Anyone Home solutions (SGT, chatbot, contact center) — L1 Existing (135/23/10); L2: `CContactButtonModule` self-guided tours + `CGuestCardModule` live chat + CallCenter app — broad CRM parity, no delta.",
-    "signal_summary": "Anyone Home solutions page — self-guided tours, chatbot, contact center. L2 Existing in Core; Won't chase.",
+    "why_routing": "We found a change on the features page. Anyone Home updated their product messaging: Revolutionizing Leasing • Self-Guided Tours • Chatbot with Live Chat • Contact Center • Leasing Call Analysis • Intelligence For… Owners & Managers Leasing Ope…. → Won't chase — Core already ships this; no prototype.",
+    "signal_summary": "We found a change on the features page. Anyone Home updated their product messaging: Revolutionizing Leasing • Self-Guided Tours • Chatbot with Live Chat • Contact Center • Leasing Call Analysis • Intelligence For… Owners & Managers Leasing Ope…. → Won't chase — Core already ships this; no prototype.",
     "tier": "Won't chase",
     "source_url": "https://anyonehome.com/solutions/",
     "content_hash": "1664f109fa3c12fd",
@@ -196,10 +202,11 @@
     "significance_reasons": [
       "no prior excerpt to verify",
       "Product page"
-    ]
+    ],
+    "routing_reason": "Product-shaped signal — needs Core parity scan (run full tracker-publish or /trackerstart). Auto-classified only."
   },
   {
-    "id": 9,
+    "id": 8,
     "competitor_id": "funnel-leasing",
     "competitor": "Funnel Leasing",
     "headline": "26 Funnel Leasing Customer Reviews & References",
@@ -224,10 +231,11 @@
     "significance_score": 0,
     "significance_reasons": [
       "no prior excerpt to verify"
-    ]
+    ],
+    "routing_reason": "Third-party social proof or review listing — PMM channel work, not an engineering PRD."
   },
   {
-    "id": 10,
+    "id": 9,
     "competitor_id": "anyone-home",
     "competitor": "Anyone Home",
     "headline": "Leasing Software for Multifamily Management | Anyone Home",
@@ -252,10 +260,11 @@
     "significance_score": 0,
     "significance_reasons": [
       "no prior excerpt to verify"
-    ]
+    ],
+    "routing_reason": "Pricing or packaging page update — validate against Core fee disclosure before chasing."
   },
   {
-    "id": 12,
+    "id": 10,
     "competitor_id": "anyone-home",
     "competitor": "Anyone Home",
     "headline": "Why Anyone Home? | Anyone Home",
@@ -280,10 +289,11 @@
     "significance_score": 0,
     "significance_reasons": [
       "no prior excerpt to verify"
-    ]
+    ],
+    "routing_reason": "Case study or testimonial content — channel-building, not platform engineering."
   },
   {
-    "id": 14,
+    "id": 11,
     "competitor_id": "jonah-digital",
     "competitor": "Jonah Digital Agency",
     "headline": "Multifamily Website Add-Ons | JONAH®",
@@ -292,10 +302,10 @@
     "parity": "Partial",
     "parity_l1": "Existing",
     "parity_l2": "Partial",
-    "routing": "Tier — Now",
-    "why_routing": "[Carryover] Jonah SightMap + Tour Scheduler add-on messaging unchanged. L1 Existing (121/24/8); L2: `CEngrainSightMapWidget` embed + rent arrays confirmed — delta remains live per-unit pricing pins + tour handoff UX.",
-    "signal_summary": "[Carryover] Jonah Digital Engrain SightMap Experience + Tour Scheduler Integration — Core has embed foundation; delta is live per-unit pricing pins and tour scheduler handoff.",
-    "tier": "Now",
+    "routing": "Later",
+    "why_routing": "We found a change on the features page. Jonah Digital updated their product messaging: Engrain SightMap® Experience • Retail Page • Tour Scheduler Integration. → Tier — Now candidate — parity gap vs Core; prototype warranted.",
+    "signal_summary": "We found a change on the features page. Jonah Digital updated their product messaging: Engrain SightMap® Experience • Retail Page • Tour Scheduler Integration. → Tier — Now candidate — parity gap vs Core; prototype warranted.",
+    "tier": "Later",
     "source_url": "https://jonahdigital.com/add-ons/",
     "content_hash": "892d4fa9486fca30",
     "prototype_path": "tracker-briefs/runs/2026-06-25T13-53-06Z/prototypes/sightmap-live-pricing.html",
@@ -303,6 +313,7 @@
     "carried_forward_from": "2026-06-23T20-07-42Z",
     "change_status": "carryover",
     "unchanged_hash": "892d4fa9486fca30",
-    "first_seen_run": "2026-06-21T13-27-53Z"
+    "first_seen_run": "2026-06-21T13-27-53Z",
+    "routing_reason": "Product-shaped signal — needs Core parity scan (run full tracker-publish or /trackerstart). Auto-classified only."
   }
 ]

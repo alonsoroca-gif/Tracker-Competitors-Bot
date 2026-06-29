@@ -66,6 +66,7 @@ function main() {
       routing: meta.routing,
       tier: meta.tier,
       why_routing: analysis,
+      routing_reason: meta.why_routing,
       signal_summary: analysis,
     };
   })

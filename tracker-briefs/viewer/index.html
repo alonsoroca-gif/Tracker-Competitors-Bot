@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Tracker Brief Viewer</title>
   <!-- viewer-build: 2026-06-10-responsive-v11 -->
-  <link rel="stylesheet" href="roi-styles.css?v=roi-v16" />
-  <script src="roi-shared.js?v=roi-v16"></script>
+  <link rel="stylesheet" href="roi-styles.css?v=roi-v18" />
+  <script src="roi-shared.js?v=roi-v18"></script>
   <style>
     :root {
       --bg: #0c0c0f;
@@ -297,13 +297,19 @@
     }
     .carryover-proto .meta { color: var(--muted); }
     .carryover-proto a { color: var(--accent); font-weight: 600; }
+    .muted { color: var(--muted); }
+    .dedup-note { font-size: 13px; font-style: italic; margin-top: 10px; }
+    .change-detail { color: var(--muted); font-size: 12px; margin-top: 4px; }
+    td .change-detail { display: block; }
+    .routing-lead { font-size: 13px; }
+    .routing-detail { color: var(--muted); font-size: 12px; margin-top: 4px; }
   </style>
 </head>
 <body>
   <header>
     <h1>Tracker Brief Viewer</h1>
     <span class="meta" id="run-meta">Loading…</span>
-    <span class="meta" title="Hard-refresh if layout looks stale">viewer roi-v16</span>
+    <span class="meta" title="Hard-refresh if layout looks stale">viewer roi-v18</span>
     <select id="run-select" aria-label="Select run"></select>
     <button type="button" id="reload-btn">Reload</button>
   </header>
@@ -356,7 +362,7 @@
 
     async function fetchJson(path) {
       const url = new URL(path, window.location.href);
-      url.searchParams.set('v', typeof VIEWER_BUILD !== 'undefined' ? VIEWER_BUILD : 'roi-v16');
+      url.searchParams.set('v', typeof VIEWER_BUILD !== 'undefined' ? VIEWER_BUILD : 'roi-v18');
       const res = await fetch(url);
       if (!res.ok) throw new Error(`${path} → ${res.status}`);
       return res.json();
@@ -385,12 +391,27 @@
       return `<a href="${esc(url)}" target="_blank" rel="noopener" title="${esc(url)}">Open ↗</a>`;
     }
 
+    // Lead with the plain-English verdict + reason (straight answer to "why are
+    // we chasing / not chasing this?"), then keep the dense L1/L2 parity
+    // rationale as smaller secondary text below it.
+    function routingCell(r) {
+      const reason = r.routing_reason && r.routing_reason !== r.why_routing ? r.routing_reason : '';
+      const lead = reason
+        ? `<div class="routing-lead"><strong>${esc(r.routing)}</strong> — ${esc(reason)}</div>`
+        : `<div class="routing-lead"><strong>${esc(r.routing)}</strong></div>`;
+      const detailText = r.why_routing || r.signal_summary;
+      const detail = detailText ? `<div class="routing-detail">${esc(detailText)}</div>` : '';
+      return lead + detail;
+    }
+
     function renderSignalCards(rows) {
       if (!rows.length) return '';
-      return rows.map((r) => `
+      // Number sequentially (1..n) for the SHOWN set — the raw signals-table id
+      // skips hidden rows, which is why the list used to start at #6.
+      return rows.map((r, i) => `
         <article class="signal-card">
           <div class="signal-card-head">
-            <strong>#${esc(r.id)} · ${esc(r.competitor)}</strong>
+            <strong>#${i + 1} · ${esc(r.competitor)}</strong>
             ${r.change_status === 'new' ? '<span class="badge">new</span>' : ''}
             ${r.change_status === 'changed' && r.change_significance ? `<span class="badge">changed · ${esc(r.change_significance)}</span>` : ''}
             <span class="badge">${esc(classLabel(r))}</span>
@@ -399,7 +420,8 @@
           </div>
           <dl>
             <dt>Headline</dt><dd>${esc(r.headline)}</dd>
-            <dt>Why / routing</dt><dd>${esc(r.why_routing || r.signal_summary)}</dd>
+            ${r.change_status === 'changed' && r.change_detail ? `<dt>What changed</dt><dd class="change-detail">${esc(r.change_detail)}</dd>` : ''}
+            <dt>Why / routing</dt><dd>${routingCell(r)}</dd>
             ${r.source_url ? `<dt>Source</dt><dd>${sourceLink(r.source_url)}</dd>` : ''}
           </dl>
         </article>
@@ -426,15 +448,15 @@
           <th class="col-why">Why / routing</th>
           <th class="col-source">Source</th>
         </tr></thead>`;
-      const body = rows.map((r) => `
+      const body = rows.map((r, i) => `
         <tr>
-          <td class="col-id">${esc(r.id)}</td>
+          <td class="col-id">${i + 1}</td>
           <td class="col-competitor">${esc(r.competitor)}</td>
-          <td class="col-headline">${esc(r.headline)}</td>
+          <td class="col-headline">${esc(r.headline)}${r.change_status === 'changed' && r.change_detail ? `<div class="change-detail">↳ what changed: ${esc(r.change_detail)}</div>` : ''}</td>
           <td class="col-class">${esc(classLabel(r))}</td>
           <td class="col-parity">${esc(parityLabel(r))}</td>
           <td class="col-routing">${esc(r.routing)}</td>
-          <td class="col-why">${esc(r.why_routing || r.signal_summary)}</td>
+          <td class="col-why">${routingCell(r)}</td>
           <td class="col-source">${sourceLink(r.source_url)}</td>
         </tr>
       `).join('');
@@ -483,25 +505,15 @@
         </li>
       `;
       }).join('');
-      return `<details class="carryover" open><summary>${rows.length} minimal change(s) below Billy’s threshold — shown for your supervision (hidden from Billy)</summary><ul class="carryover-proto">${items}</ul></details>`;
+      return `<details class="carryover"><summary>${rows.length} minimal change(s) below Billy’s threshold — click to expand (hidden from Billy)</summary><ul class="carryover-proto" style="max-height:340px;overflow:auto">${items}</ul></details>`;
     }
 
-    function renderCarryoverProtos(protos, runId) {
+    // A prototype shows once. Once shipped, it does not re-appear unless its
+    // source signal changed (which changes the prototype content). Unchanged
+    // carry-forwards collapse to a single count line — never re-listed.
+    function renderCarryoverProtos(protos) {
       if (!protos.length) return '';
-      const items = protos.map((p) => {
-        const htmlPath = p.preview_path || p.html_path || '';
-        const protoShell = viewerShellUrl('prototype.html', htmlPath, p.title, runId, p.id);
-        const prdShell = p.prd_path
-          ? `prd.html?src=${encodeURIComponent(assetUrl(p.prd_path))}&back=${encodeURIComponent(window.location.href)}`
-          : '';
-        const since = p.first_shipped_run ? ` since ${esc(String(p.first_shipped_run).slice(0, 10))}` : '';
-        return `<li><strong>${esc(p.title)}</strong>`
-          + `<span class="meta">${esc(p.competitor || p.competitor_id || '')} · carried over${since}</span>`
-          + `<a href="${esc(protoShell)}" target="_blank" rel="noopener">Open ↗</a>`
-          + (prdShell ? `<a href="${esc(prdShell)}" target="_blank" rel="noopener">PRD ↗</a>` : '')
-          + `</li>`;
-      }).join('');
-      return `<details class="carryover"><summary>${protos.length} carried-over prototype(s) — unchanged since last brief</summary><ul class="carryover-proto">${items}</ul></details>`;
+      return `<p class="muted dedup-note">${protos.length} prototype(s) hidden — already shipped, source unchanged.</p>`;
     }
 
     function renderPrototypes(protos, manifest, runId, hiddenProtos) {
@@ -512,13 +524,13 @@
         const isPmm = (manifest?.product_row_count ?? manifest?.prototype_count ?? 0) === 0;
         el.className = '';
         const head = hidden.length
-          ? `<p class="empty">No new prototypes today — ${hidden.length} carried over (unchanged).</p>`
+          ? `<p class="empty">No new prototypes today.</p>`
           : `<p class="empty">No prototypes this run${isPmm ? ' (PMM-only day)' : ''}.</p>
           <p class="demo-hint">
             Prototypes and <strong>ROI</strong> appear on Product signal days.
             <a href="?run=_sample-product-day">Open Product-day demo</a> to preview what Billy sees when there are Tier — Now Product rows.
           </p>`;
-        el.innerHTML = head + renderCarryoverProtos(hidden, runId);
+        el.innerHTML = head + renderCarryoverProtos(hidden);
         return;
       }
       el.className = 'proto-grid';
@@ -528,7 +540,7 @@
       el.innerHTML = '';
       protos.forEach((p) => {
         const htmlPath = p.preview_path || p.html_path || '';
-        const src = assetUrl(htmlPath) + '?v=roi-v16';
+        const src = assetUrl(htmlPath) + '?v=roi-v18';
         const protoShell = viewerShellUrl('prototype.html', htmlPath, p.title, runId, p.id);
         const prdShell = p.prd_path
           ? `prd.html?src=${encodeURIComponent(assetUrl(p.prd_path))}&back=${encodeURIComponent(window.location.href)}`
@@ -590,7 +602,7 @@
         card.append(head, roiSection, previewWrap, links);
         el.appendChild(card);
       });
-      if (hidden.length) el.insertAdjacentHTML('beforeend', renderCarryoverProtos(hidden, runId));
+      if (hidden.length) el.insertAdjacentHTML('beforeend', renderCarryoverProtos(hidden));
     }
 
     async function loadRun(runId) {
@@ -601,11 +613,6 @@
         fetchJson(base + 'prototypes.json').catch(() => []),
         fetchJson(base + 'viewer-annotations.json').catch(() => null),
       ]);
-
-      document.getElementById('run-meta').textContent =
-        `${manifest.run_id} · ${manifest.net_new_count ?? 0} net-new · ${manifest.prototype_count ?? 0} prototypes`;
-      document.getElementById('summary-text').textContent =
-        manifest.summary || '(no summary)';
 
       // Prefer the feed's new/changed/unchanged classification so unchanged
       // carryover is hidden by default (matches the chat feed). Older runs that
@@ -636,6 +643,17 @@
       const protoAnnotated = protoSource.some((p) => 'carried_over' in p);
       const shownProto = protoAnnotated ? protoSource.filter((p) => !p.carried_over || p.changed) : protoSource;
       const hiddenProto = protoAnnotated ? protoSource.filter((p) => p.carried_over && !p.changed) : [];
+
+      // Accurate, de-confusing summary. The manifest's "net-new URLs" counts URLs
+      // re-checked against the prior brief — NOT new signals. That mismatch is why
+      // "13 net-new" sat above only 3 shown rows. Show the classified split instead.
+      const newCount = shownSig.filter((r) => r.change_status === 'new').length;
+      const changedShown = shownSig.filter((r) => r.change_status === 'changed').length;
+      document.getElementById('run-meta').textContent =
+        `${manifest.run_id} · ${newCount} new · ${changedShown} changed · ${minimalSig.length} minimal · ${unchangedCount} unchanged`;
+      document.getElementById('summary-text').textContent =
+        `${manifest.net_new_count ?? 0} URL(s) re-checked vs the prior brief → ${newCount} new · ${changedShown} changed (shown) · ${minimalSig.length} minimal (below Billy’s threshold) · ${unchangedCount} unchanged (deduped). ${shownProto.length} prototype(s) shown.`;
+
       renderPrototypes(shownProto, manifest, runId, hiddenProto);
     }
 

@@ -204,6 +204,9 @@ function buildSignalsTableRows(signals, opts = {}) {
       parity_l2: isProduct ? null : null,
       routing: c.routing,
       why_routing: analysis,
+      // Plain-English verdict reason ("why we are / aren't chasing"), kept
+      // separate from the dense L1/L2 analysis so the viewer can lead with it.
+      routing_reason: c.why_routing,
       signal_summary: analysis,
       tier: c.tier,
       source_url: s.source_url || '',
