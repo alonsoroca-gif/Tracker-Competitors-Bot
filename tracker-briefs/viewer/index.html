@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Tracker Brief Viewer</title>
   <!-- viewer-build: 2026-06-10-responsive-v11 -->
-  <link rel="stylesheet" href="roi-styles.css?v=roi-v18" />
-  <script src="roi-shared.js?v=roi-v18"></script>
+  <link rel="stylesheet" href="roi-styles.css?v=roi-v19" />
+  <script src="roi-shared.js?v=roi-v19"></script>
   <style>
     :root {
       --bg: #0c0c0f;
@@ -309,7 +309,7 @@
   <header>
     <h1>Tracker Brief Viewer</h1>
     <span class="meta" id="run-meta">Loading…</span>
-    <span class="meta" title="Hard-refresh if layout looks stale">viewer roi-v18</span>
+    <span class="meta" title="Hard-refresh if layout looks stale">viewer roi-v19</span>
     <select id="run-select" aria-label="Select run"></select>
     <button type="button" id="reload-btn">Reload</button>
   </header>
@@ -362,7 +362,7 @@
 
     async function fetchJson(path) {
       const url = new URL(path, window.location.href);
-      url.searchParams.set('v', typeof VIEWER_BUILD !== 'undefined' ? VIEWER_BUILD : 'roi-v18');
+      url.searchParams.set('v', typeof VIEWER_BUILD !== 'undefined' ? VIEWER_BUILD : 'roi-v19');
       const res = await fetch(url);
       if (!res.ok) throw new Error(`${path} → ${res.status}`);
       return res.json();
@@ -395,7 +395,24 @@
     // we chasing / not chasing this?"), then keep the dense L1/L2 parity
     // rationale as smaller secondary text below it.
     function routingCell(r) {
-      const reason = r.routing_reason && r.routing_reason !== r.why_routing ? r.routing_reason : '';
+      // For Product rows, the honest "why" AFTER the Core parity scan is the
+      // parity verdict itself. The stored routing_reason is stamped at classify
+      // time (pre-parity) and goes stale ("needs Core parity scan"), so derive
+      // the lead from the actual verdict here — render-time truth can't drift.
+      const parity = String(r.parity_l2 || r.parity || '').toLowerCase();
+      const scanned = parity && parity !== '—' && parity !== 'not_scanned';
+      let reason = '';
+      if (r.classification === 'Product' && scanned) {
+        reason = parity === 'gap'
+          ? 'Core gap — net-new build if promoted to Tier-Now.'
+          : parity === 'partial'
+            ? 'Partial in Core — only the delta is net-new.'
+            : parity === 'existing'
+              ? 'Core already ships this — won’t chase.'
+              : `Core parity: ${r.parity_l2 || r.parity}.`;
+      } else if (r.routing_reason && r.routing_reason !== r.why_routing) {
+        reason = r.routing_reason;
+      }
       const lead = reason
         ? `<div class="routing-lead"><strong>${esc(r.routing)}</strong> — ${esc(reason)}</div>`
         : `<div class="routing-lead"><strong>${esc(r.routing)}</strong></div>`;
@@ -540,7 +557,7 @@
       el.innerHTML = '';
       protos.forEach((p) => {
         const htmlPath = p.preview_path || p.html_path || '';
-        const src = assetUrl(htmlPath) + '?v=roi-v18';
+        const src = assetUrl(htmlPath) + '?v=roi-v19';
         const protoShell = viewerShellUrl('prototype.html', htmlPath, p.title, runId, p.id);
         const prdShell = p.prd_path
           ? `prd.html?src=${encodeURIComponent(assetUrl(p.prd_path))}&back=${encodeURIComponent(window.location.href)}`
