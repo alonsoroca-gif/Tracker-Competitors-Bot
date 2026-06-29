@@ -1,0 +1,32 @@
+[
+  {
+    "id": "6",
+    "competitor_signal": "EliseAI homepage product messaging: AI property management, self-guided tours, CRM, resident communication, SMS/email automation for housing and healthcare",
+    "proposed_feature": "Unified AI leasing assistant with self-guided tour scheduling, CRM lead nurturing, and omnichannel resident communication (SMS/email)",
+    "product_id": "leasing-ai"
+  },
+  {
+    "id": "7",
+    "competitor_signal": "Funnel Leasing homepage: Virtual Assistant secret shop scoring, AI-handled prospect conversion claims, centralization + AI automation platform",
+    "proposed_feature": "AI virtual leasing assistant with secret-shop scoring, automated lead nurturing, and tour conversion analytics",
+    "product_id": "leasing-ai"
+  },
+  {
+    "id": "8",
+    "competitor_signal": "Anyone Home solutions page: Self-Guided Tours, Chatbot with Live Chat, Contact Center, Leasing Call Analysis",
+    "proposed_feature": "Self-guided tour scheduling with live chat handoff, contact center routing, and leasing call analysis/intelligence",
+    "product_id": "prospect-portal"
+  },
+  {
+    "id": "9",
+    "competitor_signal": "Jonah Digital add-ons: Engrain SightMap Experience, Retail Page, Tour Scheduler Integration",
+    "proposed_feature": "Interactive SightMap-style siteplan embed with live PMS pricing and integrated tour scheduler on leasing websites",
+    "product_id": "prospect-portal"
+  },
+  {
+    "id": "10",
+    "competitor_signal": "Anyone Home 30 June 2026 release: Service Outage expiration date scheduling for maintenance service outages",
+    "proposed_feature": "Maintenance service outage scheduling with automatic expiration dates and auto-removal from resident-facing systems",
+    "product_id": null
+  }
+]

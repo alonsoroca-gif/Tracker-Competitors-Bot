@@ -1,14 +1,14 @@
 {
   "status": "ready",
-  "run_id": "2026-06-25T13-53-06Z",
+  "run_id": "2026-06-29T15-06-58Z",
   "deadline_mt": "07:45",
   "viewer_path": "tracker-briefs/viewer/index.html",
-  "run_dir": "tracker-briefs/runs/2026-06-25T13-53-06Z",
-  "prototype_count": 1,
-  "net_new_count": 13,
-  "product_row_count": 4,
+  "run_dir": "tracker-briefs/runs/2026-06-29T15-06-58Z",
+  "prototype_count": 0,
+  "net_new_count": 15,
+  "product_row_count": 5,
   "source": "tracker-publish",
-  "ready_at": "2026-06-25T16:45:28.574Z",
+  "ready_at": "2026-06-29T19:04:38.571Z",
   "drop_new_signals_added": 176,
-  "started_at": "2026-06-25T16:29:08.239Z"
+  "started_at": "2026-06-29T19:03:30.348Z"
 }

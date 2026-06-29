@@ -1,0 +1,42 @@
+{
+  "6": {
+    "parity": "Partial",
+    "l1": "Partial",
+    "l2": "Partial",
+    "reason": "Layer 2: ProspectPortal GuestCard/ContactButton + Entrata comms APIs cover self-guided tour contact flows; no unified EliseAI-style omnichannel AI assistant at parity depth.",
+    "top": "Applications/ProspectPortal/Application/ContactButton/CContactButtonModule.class.php",
+    "routing": "Later"
+  },
+  "7": {
+    "parity": "Partial",
+    "l1": "Existing",
+    "l2": "Partial",
+    "reason": "Layer 2 override: L1 inflated by gateway \"secret\" token matches. Core has ClientAdmin CAiAgentManager (platform agent API) and leasing automation pieces but not Funnel-style VA secret-shop scoring product.",
+    "top": "Applications/ClientAdmin/Application/Development/AiAgent/CAiAgentManager.class.php",
+    "routing": "Later"
+  },
+  "8": {
+    "parity": "Existing",
+    "l1": "Existing",
+    "l2": "Existing",
+    "reason": "Layer 2 confirmed: self-guided tours, contact center, call analysis across ProspectPortal + CallCenter + Gateway.",
+    "top": "Applications/ProspectPortal/Application/ContactButton/CContactButtonModule.class.php",
+    "routing": "Won't chase"
+  },
+  "9": {
+    "parity": "Existing",
+    "l1": "Existing",
+    "l2": "Existing",
+    "reason": "Layer 2 confirmed: Engrain SightMap embed + unit data fetch in ProspectPortal PropertySystem.",
+    "top": "Applications/ProspectPortal/Application/PropertySystem/CPropertySystemModule.class.php (fetchEngrainApiUnitData)",
+    "routing": "Won't chase"
+  },
+  "10": {
+    "parity": "Gap",
+    "l1": "Existing",
+    "l2": "Gap",
+    "reason": "Layer 2 override: no maintenance Service Outage expiration scheduling found; L1 hits were generic \"outage\"/\"expiration\" in unrelated gateway/deploy code.",
+    "top": null,
+    "routing": "Later"
+  }
+}

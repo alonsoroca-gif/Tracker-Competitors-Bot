@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-06-25T16:45:28.578Z",
+  "updated_at": "2026-06-29T19:04:38.573Z",
   "runs": [
     {
       "run_id": "_sample-product-day",
@@ -9,6 +9,15 @@
       "prototype_count": 2,
       "summary": "Sample Product day for viewer QA — not wired to latest.json.",
       "fixture": true
+    },
+    {
+      "run_id": "2026-06-29T15-06-58Z",
+      "published_at": "2026-06-29T19:04:35.867Z",
+      "day_type": "weekend_catch_up",
+      "net_new_count": 15,
+      "prototype_count": 0,
+      "summary": "15 weekend collect(s) · 15 intel row(s) incl. 5 Product (2 Existing → Won't chase, 2 Partial, 1 Gap) · 0 Tier-Now prototypes.",
+      "fixture": false
     },
     {
       "run_id": "2026-06-25T13-53-06Z",
