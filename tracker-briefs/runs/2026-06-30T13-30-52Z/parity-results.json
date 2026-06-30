@@ -1,0 +1,10 @@
+{
+  "1": {
+    "parity": "Existing",
+    "l1": "Existing",
+    "l2": "Existing",
+    "reason": "Layer 2 confirmed: Engrain SightMap embed + unit data fetch in ProspectPortal PropertySystem.",
+    "top": "Applications/ProspectPortal/Application/PropertySystem/CPropertySystemModule.class.php (fetchEngrainApiUnitData)",
+    "routing": "Won't chase"
+  }
+}
