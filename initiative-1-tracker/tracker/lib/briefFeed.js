@@ -33,19 +33,35 @@ function isTrivialChange(r) {
 }
 
 /**
- * Split annotated signal rows into shown vs hidden. Shown = new + material/minor
+ * A Product row whose parity verdict is undecided (Borderline/Unknown, or the
+ * agent flagged needs_review). These must never be auto-buried into "hidden" or
+ * silently filed to Won't chase — the background agent can't AskQuestion, so the
+ * decision belongs to the manager reading the brief. Missing this bucket risks a
+ * real gap (a prototype we should build) disappearing.
+ */
+function needsManagerReview(r) {
+  const verdict = r.parity_l2 || r.parity || '';
+  return r.needs_review === true || verdict === 'Borderline' || verdict === 'Unknown';
+}
+
+/**
+ * Split annotated signal rows into review vs shown vs hidden. Review = undecided
+ * parity rows (surfaced regardless of change status). Shown = new + material/minor
  * changes. Hidden = unchanged + trivial changes (verification gate suppresses
  * churn that does not clear the significance threshold).
  */
 function splitSignalRows(rows) {
   const list = rows || [];
-  const annotated = list.some((r) => r.change_status);
-  if (!annotated) return { shown: list, hidden: [] };
+  const review = list.filter((r) => needsManagerReview(r));
+  const rest = list.filter((r) => !needsManagerReview(r));
+  const annotated = rest.some((r) => r.change_status);
+  if (!annotated) return { shown: rest, hidden: [], review };
   return {
-    shown: list.filter(
+    shown: rest.filter(
       (r) => r.change_status === 'new' || (r.change_status === 'changed' && !isTrivialChange(r)),
     ),
-    hidden: list.filter((r) => r.change_status === 'unchanged' || isTrivialChange(r)),
+    hidden: rest.filter((r) => r.change_status === 'unchanged' || isTrivialChange(r)),
+    review,
   };
 }
 
@@ -63,15 +79,17 @@ function formatSummary(manifest, latest, prototypes = null, signalsTable = null)
   const readyAt = latest?.ready_at || manifest.published_at || '—';
 
   // Signals: count new + changed; unchanged are suppressed from the brief.
+  // Undecided-parity rows (review) always surface — count them explicitly.
   let signalSegment;
   let newCount = manifest.net_new_count ?? 0;
-  if (Array.isArray(signalsTable) && signalsTable.some((r) => r.change_status)) {
-    const { shown, hidden: hiddenRows } = splitSignalRows(signalsTable);
+  if (Array.isArray(signalsTable) && signalsTable.some((r) => r.change_status || needsManagerReview(r))) {
+    const { shown, hidden: hiddenRows, review } = splitSignalRows(signalsTable);
     newCount = shown.filter((r) => r.change_status === 'new').length;
     const changed = shown.filter((r) => r.change_status === 'changed').length;
     const hidden = hiddenRows.length;
     signalSegment = `**${newCount}** new signal(s)`;
     if (changed) signalSegment += ` · ${changed} changed`;
+    if (review.length) signalSegment += ` · **${review.length} need your call**`;
     if (hidden) signalSegment += ` · ${hidden} hidden`;
   } else {
     signalSegment = `**${newCount}** net-new signal(s)`;
@@ -142,6 +160,30 @@ function formatChatTable(rows) {
   return out.join('\n');
 }
 
+/**
+ * Standing "Needs your call" lane for undecided-parity Product rows. These are
+ * never hidden and never auto-tiered — the manager promotes to a PRD (real gap)
+ * or confirms Won't chase. Prevents a genuine gap from being silently buried.
+ */
+function formatReviewSection(review) {
+  if (!review.length) return '';
+  const lines = [
+    `### ⚠️ Needs your call — undecided parity (${review.length})`,
+    '',
+    '_Parity was inconclusive (Borderline/Unknown), so these were NOT auto-tiered. Verify against Core, then promote to a PRD (real gap) or confirm Won\'t chase._',
+    '',
+  ];
+  for (const r of review) {
+    const verdict = r.parity_l2 || r.parity || '—';
+    lines.push(
+      `- **${competitorLabel(r)}** — ${escapeCell(truncate(r.headline, 60))} · parity: **${verdict}**`,
+    );
+    lines.push(`  - ${escapeCell(truncate(r.signal_summary || r.why_routing, 220))}`);
+    lines.push('  - **Decide:** promote to PRD if it\'s a real gap, else confirm Won\'t chase. Evidence + files in the viewer.');
+  }
+  return lines.join('\n');
+}
+
 function shippedDayLabel(p) {
   const iso = p.first_shipped_at;
   if (!iso) return p.first_shipped_run || 'a prior run';
@@ -200,6 +242,14 @@ function formatFeedMarkdown({ manifest, latest, signalsTable, prototypes }) {
     formatChatTable(signalsTable),
   ];
 
+  // Undecided-parity rows surface in their own standing lane so they are never
+  // buried among hidden/Won't-chase rows.
+  const { review } = splitSignalRows(signalsTable || []);
+  const reviewSection = formatReviewSection(review);
+  if (reviewSection) {
+    blocks.push('', reviewSection);
+  }
+
   const cards = formatPrototypeCards(prototypes || []);
   if (cards) {
     blocks.push('', cards);
@@ -232,9 +282,11 @@ function formatNotReady(latest, { stale = false, todayMt = null, readyDayMt = nu
 
 module.exports = {
   competitorLabel,
+  needsManagerReview,
   splitSignalRows,
   formatSummary,
   formatChatTable,
+  formatReviewSection,
   formatPrototypeCards,
   formatFeedMarkdown,
   formatNotReady,

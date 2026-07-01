@@ -101,7 +101,11 @@ async function ensureServer(port) {
 
 function viewerUrl(port, runId) {
   const base = `http://127.0.0.1:${port}/tracker-briefs/viewer/index.html`;
-  return runId ? `${base}?run=${encodeURIComponent(runId)}` : base;
+  // Per-open cache-bust on the PAGE url (not just ?v= assets). Simple Browser
+  // otherwise caches index.html itself, so viewer code changes silently don't
+  // show up until a manual hard-refresh — the recurring "stale viewer" bug.
+  const bust = `_t=${Date.now()}`;
+  return runId ? `${base}?run=${encodeURIComponent(runId)}&${bust}` : `${base}?${bust}`;
 }
 
 function activateCursor() {

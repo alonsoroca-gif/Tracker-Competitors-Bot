@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Tracker Brief Viewer</title>
   <!-- viewer-build: 2026-06-10-responsive-v11 -->
-  <link rel="stylesheet" href="roi-styles.css?v=roi-v19" />
-  <script src="roi-shared.js?v=roi-v19"></script>
+  <link rel="stylesheet" href="roi-styles.css?v=roi-v20" />
+  <script src="roi-shared.js?v=roi-v20"></script>
   <style>
     :root {
       --bg: #0c0c0f;
@@ -298,6 +298,19 @@
     .carryover-proto .meta { color: var(--muted); }
     .carryover-proto a { color: var(--accent); font-weight: 600; }
     .muted { color: var(--muted); }
+    .needs-review {
+      grid-column: 1 / -1; margin: 0 0 16px; padding: 14px 16px;
+      border: 1px solid #f59e0b66; border-left: 4px solid #f59e0b;
+      border-radius: 8px; background: rgba(245, 158, 11, 0.08);
+    }
+    .needs-review h3 { margin: 0 0 4px; font-size: 15px; color: #fbbf24; }
+    .needs-review .meta { color: var(--muted); font-size: 12px; margin: 4px 0; }
+    .review-list { margin: 10px 0 0; padding: 0; list-style: none; display: grid; gap: 10px; }
+    .review-list li {
+      padding: 10px 12px; border: 1px solid var(--border); border-radius: 6px;
+      background: rgba(0, 0, 0, 0.15);
+    }
+    .review-list a { color: var(--accent); }
     .dedup-note { font-size: 13px; font-style: italic; margin-top: 10px; }
     .change-detail { color: var(--muted); font-size: 12px; margin-top: 4px; }
     td .change-detail { display: block; }
@@ -309,7 +322,7 @@
   <header>
     <h1>Tracker Brief Viewer</h1>
     <span class="meta" id="run-meta">Loading…</span>
-    <span class="meta" title="Hard-refresh if layout looks stale">viewer roi-v19</span>
+    <span class="meta" title="Hard-refresh if layout looks stale">viewer roi-v20</span>
     <select id="run-select" aria-label="Select run"></select>
     <button type="button" id="reload-btn">Reload</button>
   </header>
@@ -362,7 +375,7 @@
 
     async function fetchJson(path) {
       const url = new URL(path, window.location.href);
-      url.searchParams.set('v', typeof VIEWER_BUILD !== 'undefined' ? VIEWER_BUILD : 'roi-v19');
+      url.searchParams.set('v', typeof VIEWER_BUILD !== 'undefined' ? VIEWER_BUILD : 'roi-v20');
       const res = await fetch(url);
       if (!res.ok) throw new Error(`${path} → ${res.status}`);
       return res.json();
@@ -505,6 +518,36 @@
       return r.change_status || '';
     }
 
+    // A Product row whose parity verdict is undecided (Borderline/Unknown) or the
+    // agent flagged needs_review. The background publish agent can't AskQuestion,
+    // so instead of silently filing these to Won't chase they surface here for the
+    // manager to promote (real gap → PRD) or confirm skip. Never hidden.
+    function needsReview(r) {
+      const v = String(r.parity_l2 || r.parity || '');
+      return r.needs_review === true || v === 'Borderline' || v === 'Unknown';
+    }
+
+    function renderReviewSignals(rows) {
+      if (!rows.length) return '';
+      const items = rows.map((r) => {
+        const verdict = esc(r.parity_l2 || r.parity || '—');
+        const why = esc(r.signal_summary || r.why_routing || '');
+        return `
+        <li>
+          <div>
+            ${r.source_url ? `<a href="${esc(r.source_url)}" target="_blank" rel="noopener"><strong>${esc(r.competitor)}</strong></a>` : `<strong>${esc(r.competitor)}</strong>`}
+            <span>— ${esc(r.headline)}</span>
+            <span class="badge">parity: ${verdict}</span>
+          </div>
+          <div class="meta">${why}</div>
+          <div class="meta"><strong>Decide:</strong> promote to a PRD if it's a real gap, else confirm Won't chase. Files + evidence in the parity audit below.</div>
+        </li>`;
+      }).join('');
+      return `<section class="needs-review"><h3>⚠️ Needs your call — undecided parity (${rows.length})</h3>
+        <p class="meta">Parity was inconclusive, so these were <strong>not</strong> auto-tiered. They stay here every day until you rule on them — nothing gets silently filed to Won't chase.</p>
+        <ul class="review-list">${items}</ul></section>`;
+    }
+
     function renderCarryoverSignals(rows) {
       if (!rows.length) return '';
       const items = rows.map((r) => {
@@ -557,7 +600,7 @@
       el.innerHTML = '';
       protos.forEach((p) => {
         const htmlPath = p.preview_path || p.html_path || '';
-        const src = assetUrl(htmlPath) + '?v=roi-v19';
+        const src = assetUrl(htmlPath) + '?v=roi-v20';
         const protoShell = viewerShellUrl('prototype.html', htmlPath, p.title, runId, p.id);
         const prdShell = p.prd_path
           ? `prd.html?src=${encodeURIComponent(assetUrl(p.prd_path))}&back=${encodeURIComponent(window.location.href)}`
@@ -634,7 +677,11 @@
       // Prefer the feed's new/changed/unchanged classification so unchanged
       // carryover is hidden by default (matches the chat feed). Older runs that
       // predate the annotation file fall back to showing every row.
-      const sigSource = (ann && Array.isArray(ann.signals) && ann.signals.length) ? ann.signals : table;
+      const sigSourceAll = (ann && Array.isArray(ann.signals) && ann.signals.length) ? ann.signals : table;
+      // Undecided-parity rows come out first and never get filtered by change
+      // status — they surface until the manager rules on them.
+      const reviewSig = sigSourceAll.filter(needsReview);
+      const sigSource = sigSourceAll.filter((r) => !needsReview(r));
       const sigAnnotated = sigSource.some((r) => r.change_status);
       const isTrivial = (r) => r.change_status === 'changed' && r.change_significance === 'trivial';
       // Supervisor (this viewer) sees ANY change, even minimal: new + every changed
@@ -654,7 +701,8 @@
       const dedupNote = unchangedCount
         ? `<p class="muted dedup-note">${unchangedCount} unchanged page(s) deduped — byte-identical to a prior brief, hidden.</p>`
         : '';
-      document.getElementById('table-wrap').innerHTML = sigHtml + renderCarryoverSignals(minimalSig) + dedupNote;
+      document.getElementById('table-wrap').innerHTML =
+        renderReviewSignals(reviewSig) + sigHtml + renderCarryoverSignals(minimalSig) + dedupNote;
 
       const protoSource = (ann && Array.isArray(ann.prototypes) && ann.prototypes.length) ? ann.prototypes : protosRaw;
       const protoAnnotated = protoSource.some((p) => 'carried_over' in p);
@@ -666,10 +714,11 @@
       // "13 net-new" sat above only 3 shown rows. Show the classified split instead.
       const newCount = shownSig.filter((r) => r.change_status === 'new').length;
       const changedShown = shownSig.filter((r) => r.change_status === 'changed').length;
+      const reviewSeg = reviewSig.length ? ` · ${reviewSig.length} need your call` : '';
       document.getElementById('run-meta').textContent =
-        `${manifest.run_id} · ${newCount} new · ${changedShown} changed · ${minimalSig.length} minimal · ${unchangedCount} unchanged`;
+        `${manifest.run_id} · ${newCount} new · ${changedShown} changed${reviewSeg} · ${minimalSig.length} minimal · ${unchangedCount} unchanged`;
       document.getElementById('summary-text').textContent =
-        `${manifest.net_new_count ?? 0} URL(s) re-checked vs the prior brief → ${newCount} new · ${changedShown} changed (shown) · ${minimalSig.length} minimal (below Billy’s threshold) · ${unchangedCount} unchanged (deduped). ${shownProto.length} prototype(s) shown.`;
+        `${manifest.net_new_count ?? 0} URL(s) re-checked vs the prior brief → ${newCount} new · ${changedShown} changed (shown)${reviewSig.length ? ` · ${reviewSig.length} need your call (undecided parity)` : ''} · ${minimalSig.length} minimal (below Billy’s threshold) · ${unchangedCount} unchanged (deduped). ${shownProto.length} prototype(s) shown.`;
 
       renderPrototypes(shownProto, manifest, runId, hiddenProto);
     }

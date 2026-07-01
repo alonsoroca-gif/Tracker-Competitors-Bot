@@ -261,6 +261,28 @@ check(
     split.hidden.length === 2,
 );
 
+// Undecided-parity rows never get buried: a Borderline/needs_review row with
+// unchanged content must land in review, not hidden.
+const reviewSplit = splitSignalRows([
+  { id: 1, source_url: 'a', change_status: 'unchanged', parity_l2: 'Borderline', needs_review: true },
+  { id: 2, source_url: 'b', change_status: 'unchanged', parity_l2: 'Existing' },
+  { id: 3, source_url: 'c', change_status: 'unchanged', parity_l2: 'Unknown' },
+]);
+check(
+  'Borderline/Unknown/needs_review rows surface for review, not hidden',
+  reviewSplit.review.length === 2 &&
+    reviewSplit.review.every((r) => r.id === 1 || r.id === 3) &&
+    reviewSplit.hidden.length === 1 &&
+    reviewSplit.hidden[0].id === 2 &&
+    !reviewSplit.hidden.some((r) => r.needs_review),
+);
+
+const reviewMarkdown = require('../lib/briefFeed.js').formatReviewSection(reviewSplit.review);
+check(
+  'review section renders a decide prompt',
+  reviewMarkdown.includes('Needs your call') && reviewMarkdown.includes('promote to a PRD'),
+);
+
 const viewer = path.join(repoRoot, 'tracker-briefs/viewer/index.html');
 if (!fs.existsSync(viewer)) {
   process.stderr.write('brief-feed.test: viewer missing\n');
