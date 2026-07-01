@@ -1,0 +1,281 @@
+[
+  {
+    "id": "5",
+    "parity": "Borderline",
+    "verdict_reason": "9 matches across 3 files — just above the Gap floor; could be incidental keyword overlap. Verify before assigning Tier.",
+    "total_score": 9,
+    "files_with_hits": 3,
+    "apps_with_hits": 2,
+    "top_apps": [
+      {
+        "app": "ProspectPortal",
+        "score": 7,
+        "files": 2
+      },
+      {
+        "app": "ClientAdmin",
+        "score": 2,
+        "files": 1
+      }
+    ],
+    "top_files": [
+      {
+        "relativePath": "Application/PropertySystem/PropertyPageSystem/GuestCard/CGuestCardModule.class.php",
+        "app": "ProspectPortal",
+        "score": 4,
+        "matched_terms": [
+          "communication",
+          "automation"
+        ]
+      },
+      {
+        "relativePath": "Application/ContactButton/CContactButtonModule.class.php",
+        "app": "ProspectPortal",
+        "score": 3,
+        "matched_terms": [
+          "communication",
+          "self-guided"
+        ]
+      },
+      {
+        "relativePath": "Application/AssignApplicationModules.php",
+        "app": "ClientAdmin",
+        "score": 2,
+        "matched_terms": [
+          "communication",
+          "automation"
+        ]
+      }
+    ],
+    "grounding_terms": [
+      "eliseai",
+      "homepage",
+      "assistant",
+      "self-guided",
+      "communication",
+      "multi-channel",
+      "automation"
+    ]
+  },
+  {
+    "id": "6",
+    "parity": "Existing",
+    "verdict_reason": "279 matches across 61 files in 13 apps — likely already shipped",
+    "total_score": 279,
+    "files_with_hits": 61,
+    "apps_with_hits": 13,
+    "top_apps": [
+      {
+        "app": "ClientAdmin",
+        "score": 58,
+        "files": 11
+      },
+      {
+        "app": "Services",
+        "score": 51,
+        "files": 9
+      },
+      {
+        "app": "ProspectPortal",
+        "score": 36,
+        "files": 14
+      },
+      {
+        "app": "Vendor",
+        "score": 36,
+        "files": 8
+      },
+      {
+        "app": "Gateway",
+        "score": 34,
+        "files": 4
+      }
+    ],
+    "top_files": [
+      {
+        "relativePath": "Application/AssignApplicationModules.php",
+        "app": "ClientAdmin",
+        "score": 15,
+        "matched_terms": [
+          "dashboard",
+          "insights"
+        ]
+      },
+      {
+        "relativePath": "App/Controllers/Utilities/UEM/EnergyStar/EnergyStarDashboardV2.php",
+        "app": "ClientAdmin",
+        "score": 15,
+        "matched_terms": [
+          "dashboard",
+          "call"
+        ]
+      },
+      {
+        "relativePath": "Application/TwilioCallStatus/CGatewayTwilioCallStatusHandler.class.php",
+        "app": "Gateway",
+        "score": 15,
+        "matched_terms": [
+          "call",
+          "dashboard",
+          "voice"
+        ]
+      },
+      {
+        "relativePath": "Application/Dashboard/CEndureDashboard.class.php",
+        "app": "Vendor",
+        "score": 15,
+        "matched_terms": [
+          "dashboard",
+          "showing",
+          "virtual"
+        ]
+      },
+      {
+        "relativePath": "Application/IncomingEmailRelay/CGatewayEmailRelayHandler.class.php",
+        "app": "Gateway",
+        "score": 11,
+        "matched_terms": [
+          "secret",
+          "dashboard"
+        ]
+      },
+      {
+        "relativePath": "Application/CServicesApp.class.php",
+        "app": "Services",
+        "score": 10,
+        "matched_terms": [
+          "call",
+          "showing",
+          "conversion"
+        ]
+      }
+    ],
+    "grounding_terms": [
+      "funnel",
+      "voice",
+      "insights",
+      "virtual",
+      "assistant",
+      "secret",
+      "shop",
+      "ai-handled",
+      "conversion",
+      "call",
+      "dashboard",
+      "showing",
+      "human-handled",
+      "secret-shop",
+      "scoring"
+    ]
+  },
+  {
+    "id": "7",
+    "parity": "Existing",
+    "verdict_reason": "714 matches across 94 files in 14 apps — likely already shipped",
+    "total_score": 714,
+    "files_with_hits": 94,
+    "apps_with_hits": 14,
+    "top_apps": [
+      {
+        "app": "ProspectPortal",
+        "score": 213,
+        "files": 28
+      },
+      {
+        "app": "Services",
+        "score": 151,
+        "files": 16
+      },
+      {
+        "app": "Scripts",
+        "score": 86,
+        "files": 9
+      },
+      {
+        "app": "CallCenter",
+        "score": 67,
+        "files": 6
+      },
+      {
+        "app": "ResidentPortal",
+        "score": 56,
+        "files": 11
+      }
+    ],
+    "top_files": [
+      {
+        "relativePath": "Application/SoapServers/CMoneyGramRealTimeBillPaymentRequestSoap.class.php",
+        "app": "AdminSync",
+        "score": 15,
+        "matched_terms": [
+          "call",
+          "contact"
+        ]
+      },
+      {
+        "relativePath": "Application/DialPlan/CDialPlanDirective.class.php",
+        "app": "CallCenter",
+        "score": 15,
+        "matched_terms": [
+          "coaching",
+          "call",
+          "center"
+        ]
+      },
+      {
+        "relativePath": "Application/DialPlan/CNewDialplanDirective.class.php",
+        "app": "CallCenter",
+        "score": 15,
+        "matched_terms": [
+          "coaching",
+          "call",
+          "center"
+        ]
+      },
+      {
+        "relativePath": "Application/DialPlan/CNewDialplanDirectory.class.php",
+        "app": "CallCenter",
+        "score": 15,
+        "matched_terms": [
+          "contact",
+          "coaching",
+          "call",
+          "center"
+        ]
+      },
+      {
+        "relativePath": "Application/CallAnalysisCallDispute/CGatewayCallAnalysisCallDisputeHandler.class.php",
+        "app": "Gateway",
+        "score": 15,
+        "matched_terms": [
+          "call",
+          "analysis"
+        ]
+      },
+      {
+        "relativePath": "tests/unit/Application/ContactButton/CContactButtonModuleTest.php",
+        "app": "ProspectPortal",
+        "score": 15,
+        "matched_terms": [
+          "call",
+          "contact"
+        ]
+      }
+    ],
+    "grounding_terms": [
+      "anyone",
+      "call",
+      "analysis",
+      "contact",
+      "center",
+      "hybrid",
+      "intelligence",
+      "chatbot",
+      "self-guided",
+      "recording",
+      "coaching",
+      "scores",
+      "handoff"
+    ]
+  }
+]
