@@ -1,5 +1,17 @@
 [
   {
+    "id": "known-undercount-eliseai-assistant",
+    "competitor_signal": "EliseAI homepage AI leasing assistant CRM self-guided tours SMS email resident communication multi-channel automation",
+    "proposed_feature": "Multi-channel AI leasing assistant for prospect SMS email chat automation with self-guided tour scheduling",
+    "product_id": "lead-manager",
+    "expected_verdict": [
+      "Existing",
+      "Partial"
+    ],
+    "known_limitation": "regression_after_core_alias_map_2026_07_06",
+    "rationale": "Documents the false-NEGATIVE under-count fixed on 2026-07-06. Pre-fix verdict was Borderline (score=9, files=3, apps=2): the competitor's marketing vocabulary (\"AI leasing assistant\", \"self-guided tours\") never lexically matched Core's prefixed identifiers (TSelfGuidedTour, CChatbotInsight, CGuestCardModule), so whole-word matching missed the real implementation and the row was silently filed to Won't chase. After adding the CORE_ALIASES substring map (leasingai, selfguidedtour, guestcard, chatbotinsight, eliservicehandler) + the file-name match bonus, the verdict rises to Existing (score=91, files=11, apps=4) grounded on the CORRECT files — CGuestCardModule, CContactButtonModule, CLeadServiceHandler — matching my manual Layer-2 dive. This fixture bans Borderline/Gap: the alias map must keep this vocabulary-mismatch case from under-counting again."
+  },
+  {
     "id": "existing-all-in-pricing",
     "competitor_signal": "Jonah positioning as FTC pricing-transparency-ready — all-in pricing disclosure with mandatory fees included",
     "proposed_feature": "All-In Pricing mode in Entrata pricing engine — every prospect-facing price includes mandatory fees by default",

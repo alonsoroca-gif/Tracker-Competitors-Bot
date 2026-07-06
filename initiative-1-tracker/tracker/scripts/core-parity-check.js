@@ -127,26 +127,52 @@ function escapeRegex(s) {
 /** Whole-word matcher. The shared scanner in repoInsight.js uses
  *  substring match (`line.includes(term)`) which conflates `eli` with
  *  `eligibility` / `elite` and inflates parity scores. For the parity
- *  gate we need word-boundary precision. */
-function buildTermMatchers(terms) {
-  return terms.map((t) => ({
-    term: t,
-    re: new RegExp(`\\b${escapeRegex(t)}\\b`, 'i'),
-  }));
+ *  gate we need word-boundary precision for competitor-derived terms.
+ *
+ *  Alias terms (see CORE_ALIASES) are the exception: they are long,
+ *  distinctive Core identifiers (e.g. `selfguidedtour`, `chatbotinsight`)
+ *  that whole-word matching CANNOT find, because Core prefixes classes
+ *  (`TSelfGuidedTour`, `CChatbotInsight`) so there is no word boundary.
+ *  These match as substrings — safe because an 8+ char compound like
+ *  `callanalysis` does not collide with unrelated vocabulary the way a
+ *  short generic word (`eli`, `call`) would. */
+function buildTermMatchers(terms, { substring = false } = {}) {
+  return terms.map((t) => {
+    if (substring) {
+      const low = String(t).toLowerCase();
+      return { term: t, kind: 'alias', match: (text) => text.toLowerCase().includes(low) };
+    }
+    const re = new RegExp(`\\b${escapeRegex(t)}\\b`, 'i');
+    return { term: t, kind: 'word', match: (text) => re.test(text) };
+  });
 }
 
 /**
  * A single stateless regex that matches a line iff ANY term is present.
  * Used as a cheap pre-filter in scoreFile: the overwhelming majority of
  * source lines contain none of the terms, so one combined `.test` lets us
- * skip the per-term matcher loop on those lines. Boolean-equivalent to
- * OR-ing every individual `\bterm\b` matcher, so scores are unchanged.
- * No `g` flag — `.test` must stay stateless across lines.
+ * skip the per-term matcher loop on those lines. Whole-word terms keep the
+ * `\b` boundary; alias terms are matched as bare substrings (they target
+ * prefixed identifiers with no boundary). No `g` flag — `.test` must stay
+ * stateless across lines.
  */
-function buildCombinedMatcher(terms) {
-  if (!terms || !terms.length) return null;
-  return new RegExp(`\\b(?:${terms.map(escapeRegex).join('|')})\\b`, 'i');
+function buildCombinedMatcher(terms, aliasTerms = []) {
+  const parts = [];
+  if (terms && terms.length) parts.push(`\\b(?:${terms.map(escapeRegex).join('|')})\\b`);
+  if (aliasTerms && aliasTerms.length) parts.push(`(?:${aliasTerms.map(escapeRegex).join('|')})`);
+  if (!parts.length) return null;
+  return new RegExp(parts.join('|'), 'i');
 }
+
+// Location weighting: a term in a file/class NAME describes what the file IS
+// ABOUT; the same term in a method body or string literal is likely incidental.
+// Weight a name match higher so a genuinely on-topic file (e.g. a term hitting
+// `CGuestCardModule`) outranks a vocabulary collision in an unrelated file.
+// Bounded by max_file_score. (Doc-comment weighting was tried and reverted —
+// it inflated generic terms appearing in comments, tipping the elise-variance
+// regression fixtures to a false Existing.)
+const NAME_MATCH_WEIGHT = 3;
+const BODY_LINE_WEIGHT = 1;
 
 function* walkFiles(dir, depth, maxDepth) {
   if (depth > maxDepth) return;
@@ -169,7 +195,7 @@ function* walkFiles(dir, depth, maxDepth) {
   }
 }
 
-function scoreFile(content, matchers, combinedRe) {
+function scoreFile(content, matchers, combinedRe, basename = '') {
   const text = String(content);
   // File-level fast reject: if no search term appears anywhere in the file,
   // it contributes zero — skip the line split + per-line scan entirely. For
@@ -177,20 +203,31 @@ function scoreFile(content, matchers, combinedRe) {
   // full per-line pass into one regex probe. Semantically identical: terms
   // are single words that can't span a newline, so "no match in content"
   // implies "no match on any line".
-  if (combinedRe && !combinedRe.test(text)) {
+  const nameHit = basename && combinedRe && combinedRe.test(basename);
+  if (combinedRe && !nameHit && !combinedRe.test(text)) {
     return { score: 0, matched_terms: [], snippets: [] };
   }
   const lines = text.split('\n');
   let score = 0;
   const matched = new Set();
   const snippets = [];
+  // Name/purpose bonus: a term in the file (class) name is a strong purpose
+  // signal — score it once, above a body mention.
+  if (nameHit) {
+    for (const m of matchers) {
+      if (m.match(basename)) {
+        score += NAME_MATCH_WEIGHT;
+        matched.add(m.term);
+      }
+    }
+  }
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
     // Fast reject: skip the per-term loop on lines that contain no term.
     if (combinedRe && !combinedRe.test(line)) continue;
     for (const m of matchers) {
-      if (m.re.test(line)) {
-        score += 1;
+      if (m.match(line)) {
+        score += BODY_LINE_WEIGHT;
         matched.add(m.term);
         if (snippets.length < 3) {
           snippets.push({ line: i + 1, term: m.term, text: line.trim().slice(0, 160) });
@@ -218,10 +255,11 @@ function scanApp(appRoot, matchers, opts = {}) {
       continue;
     }
     if (buf.length > maxFileBytes) buf = buf.slice(0, maxFileBytes);
-    const { score, matched_terms, snippets } = scoreFile(buf, matchers, opts.combinedRe);
+    const relativePath = path.relative(appRoot, file);
+    const { score, matched_terms, snippets } = scoreFile(buf, matchers, opts.combinedRe, path.basename(relativePath));
     if (score <= 0) continue;
     hits.push({
-      relativePath: path.relative(appRoot, file),
+      relativePath,
       score,
       matched_terms,
       snippets,
@@ -278,7 +316,7 @@ function buildCoreFileCache(allApps, opts = {}) {
 function scanCachedApp(cachedFiles, matchers, combinedRe) {
   const hits = [];
   for (const f of cachedFiles) {
-    const { score, matched_terms, snippets } = scoreFile(f.content, matchers, combinedRe);
+    const { score, matched_terms, snippets } = scoreFile(f.content, matchers, combinedRe, path.basename(f.relativePath));
     if (score <= 0) continue;
     hits.push({
       relativePath: f.relativePath,
@@ -749,6 +787,45 @@ function terms(feature) {
 }
 
 /**
+ * Competitor→Core alias map (recall). Competitors describe features in
+ * marketing language ("AI leasing assistant", "self-guided tours") that
+ * never lexically matches Core's internal naming (`ELI`, `TSelfGuidedTour`).
+ * That vocabulary gap is why EliseAI under-counted to Borderline (9/3/2) on
+ * 2026-07-01 despite Core clearly shipping the capability.
+ *
+ * Each entry: if a trigger phrase appears in the competitor blob, add the
+ * distinctive Core identifiers to the search. These are matched as
+ * SUBSTRINGS (see buildTermMatchers) because Core prefixes classes, so
+ * `\bselfguidedtour\b` can't match `TSelfGuidedTour`. Only long, distinctive
+ * compounds are used — never generic words — so substring matching stays
+ * safe (no `eli`/`call`-style collisions).
+ */
+const CORE_ALIASES = [
+  {
+    when: /\bai[\s-]?(leasing|powered|assistant)|leasing assistant|virtual assistant|chat\s?bot|conversational|ai\s+assistant\b/i,
+    add: ['leasingai', 'chatbotinsight', 'eliservicehandler'],
+  },
+  {
+    when: /\bself[\s-]?guided|self[\s-]?service|guided tour|tour scheduling|schedule a tour\b/i,
+    add: ['selfguidedtour', 'guestcard'],
+  },
+  {
+    when: /\bvoice ai|voice assistant|\bivr\b|call center|contact center|call analysis|call scoring|secret shop|call recording\b/i,
+    add: ['callanalysis', 'dialplan', 'ivraction'],
+  },
+];
+
+/** Distinctive Core identifiers to search, derived from the competitor blob. */
+function aliasTermsFor(feature) {
+  const blob = [feature.competitor_signal, feature.proposed_feature].filter(Boolean).join('\n');
+  const out = new Set();
+  for (const entry of CORE_ALIASES) {
+    if (entry.when.test(blob)) entry.add.forEach((a) => out.add(a));
+  }
+  return [...out];
+}
+
+/**
  * Verdict logic with a `Borderline` band for low-confidence cases. The
  * goal is to be honest about uncertainty: when the score sits right at
  * a tier boundary, when only one file matched (no cross-file diversity),
@@ -852,12 +929,13 @@ function checkOne(feature, applicationsDir, allApps, thresholds, fileCache) {
     };
   }
 
+  const aliasT = aliasTermsFor(feature);
   const apps = scopeAppsForProduct(feature.product_id, applicationsDir, allApps, thresholds._scopeByProduct);
   const perAppMap = new Map();
   const rawHits = [];
   const minDistinct = thresholds.min_distinct_terms_per_file ?? 2;
-  const matchers = buildTermMatchers(t);
-  const combinedRe = buildCombinedMatcher(t);
+  const matchers = [...buildTermMatchers(t), ...buildTermMatchers(aliasT, { substring: true })];
+  const combinedRe = buildCombinedMatcher(t, aliasT);
 
   for (const app of apps) {
     const hits = fileCache && fileCache.has(app.name)
@@ -916,6 +994,7 @@ function checkOne(feature, applicationsDir, allApps, thresholds, fileCache) {
       matched_terms: h.matched_terms,
     })),
     grounding_terms: t,
+    alias_terms: aliasT,
   };
 }
 
