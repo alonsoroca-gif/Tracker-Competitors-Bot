@@ -120,6 +120,17 @@ const SKIP_DIRS = new Set([
 ]);
 const SOURCE_EXT = /\.(php|phtml|inc|js|cjs|mjs|tsx?|jsx|vue|twig)$/i;
 
+// Test/spec files are NOT evidence of a shipped capability — a real feature is
+// proven by implementation files, not unit tests. Counting them lets generic
+// vocabulary in a test (e.g. `CEntrataAiInspectionServiceHandlerTest` matching
+// "inspection"/"detection") manufacture a false Partial for a feature Core does
+// not actually ship. Excluded from parity scoring on both scan paths.
+const TEST_PATH_RE = /(^|\/)tests?(\/|$)|(Test|Spec)\.(php|phtml|inc|js|cjs|mjs|tsx?|jsx)$|\.(test|spec)\.(js|cjs|mjs|tsx?|jsx)$/i;
+
+function isTestPath(relativePath) {
+  return TEST_PATH_RE.test(String(relativePath || ''));
+}
+
 function escapeRegex(s) {
   return String(s).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
@@ -256,6 +267,7 @@ function scanApp(appRoot, matchers, opts = {}) {
     }
     if (buf.length > maxFileBytes) buf = buf.slice(0, maxFileBytes);
     const relativePath = path.relative(appRoot, file);
+    if (isTestPath(relativePath)) continue;
     const { score, matched_terms, snippets } = scoreFile(buf, matchers, opts.combinedRe, path.basename(relativePath));
     if (score <= 0) continue;
     hits.push({
@@ -316,6 +328,7 @@ function buildCoreFileCache(allApps, opts = {}) {
 function scanCachedApp(cachedFiles, matchers, combinedRe) {
   const hits = [];
   for (const f of cachedFiles) {
+    if (isTestPath(f.relativePath)) continue;
     const { score, matched_terms, snippets } = scoreFile(f.content, matchers, combinedRe, path.basename(f.relativePath));
     if (score <= 0) continue;
     hits.push({
