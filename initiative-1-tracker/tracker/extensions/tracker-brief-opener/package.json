@@ -1,9 +1,9 @@
 {
   "name": "tracker-brief-opener",
   "displayName": "Tracker Brief Opener",
-  "description": "Opens Tracker Brief Viewer URLs in Cursor Simple Browser (used by open-brief-viewer.js).",
+  "description": "Owns the local viewer server + opens Tracker Brief Viewer URLs in Cursor Simple Browser. Watches a workspace request file so auto-open works from a sandboxed morningbrief run.",
   "publisher": "entrata",
-  "version": "1.0.2",
+  "version": "1.1.0",
   "license": "MIT",
   "engines": {
     "vscode": "^1.70.0"

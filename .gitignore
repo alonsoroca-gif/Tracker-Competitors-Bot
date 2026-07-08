@@ -62,3 +62,8 @@ tracker-drops/.last-interpreted-drop-id
 # copy-out step (e.g., copy specific briefs into a committed
 # initiative-1-tracker/briefs-archive/ folder when worth preserving).
 .tracker-briefs/
+
+# Transient viewer auto-open request file (written by open-brief-viewer.js /
+# the sandboxed brief, watched by the tracker-brief-opener extension). Runtime
+# signal only — never source.
+tracker-briefs/.open-request.json

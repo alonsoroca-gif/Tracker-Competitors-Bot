@@ -152,22 +152,37 @@ function openViaCursorCli(cursorBin, targetUrl) {
   child.unref();
 }
 
-const REQUEST_PATH = path.join(os.homedir(), '.tracker-brief-open-request.json');
+const HOME_REQUEST_PATH = path.join(os.homedir(), '.tracker-brief-open-request.json');
+// Workspace request file — the agent sandbox allows workspace writes but blocks
+// home-dir writes, so this is the path that lets a sandboxed morningbrief trigger
+// auto-open. The extension (>=1.1.0) watches it.
+const WS_REQUEST_PATH = path.join(repoRoot, 'tracker-briefs', '.open-request.json');
 
 /**
- * Primary open path: write a request file the extension watches. This works from
- * any context (agent shell, integrated terminal, any window) because it does not
- * depend on `cursor --open-url` URI routing, which is not delivered to the
- * extension handler when invoked outside the active window's context.
+ * Primary open path: write a request file the extension watches. Written to BOTH
+ * the home dir (works when run outside the sandbox) and the workspace (works when
+ * run sandboxed, since workspace writes are permitted). Each write is independent
+ * so a blocked home write never prevents the workspace write. Returns true if at
+ * least one landed.
  */
 function writeOpenRequest(url) {
-  fs.writeFileSync(REQUEST_PATH, JSON.stringify({ url, ts: Date.now() }), 'utf8');
+  const payload = JSON.stringify({ url, ts: Date.now() });
+  let wrote = false;
+  for (const p of [WS_REQUEST_PATH, HOME_REQUEST_PATH]) {
+    try {
+      fs.writeFileSync(p, payload, 'utf8');
+      wrote = true;
+    } catch {
+      /* path blocked (e.g. sandbox blocks home dir) — the other path may succeed */
+    }
+  }
+  return wrote;
 }
 
 /** Default — Cursor Simple Browser tab via the watched request file (+ CLI best-effort). */
 function openInCursorSimpleBrowser(url, cursorBin) {
   // Reliable path first: the watcher opens within ~1s regardless of CLI latency.
-  writeOpenRequest(url);
+  const wrote = writeOpenRequest(url);
   // Best-effort, non-blocking extras: bring Cursor forward and nudge the URI handler
   // for setups where cursor:// routing already works.
   activateCursor();
@@ -176,6 +191,7 @@ function openInCursorSimpleBrowser(url, cursorBin) {
   } catch {
     /* request file is the reliable path; CLI is optional */
   }
+  return wrote;
 }
 
 function openInExternalBrowser(url) {
@@ -229,8 +245,13 @@ async function main() {
   // and the extension opens the Simple Browser within ~1s. Slow Cursor-CLI probes are
   // deferred below so they never delay the actual open.
   try {
-    openInCursorSimpleBrowser(url, cursorBin);
-    process.stdout.write('open-brief-viewer: requested Simple Browser open via watched request file.\n');
+    const wrote = openInCursorSimpleBrowser(url, cursorBin);
+    if (wrote) {
+      process.stdout.write('open-brief-viewer: requested Simple Browser open via watched request file.\n');
+    } else {
+      process.stdout.write('open-brief-viewer: could not write a request file (home + workspace both blocked).\n');
+      printManualFallback();
+    }
   } catch (err) {
     process.stdout.write(`open-brief-viewer: auto-open failed — ${err.message}\n`);
     printManualFallback();
