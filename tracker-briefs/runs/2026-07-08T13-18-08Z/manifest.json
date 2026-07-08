@@ -1,0 +1,24 @@
+{
+  "run_id": "2026-07-08T13-18-08Z",
+  "drop_run_id": "2026-07-08T13-18-08Z",
+  "published_at": "2026-07-08T17:17:17.591Z",
+  "source": "tracker-publish",
+  "day_type": "mixed",
+  "net_new_count": 11,
+  "weekend_mandatory_count": 0,
+  "weekend_drop_ids": [],
+  "catch_up_count": 11,
+  "content_refreshed_count": 2,
+  "carryover_count": 0,
+  "calendar_gap_days": 1,
+  "product_row_count": 4,
+  "tier_now_product_count": 0,
+  "prototype_count": 0,
+  "interpretation_pointer": "2026-07-08T13-18-08Z",
+  "summary": "11 catch-up URL(s) · 2 content refresh(es) · 13 table rows · 4 Product row(s) (0 Tier — Now after parity) · 0 prototypes.",
+  "parity_summary": {
+    "Existing": 4
+  },
+  "prior_brief_run_id": "2026-07-07T13-55-23Z",
+  "needs_review": []
+}
