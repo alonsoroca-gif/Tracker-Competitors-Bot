@@ -106,6 +106,20 @@ function main() {
     }) + '\n',
   );
 
+  // Always surface a clickable viewer URL — guaranteed one-click fallback that
+  // needs no permissions. Auto-open (below) writes the home-dir request file +
+  // calls the Cursor CLI, both of which the agent sandbox blocks; when that
+  // no-ops silently, this printed URL is how you still reach the viewer.
+  const viewerPort = 8765;
+  const viewerUrl =
+    `http://127.0.0.1:${viewerPort}/tracker-briefs/viewer/index.html` +
+    `?run=${encodeURIComponent(runId)}&_t=${Date.now()}`;
+  process.stdout.write(`\nTracker Brief Viewer (click to open): ${viewerUrl}\n`);
+  process.stdout.write(
+    'If it did not auto-open, the local server may be down — run: ' +
+      'npm run brief:open-viewer --prefix initiative-1-tracker/tracker\n',
+  );
+
   if (args.open) {
     const { spawnSync } = require('child_process');
     spawnSync(
