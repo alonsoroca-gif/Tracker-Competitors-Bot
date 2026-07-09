@@ -1,1 +1,45 @@
-[]
+[
+  {
+    "id": 1,
+    "competitor_id": "leasehawk",
+    "competitor": "LeaseHawk (ACE)",
+    "headline": "#1 CRM and AI property management software | #1 Rental Experience",
+    "snippet": "Detected feature/solution themes: score in a Virtual Assistant secret shop | conversion for AI-handled prospects, compared to 19% tour conversion for non-AI handled prospects | “Funnel’s AI allowed our teams to work smarter, and insulated our business in a turbulent labor market.” | How we help Centralization + role specialization AI + automation Ideal renter experience Comprehensive renter + resident platform. Repeated product keywords: ai, automation, leasing, lead nurturing, crm, voice ai, sms, email. Positioning cues: multifamily, property management, conversion, assistant, platform",
+    "classification": "Product",
+    "classification_detail": "capability",
+    "parity": "Existing",
+    "parity_l1": "Partial",
+    "parity_l2": "Existing",
+    "routing": "Won't chase",
+    "why_routing": "[Page content changed since last brief] LeaseHawk homepage refresh with Virtual Assistant secret-shop scoring and AI tour-conversion claims (46% vs 19%). L1 Partial (32/5/5 — keyword noise on \"secret\"/\"conversion\"). Layer 2: Core ships CallAnalysis scorecards (`Applications/Entrata/Application/CallAnalysis/CallAnalysisScorecardController.class.php`), leasing-center call-analysis dashboards, LEASING_AI voice routing (`Applications/CallCenter/Application/Macros/forward_call_to_leasing_ai_text.xml`), and Eli setup — secret-shop framing is PMM, not a platform gap → Won't chase — already shipped in Core.",
+    "routing_reason": "Product-shaped signal — Core parity scan completed; Existing implementation found.",
+    "signal_summary": "LeaseHawk AI secret-shop + conversion marketing refresh — Existing parity; Core already ships call-analysis scorecards and LEASING_AI.",
+    "tier": "Won't chase",
+    "source_url": "https://leasehawk.com/",
+    "content_hash": "3737109f5615279f",
+    "prototype_path": null,
+    "prd_path": null,
+    "needs_review": false
+  },
+  {
+    "id": 2,
+    "competitor_id": "funnel-leasing",
+    "competitor": "Funnel Leasing",
+    "headline": "26 Funnel Leasing Customer Reviews & References",
+    "snippet": "8 excerpt(s) parsed. First: 18 Testimonials View 6 Case Studies View 2 Customer Videos View Customer Rating Review Score based on 714 reference ratings 4.8/5.0 (714)",
+    "classification": "PMM",
+    "classification_detail": "channel-building",
+    "parity": "—",
+    "parity_l1": null,
+    "parity_l2": null,
+    "routing": "Won't chase",
+    "why_routing": "We found a change on the review listing. 8 excerpt(s) parsed. → Won't chase — PMM/positioning; no engineering PRD unless you promote manually.",
+    "routing_reason": "Third-party social proof or review listing — PMM channel work, not an engineering PRD.",
+    "signal_summary": "We found a change on the review listing. 8 excerpt(s) parsed. → Won't chase — PMM/positioning; no engineering PRD unless you promote manually.",
+    "tier": "Won't chase",
+    "source_url": "https://www.featuredcustomers.com/vendor/funnel-leasing",
+    "content_hash": "23e336db9cc897dd",
+    "prototype_path": null,
+    "prd_path": null
+  }
+]
