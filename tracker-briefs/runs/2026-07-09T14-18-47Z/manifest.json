@@ -1,0 +1,19 @@
+{
+  "run_id": "2026-07-09T14-18-47Z",
+  "drop_run_id": "2026-07-09T14-18-47Z",
+  "published_at": "2026-07-09T16:00:05.889Z",
+  "source": "tracker-publish-intel",
+  "day_type": "intel_only",
+  "net_new_count": 0,
+  "weekend_mandatory_count": 0,
+  "weekend_drop_ids": [],
+  "catch_up_count": 0,
+  "content_refreshed_count": 0,
+  "carryover_count": 0,
+  "calendar_gap_days": 999,
+  "product_row_count": 0,
+  "tier_now_product_count": 0,
+  "prototype_count": 0,
+  "interpretation_pointer": "2026-07-09T14-18-47Z",
+  "summary": "999d since last brief — no classified rows for today's table (competitors quiet)."
+}

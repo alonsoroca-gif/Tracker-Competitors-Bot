@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-07-08T18:02:54.033Z",
+  "updated_at": "2026-07-09T16:00:05.905Z",
   "runs": [
     {
       "run_id": "_sample-product-day",
@@ -9,6 +9,15 @@
       "prototype_count": 2,
       "summary": "Sample Product day for viewer QA — not wired to latest.json.",
       "fixture": true
+    },
+    {
+      "run_id": "2026-07-09T14-18-47Z",
+      "published_at": "2026-07-09T16:00:05.889Z",
+      "day_type": "intel_only",
+      "net_new_count": 0,
+      "prototype_count": 0,
+      "summary": "999d since last brief — no classified rows for today's table (competitors quiet).",
+      "fixture": false
     },
     {
       "run_id": "2026-07-08T13-18-08Z",
