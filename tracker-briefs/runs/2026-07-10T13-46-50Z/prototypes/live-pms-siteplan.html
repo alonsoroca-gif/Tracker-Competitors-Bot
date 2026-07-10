@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Live-PMS Siteplan</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; overflow: hidden; }
+    body {
+      font-family: "SF Pro Text", system-ui, sans-serif;
+      background: #0f172a;
+      color: #e2e8f0;
+      display: flex;
+      flex-direction: column;
+      font-size: 11px;
+    }
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 12px;
+      background: #1e293b;
+      border-bottom: 1px solid #334155;
+      flex-shrink: 0;
+    }
+    .brand { font-weight: 700; font-size: 12px; color: #f8fafc; }
+    .sub { font-size: 9px; color: #94a3b8; margin-top: 1px; }
+    .live {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 9px;
+      font-weight: 600;
+      color: #4ade80;
+      background: #14532d44;
+      border: 1px solid #22c55e55;
+      padding: 4px 8px;
+      border-radius: 999px;
+    }
+    .dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: #22c55e;
+      box-shadow: 0 0 6px #22c55e;
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.5} }
+    .sync { font-size: 9px; color: #64748b; }
+    .workspace {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 1fr 148px;
+      min-height: 0;
+    }
+    .map-pane {
+      position: relative;
+      background:
+        radial-gradient(circle at 35% 45%, #1e4d7a33 0%, transparent 55%),
+        #0f172a;
+      border-right: 1px solid #334155;
+      padding: 10px;
+    }
+    .filter-row {
+      display: flex;
+      gap: 4px;
+      margin-bottom: 8px;
+      flex-wrap: wrap;
+    }
+    .chip {
+      font-size: 8px;
+      padding: 3px 7px;
+      border-radius: 999px;
+      border: 1px solid #475569;
+      color: #94a3b8;
+      background: #1e293b;
+    }
+    .chip.on { border-color: #3b82f6; color: #93c5fd; background: #1e3a5f; }
+    .building {
+      position: absolute;
+      border: 2px dashed #475569;
+      border-radius: 8px;
+      font-size: 8px;
+      color: #64748b;
+      padding: 4px 6px;
+      background: rgba(15, 23, 42, 0.6);
+    }
+    .b-a { top: 28%; left: 8%; width: 38%; height: 42%; }
+    .b-b { top: 22%; right: 8%; width: 34%; height: 36%; }
+    .pin {
+      position: absolute;
+      padding: 5px 8px;
+      border-radius: 8px;
+      font-size: 9px;
+      font-weight: 600;
+      border: 1px solid #22c55e;
+      background: #14532d66;
+      color: #ecfdf5;
+      box-shadow: 0 2px 8px rgba(0,0,0,.35);
+      cursor: default;
+    }
+    .pin.hot {
+      border-color: #f59e0b;
+      background: #78350f88;
+      color: #fef3c7;
+      transform: scale(1.05);
+      z-index: 2;
+    }
+    .pin-204 { top: 52%; left: 22%; }
+    .pin-305 { top: 38%; right: 28%; }
+    .pin-112 { bottom: 18%; left: 42%; }
+    .detail {
+      background: #1e293b;
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .detail h3 { font-size: 11px; color: #f8fafc; }
+    .meta-row { font-size: 9px; color: #94a3b8; line-height: 1.4; }
+    .price {
+      font-size: 16px;
+      font-weight: 700;
+      color: #4ade80;
+    }
+    .avail {
+      display: inline-block;
+      font-size: 8px;
+      font-weight: 600;
+      color: #86efac;
+      background: #14532d;
+      padding: 2px 6px;
+      border-radius: 4px;
+      margin-top: 4px;
+    }
+    .cta {
+      margin-top: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+    .btn {
+      text-align: center;
+      padding: 7px;
+      border-radius: 7px;
+      font-size: 9px;
+      font-weight: 600;
+      border: none;
+    }
+    .btn-primary { background: #2563eb; color: #fff; }
+    .btn-ghost { background: #334155; color: #e2e8f0; }
+    .footer {
+      padding: 5px 10px;
+      font-size: 8px;
+      color: #64748b;
+      border-top: 1px solid #334155;
+      background: #0f172a;
+      flex-shrink: 0;
+    }
+    .footer strong { color: #94a3b8; }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div>
+      <div class="brand">Harbor View Apartments</div>
+      <div class="sub">Prospect Portal · Live-PMS siteplan</div>
+    </div>
+    <div style="text-align:right">
+      <div class="live"><span class="dot"></span> LIVE PMS</div>
+      <div class="sync">Synced 2s ago</div>
+    </div>
+  </header>
+  <div class="workspace">
+    <section class="map-pane" aria-label="Property map">
+      <div class="filter-row">
+        <span class="chip on">All units</span>
+        <span class="chip">Available now</span>
+        <span class="chip">1 bed</span>
+        <span class="chip">2 bed</span>
+      </div>
+      <span class="building b-a">Building A</span>
+      <span class="building b-b">Building B</span>
+      <span class="pin pin-204 hot">204 · $1,845</span>
+      <span class="pin pin-305">305 · $1,920</span>
+      <span class="pin pin-112">112 · $1,710</span>
+    </section>
+    <aside class="detail" aria-label="Selected unit">
+      <h3>Unit 204</h3>
+      <div class="meta-row">Building A · 2 bed · 980 sq ft</div>
+      <div class="price">$1,845<span style="font-size:9px;font-weight:400;color:#94a3b8">/mo</span></div>
+      <span class="avail">Available · move-in Jul 15</span>
+      <p class="meta-row" style="margin-top:4px">Rent from Entrata pricing engine — updates when rate or hold changes.</p>
+      <div class="cta">
+        <button type="button" class="btn btn-primary">Apply with live rate</button>
+        <button type="button" class="btn btn-ghost">Schedule tour</button>
+      </div>
+    </aside>
+  </div>
+  <footer class="footer">
+    <strong>Service flow:</strong> Pin click → live PMS rent + availability → apply or tour without leaving map. Replaces Engrain SightMap embed.
+  </footer>
+</body>
+</html>

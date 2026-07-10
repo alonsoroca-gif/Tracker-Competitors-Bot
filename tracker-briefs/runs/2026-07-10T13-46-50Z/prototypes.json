@@ -1,0 +1,41 @@
+[
+  {
+    "id": "live-pms-siteplan",
+    "title": "Live-PMS Siteplan",
+    "competitor_id": "jonah-digital",
+    "competitor": "Jonah Digital Agency",
+    "signal_id": 9,
+    "html_path": "tracker-briefs/runs/2026-07-10T13-46-50Z/prototypes/live-pms-siteplan.html",
+    "preview_path": "tracker-briefs/runs/2026-07-10T13-46-50Z/prototypes/live-pms-siteplan.html",
+    "prd_path": "tracker-briefs/runs/2026-07-10T13-46-50Z/prds/live-pms-siteplan.md",
+    "brief": {
+      "what": "Interactive property siteplan with unit pins wired to live Entrata PMS rent and availability — not a static PDF or third-party Engrain embed.",
+      "benefits": "Prospect Portal · Leasing Websites · Open API pricing feed",
+      "why_build": "Counters Jonah/Engrain SightMap-style embeds with pricing that updates when the PMS updates — middleware competitors cannot ship."
+    },
+    "roi": {
+      "verdict": "pursue",
+      "lever": "Conversion / vacancy days",
+      "summary": "Live unit pricing on the siteplan lifts high-intent apply starts; delta is PMS-tied map UX, not a static embed.",
+      "per_unit_annual": "~$22/unit/yr NOI",
+      "property_250": "~$5.5K/yr",
+      "portfolio_10k": "~$220K/yr",
+      "confidence": "modeled",
+      "numbers": {
+        "type": "modeled_approximation",
+        "formula": "(Δ apply-start rate × avg monthly rent × vacancy days avoided per start) ÷ units",
+        "inputs": [
+          "+0.5–1.0% lift on siteplan sessions that reach apply (roi-analyst midpoint)",
+          "$1,800 blended avg rent · 3 vacancy days avoided per incremental start",
+          "Vacancy-day cost ≈ daily rent (industry norm — not client-specific)"
+        ],
+        "scaling": "Per-unit annual → ×250 for single-property chunk → ×10,000 for portfolio chunk. Portfolio figure is a directional scale, not a forecast.",
+        "disclaimer": "Modeled approximation for prioritization — not measured client ROI or a finance sign-off number."
+      },
+      "brief": {
+        "advantage": "Jonah/Engrain ship static or partner feeds; Entrata pins read the same live rent engine that powers leasing — no middleware lag.",
+        "why_pursue": "High-intent shoppers self-serve on the map; every day of stale pricing is a lost tour slot and extra vacancy days."
+      }
+    }
+  }
+]

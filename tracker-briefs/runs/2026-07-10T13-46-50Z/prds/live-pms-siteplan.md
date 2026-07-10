@@ -1,0 +1,30 @@
+# PRD: Live-PMS Interactive Siteplan
+
+- **Problem:** Jonah Digital's add-ons page sells Engrain SightMap embeds and tour-scheduler integrations as premium website upgrades. Operators see a polished interactive map with unit-level exploration — but third-party embeds cannot read Entrata's live rent, hold status, or screening-driven pricing. Entrata already ships siteplan coordinates and PDF maps in ProspectPortal; the gap is the **interactive pin → live PMS pricing → apply/tour** path that Jonah/Engrain structurally cannot own because they don't run the PMS.
+- **Target user:** Prospect shopping on a property website; leasing operator configuring Prospect Portal siteplan media.
+- **Scope (in):**
+  - Interactive siteplan module in Prospect Portal: unit pins positioned via existing `sitePlanXPos` / `sitePlanYPos` coordinates
+  - Pin click panel showing live rent, availability, floorplan, and move-in date pulled from PMS pricing engine (same source as check-availability)
+  - Filter chips: available now, bedroom count, price range
+  - Primary CTA: "Apply with live rate" deep-linking to application with unit pre-selected
+  - Secondary CTA: "Schedule tour" wired to existing tour scheduler
+  - Admin toggle in ClientAdmin to enable interactive siteplan vs legacy PDF-only view
+  - API endpoint returning unit pin payload (rent, status, coords) for map render — no third-party middleware
+- **Scope (out):**
+  - Engrain SightMap partnership or embed replacement project
+  - Retail/commercial page add-on (separate Jonah signal)
+  - Net-new siteplan coordinate editor (reuse existing marketing media upload)
+  - Mobile native app siteplan (web responsive only v1)
+- **Success metric:** ≥15% lift in apply-start rate from siteplan sessions vs PDF-only baseline within 90 days of pilot (3 properties).
+- **Evidence:** `tracker-drops/2026-07-10T13-46-50Z/signals.json` — jonah-digital · features_page · `https://jonahdigital.com/add-ons/` (Engrain SightMap Experience, Tour Scheduler Integration)
+- **Effort estimate:** L — Prospect Portal map UI (M), pricing API wiring (S), tour scheduler hook (S), ClientAdmin toggle (S), QA across property configs (M).
+- **Existing Entrata implementation:**
+  - Siteplan media + unit coordinates: `Applications/ProspectPortal/Application/PropertySystem/CheckAvailability/CCheckAvailabilityModule.class.php` (`loadSitePlanData`, `displayUnitSpaces`)
+  - Unit pricing load: `Applications/ProspectPortal/Application/PropertySystem/ApplicationSystem/ApplicationUnitInfo/CApplicationUnitInfoModule.class.php` (`loadPricingAndLeaseTerms`)
+  - Siteplan coordinate fields on units: `Applications/Services/.../CSiteTabletServiceHandler.class.php` (`getSitePlanXPos`, `getSitePlanYPos`)
+- **Delta vs Core:** Interactive map pins with live PMS rent/availability on click + apply/tour CTAs — replacing static PDF siteplan or third-party SightMap embed for high-intent shoppers.
+- **Net-new engineering ask:**
+  - Prospect Portal interactive siteplan React/Smarty module with pin → pricing panel
+  - JSON API for unit pin payload (coords, rent, availability, floorplan)
+  - ClientAdmin feature flag for interactive vs PDF siteplan mode
+  - Apply deep-link with unit pre-selection from map context
