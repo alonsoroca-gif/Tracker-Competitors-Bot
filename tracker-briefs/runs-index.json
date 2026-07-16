@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-07-13T15:34:25.032Z",
+  "updated_at": "2026-07-16T21:37:46.669Z",
   "runs": [
     {
       "run_id": "_sample-product-day",
@@ -9,6 +9,15 @@
       "prototype_count": 2,
       "summary": "Sample Product day for viewer QA — not wired to latest.json.",
       "fixture": true
+    },
+    {
+      "run_id": "2026-07-16T19-12-18Z",
+      "published_at": "2026-07-16T21:20:00.000Z",
+      "day_type": "product",
+      "net_new_count": 0,
+      "prototype_count": 0,
+      "summary": "1 carryover spotlight · 1 Product row (Existing → Won't chase) · 0 prototypes.",
+      "fixture": false
     },
     {
       "run_id": "2026-07-10T13-46-50Z",

@@ -1,0 +1,33 @@
+{
+  "generated_at": "2026-07-16T21:37:46.711Z",
+  "prior_run_id": "2026-07-10T13-46-50Z",
+  "baseline_run_count": 25,
+  "signals": [
+    {
+      "id": 1,
+      "competitor_id": "anyone-home",
+      "competitor": "Anyone Home",
+      "headline": "21 July 2026 Release",
+      "snippet": "SMS SMS Opt-in Enhancements To help keep your team compliant with evolving SMS regulations, Anyone Home now requires prospects and residents to explicitly opt in before receiving SMS communications. CRM Email and SMS Notification Settings Expansion Ready, Set, Notify! Pop-notifications and dashboard bell alerts can now be enabled independently for inbound email and SMS communications. The previous Allow […]",
+      "classification": "Product",
+      "classification_detail": "capability",
+      "parity": "Existing",
+      "parity_l1": "Existing",
+      "parity_l2": "Existing",
+      "routing": "Won't chase",
+      "why_routing": "Anyone Home SMS opt-in compliance changelog — Layer 2: Core ships double opt-in (ProspectPortal CGuestCardModule SMS_OPT_IN_TYPE_DOUBLE), per-channel SMS confirmation handlers (Applications/Sms/Application/Processor/CChatInboundMessageController.class.php), property SMS opt-in preferences, and ILS lead auto opt-in (Services CLeadServiceHandler). TCPA workflow already in Core → Won't chase — already shipped in Core.",
+      "routing_reason": "Anyone Home SMS opt-in compliance changelog — Layer 2: Core ships double opt-in, per-channel SMS confirmation handlers, property SMS opt-in preferences, and ILS lead opt-in. TCPA workflow already in Core → Won't chase — already shipped in Core.",
+      "signal_summary": "Anyone Home SMS opt-in compliance — Existing parity; Core already ships TCPA double opt-in and per-channel SMS preferences.",
+      "tier": "Won't chase",
+      "source_url": "https://anyonehome-updates.com/21-july-2026-release/",
+      "content_hash": "32a78bf0f9d1b9dd",
+      "prototype_path": null,
+      "prd_path": null,
+      "needs_review": false,
+      "change_status": "unchanged",
+      "unchanged_hash": "32a78bf0f9d1b9dd",
+      "first_seen_run": "2026-07-10T13-46-50Z"
+    }
+  ],
+  "prototypes": []
+}

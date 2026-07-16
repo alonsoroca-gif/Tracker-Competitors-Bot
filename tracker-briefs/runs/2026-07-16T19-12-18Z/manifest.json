@@ -1,0 +1,23 @@
+{
+  "run_id": "2026-07-16T19-12-18Z",
+  "drop_run_id": "2026-07-16T19-12-18Z",
+  "published_at": "2026-07-16T21:20:00.000Z",
+  "source": "tracker-publish",
+  "day_type": "product",
+  "net_new_count": 0,
+  "weekend_mandatory_count": 0,
+  "weekend_drop_ids": [],
+  "catch_up_count": 0,
+  "content_refreshed_count": 0,
+  "carryover_count": 1,
+  "calendar_gap_days": 999,
+  "product_row_count": 1,
+  "tier_now_product_count": 0,
+  "prototype_count": 0,
+  "interpretation_pointer": "2026-07-16T19-12-18Z",
+  "summary": "1 carryover spotlight · 1 Product row (Existing → Won't chase) · 0 prototypes.",
+  "parity_summary": {
+    "Existing": 1
+  },
+  "prior_brief_run_id": "2026-07-10T13-46-50Z"
+}
