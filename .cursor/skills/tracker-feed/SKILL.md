@@ -7,6 +7,8 @@ description: Billy-facing consumer for published tracker briefs — reads tracke
 
 **Consumer skill** — showroom for what `tracker-publish` wrote to `tracker-briefs/`. Runs at the **end** of morningbrief (tracker section ~8:20), after **Step 1** kicked off publish in the background.
 
+**Billy-facing only:** Never paste `collect-health-status.js` / collect lane failures into this feed. That block is Alonso/operator-only in morningbrief Step 9.
+
 ## Quick start
 
 **Trigger:** morningbrief **tracker section** (~8:20am, after other subskills), or `/tracker feed`, "show today's tracker brief".

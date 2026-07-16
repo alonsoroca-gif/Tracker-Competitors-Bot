@@ -307,7 +307,7 @@ const covArticlesArr = pillarCoverageFromUrls({ articles_urls: ['https://x.com/a
 assert(covArticlesArr.p1 === true, 'articles_urls array counts toward P1');
 
 // getSourceUrls — funnel-leasing third-party review lane
-const { getSourceUrls } = require('../lib/collect');
+const { getSourceUrls, rssHeaders } = require('../lib/collect');
 const funnelUrls = getSourceUrls('funnel-leasing');
 assert(
   funnelUrls.reviews_url && funnelUrls.reviews_url.includes('featuredcustomers'),
@@ -321,6 +321,32 @@ assert(funnelUrls.insights_url && funnelUrls.insights_url.includes('insights'), 
 assert(funnelUrls.media_url && funnelUrls.media_url.includes('media'), 'funnel-leasing media_url set');
 assert(funnelUrls.podcast_url && funnelUrls.podcast_url.includes('podcast'), 'funnel-leasing podcast_url set');
 assert(funnelUrls.reviews_url && funnelUrls.reviews_url.includes('featuredcustomers'), 'funnel-leasing reviews_url set');
+assert(
+  Array.isArray(funnelUrls.articles_urls) &&
+    funnelUrls.articles_urls.some((u) => u.includes('/resources')),
+  'funnel-leasing articles include /resources/'
+);
+assert(
+  funnelUrls.features_url.includes('/products'),
+  'funnel-leasing features_url is /products/ (Jul 2026 nav)'
+);
+assert(
+  funnelUrls.careers_url.includes('/about/careers'),
+  'funnel-leasing careers_url is /about/careers/ (Jul 2026 nav)'
+);
+const anyoneUrlsNav = getSourceUrls('anyone-home');
+assert(
+  anyoneUrlsNav.careers_url.includes('career-opportunities'),
+  'anyone-home careers_url is /career-opportunities/ (Jul 2026 nav)'
+);
+
+// RSS headers must NOT advertise br/gzip — rss-parser cannot decompress them
+// (Jul 2026 silent Funnel feed outage).
+const rssHdr = rssHeaders();
+assert(
+  String(rssHdr['accept-encoding'] || '').toLowerCase() === 'identity',
+  'rssHeaders force accept-encoding: identity'
+);
 
 const eliseUrls = getSourceUrls('eliseai');
 assert(
@@ -349,43 +375,60 @@ assert(
   'eliseai docs_url cleared — /datalog was redirecting to /blog (an article index, not docs)'
 );
 assert(
-  eliseUrls.articles_url === 'https://eliseai.com/blog',
-  'eliseai articles_url set to /blog (Phase B-2 lane handles HTML article indexes)'
+  Array.isArray(eliseUrls.articles_urls) &&
+    eliseUrls.articles_urls.includes('https://eliseai.com/blog') &&
+    eliseUrls.articles_urls.includes('https://eliseai.com/content-library') &&
+    eliseUrls.articles_urls.includes('https://eliseai.com/newsroom'),
+  'eliseai articles_urls includes /blog, /content-library, /newsroom'
 );
 assert(
-  Array.isArray(eliseUrls.articles_urls) && eliseUrls.articles_urls.includes('https://eliseai.com/blog'),
-  'eliseai articles_urls array contains /blog'
+  eliseUrls.features_url.includes('platform-overview'),
+  'eliseai features_url uses /platform-overview (real nav page)'
+);
+assert(eliseUrls.pricing_url === '', 'eliseai pricing_url empty — no public /pricing page');
+assert(eliseUrls.docs_url === '', 'eliseai docs_url empty — no public docs host');
+assert(
+  !eliseUrls.youtube_discovery_queries || eliseUrls.youtube_discovery_queries.length === 0,
+  'eliseai YouTube discovery removed (no API key / not a daily source)'
 );
 assert(
   funnelUrlsPostDemo.docs_url === '',
   'funnel-leasing docs_url cleared (developer.funnelleasing.com is a JS SPA — defer to Playwright)'
 );
-const leasehawkUrls = getSourceUrls('leasehawk');
+const productsCfg = require('../config/products.json');
 assert(
-  leasehawkUrls.careers_url === '',
-  'leasehawk careers_url cleared (no jobs in static HTML, no ATS embed, brand deprecating)'
+  !productsCfg.sources.leasehawk &&
+    Array.isArray(productsCfg.retired_competitor_ids) &&
+    productsCfg.retired_competitor_ids.includes('leasehawk'),
+  'leasehawk retired — Funnel is the sole scrape target for that brand'
 );
+assert(
+  !(productsCfg.competitors || []).some((c) => c.id === 'leasehawk'),
+  'leasehawk removed from active competitors list'
+);
+const funnelCompetitor = (productsCfg.competitors || []).find((c) => c.id === 'funnel-leasing');
+assert(funnelCompetitor && funnelCompetitor.name === 'Funnel', 'funnel-leasing display name is Funnel');
 
 // Phase B-2 — Anyone Home config has new HTML lanes
 const anyoneHomeUrls = getSourceUrls('anyone-home');
 assert(
-  anyoneHomeUrls.blog === '',
-  'anyone-home blog cleared (Cloudflare 403 on /feed/ — see FOLLOWUPS-TOMORROW)'
+  anyoneHomeUrls.blog.includes('anyonehome.com') && anyoneHomeUrls.blog.includes('feed'),
+  'anyone-home blog points at live WordPress feed (Jul 2026 restore)'
 );
 assert(
   anyoneHomeUrls.features_url.includes('/solutions/'),
   'anyone-home features_url upgraded from homepage to /solutions/'
 );
 assert(
-  anyoneHomeUrls.careers_url === '',
-  'anyone-home careers_url cleared (was 404)'
+  anyoneHomeUrls.careers_url.includes('career-opportunities'),
+  'anyone-home careers_url is /career-opportunities/ (Jul 2026 nav)'
 );
 assert(
   Array.isArray(anyoneHomeUrls.case_studies_urls) && anyoneHomeUrls.case_studies_urls.length === 2,
   'anyone-home case_studies_urls is array of 2'
 );
 assert(
-  anyoneHomeUrls.case_studies_urls.includes('https://anyonehome.com/customer-stories/'),
+  anyoneHomeUrls.case_studies_urls.some((u) => u.includes('/customer-stories')),
   'anyone-home case_studies_urls includes /customer-stories/'
 );
 assert(
@@ -591,26 +634,30 @@ assert(pbLine && /Multi-pillar|internal L2|timebox discovery/i.test(pbLine), 'pl
   const { runFullCollect: runFCFresh } = require('../lib/runCollectAll');
   const result = await runFCFresh(7, { verbose: false });
 
-  // Expectation: 1 collect call per competitor — not per (competitor × product).
+  // Expectation: 1 collect call per *active* competitor — not per (competitor × product).
+  // Aliased / collect:false rows (LeaseHawk → Funnel) are skipped on purpose.
   const cfg = loadConfig();
-  const competitorCount = cfg.competitors.length;
+  const activeCompetitors = (cfg.competitors || []).filter((c) => {
+    const alias = c.alias_of || (cfg.sources && cfg.sources[c.id] && cfg.sources[c.id].alias_of);
+    return c.collect !== false && !alias;
+  });
+  const competitorCount = activeCompetitors.length;
   const productCount = cfg.products.length;
 
   assert(
     collectCalls === competitorCount,
-    `runFullCollect calls collect() once per competitor (got ${collectCalls}, expected ${competitorCount})`
+    `runFullCollect calls collect() once per active competitor (got ${collectCalls}, expected ${competitorCount})`
   );
   assert(
-    productCount > 1 && collectCalls < productCount * competitorCount,
-    `runFullCollect skips the old N×products fan-in (got ${collectCalls}, old behavior would be ${productCount * competitorCount})`
+    productCount > 1 && collectCalls < productCount * (cfg.competitors || []).length,
+    `runFullCollect skips the old N×products fan-in (got ${collectCalls}, old behavior would be ${productCount * (cfg.competitors || []).length})`
   );
   assert(
     Array.isArray(result.batchSignals) &&
       result.batchSignals.length === competitorCount * productCount,
     `signals fan out to every product (got ${result.batchSignals.length}, expected ${competitorCount * productCount})`
   );
-  // Each competitor should have signals with every product_id present.
-  for (const comp of cfg.competitors) {
+  for (const comp of activeCompetitors) {
     const productIdsForComp = new Set(
       result.batchSignals.filter((s) => s.competitor_id === comp.id).map((s) => s.product_id)
     );
@@ -619,6 +666,10 @@ assert(pbLine && /Multi-pillar|internal L2|timebox discovery/i.test(pbLine), 'pl
       `competitor ${comp.id} has signals tagged for all ${productCount} products (got ${productIdsForComp.size})`
     );
   }
+  assert(
+    !collectInvocations.some((c) => c.competitorId === 'leasehawk'),
+    'runFullCollect does not scrape retired leasehawk id'
+  );
 
   // Restore module cache so later requires (if any) see real modules.
   require.cache[collectModulePath].exports = originalCollect;

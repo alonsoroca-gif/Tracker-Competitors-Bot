@@ -44,16 +44,14 @@ function pillarCoverageFromUrls(urls) {
   const missing_hints = [];
   if (!p1) {
     missing_hints.push(
-      'Pillar 1 (owned): set blog, press, changelog, youtube_rss, features_url, docs_url, insights_url, podcast_url, case_studies_url, or articles_url'
+      'Pillar 1 (owned): set blog, press, changelog, features_url, docs_url, insights_url, podcast_url, case_studies_url, or articles_url'
     );
   }
   if (!p2) {
     missing_hints.push('Pillar 2 (behavioral): set pricing_url and/or careers_url');
   }
   if (!p3) {
-    missing_hints.push(
-      'Pillar 3 (third party): set media_url, reviews_url, and/or youtube_comment_video_ids and/or youtube_discovery_queries (+ YOUTUBE_DATA_API_KEY)'
-    );
+    missing_hints.push('Pillar 3 (third party): set media_url and/or reviews_url');
   }
   missing_hints.push(
     'Pillar 4 (structural): not collected by this app yet — add LinkedIn/Crunchbase/etc. manually or future integration'

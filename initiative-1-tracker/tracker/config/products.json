@@ -5,17 +5,18 @@
       "press": "",
       "changelog": "",
       "docs_url": "",
-      "articles_url": "https://eliseai.com/blog",
-      "pricing_url": "",
-      "features_url": "https://eliseai.com/",
-      "careers_url": "https://eliseai.com/careers/",
-      "youtube_comment_video_ids": [],
-      "youtube_discovery_queries": [
-        "EliseAI review multifamily",
-        "Elise AI honest review property management"
+      "articles_url": [
+        "https://eliseai.com/blog",
+        "https://eliseai.com/content-library",
+        "https://eliseai.com/newsroom"
       ],
-      "youtube_discovery_max_results": 5,
-      "youtube_discovery_max_queries": 2
+      "pricing_url": "",
+      "features_url": "https://eliseai.com/platform-overview",
+      "careers_url": "https://eliseai.com/careers/",
+      "case_studies_url": [
+        "https://eliseai.com/customer-stories"
+      ],
+      "_notes": "Jul 2026 nav audit: no public /pricing or /docs. Use newsroom (not /press), platform-overview (not /platform)."
     },
     "funnel-leasing": {
       "blog": "https://funnelleasing.com/category/llm/feed/",
@@ -26,33 +27,29 @@
       "podcast_url": "https://funnelleasing.com/category/podcast/feed/",
       "reviews_url": "https://www.featuredcustomers.com/vendor/funnel-leasing",
       "docs_url": "",
-      "youtube_rss": "",
       "pricing_url": "",
-      "features_url": "https://funnelleasing.com/",
-      "careers_url": "https://funnelleasing.com/careers/"
-    },
-    "leasehawk": {
-      "blog": "",
-      "press": "",
-      "changelog": "",
-      "docs_url": "",
-      "youtube_rss": "",
-      "pricing_url": "https://leasehawk.com/",
-      "features_url": "https://leasehawk.com/",
-      "careers_url": ""
+      "features_url": "https://funnelleasing.com/products/",
+      "careers_url": "https://funnelleasing.com/about/careers/",
+      "articles_url": [
+        "https://funnelleasing.com/resources/",
+        "https://funnelleasing.com/why-funnel/"
+      ],
+      "case_studies_url": "https://funnelleasing.com/comprehensive-leasing-platform/",
+      "_notes": "Jul 2026 nav audit: careers live at /about/careers/ (not /careers/). Features = /products/. No public /pricing. LeaseHawk brand absorbed — scrape Funnel only. category/cases returned empty body; use resources + why-funnel + platform page instead."
     },
     "anyone-home": {
-      "blog": "",
+      "blog": "https://www.anyonehome.com/blog/feed/",
       "press": "",
       "changelog": "https://anyonehome-updates.com/feed/",
       "docs_url": "",
-      "pricing_url": "https://anyonehome.com/",
-      "features_url": "https://anyonehome.com/solutions/",
-      "careers_url": "",
+      "pricing_url": "https://www.anyonehome.com/",
+      "features_url": "https://www.anyonehome.com/solutions/",
+      "careers_url": "https://www.anyonehome.com/career-opportunities/",
       "case_studies_url": [
-        "https://anyonehome.com/customer-stories/",
-        "https://anyonehome.com/why-anyone-home/"
-      ]
+        "https://www.anyonehome.com/customer-stories/",
+        "https://www.anyonehome.com/why-anyone-home/"
+      ],
+      "_notes": "Jul 2026 nav audit: careers = /career-opportunities/ (not /careers/). Prefer www. host. No public /pricing."
     },
     "jonah-digital": {
       "blog": "",
@@ -63,7 +60,11 @@
       "features_url": "https://jonahdigital.com/add-ons/",
       "careers_url": "",
       "articles_url": "https://jonahdigital.com/articles/",
-      "case_studies_url": "https://jonahdigital.com/"
+      "case_studies_url": [
+        "https://jonahdigital.com/",
+        "https://jonahdigital.com/why-jonah/"
+      ],
+      "_notes": "Jul 2026 nav audit: no /pricing, /careers, /services. Real pages: /, /add-ons/, /articles/, /about/, /why-jonah/. Playwright-first for WAF."
     }
   },
   "products": [
@@ -89,23 +90,16 @@
     },
     {
       "id": "funnel-leasing",
-      "name": "Funnel Leasing",
-      "priority": "medium",
+      "name": "Funnel",
+      "priority": "high",
       "website": "https://funnelleasing.com",
-      "focus": "Leasing CRM with AI communication, tour scheduling, application management."
-    },
-    {
-      "id": "leasehawk",
-      "name": "LeaseHawk (ACE)",
-      "priority": "medium",
-      "website": "https://leasehawk.com",
-      "focus": "AI virtual leasing agent, call tracking, lead scoring, tour booking."
+      "focus": "Leasing CRM with AI communication, tour scheduling, application management. Includes former LeaseHawk/ACE brand."
     },
     {
       "id": "anyone-home",
       "name": "Anyone Home",
       "priority": "medium",
-      "website": "https://anyonehome.com",
+      "website": "https://www.anyonehome.com",
       "focus": "AI chatbot + voice for leasing, lead capture, tour scheduling."
     },
     {
@@ -115,5 +109,6 @@
       "website": "https://jonahdigital.com",
       "focus": "Digital marketing and property websites; services-based lead generation."
     }
-  ]
+  ],
+  "retired_competitor_ids": ["leasehawk"]
 }

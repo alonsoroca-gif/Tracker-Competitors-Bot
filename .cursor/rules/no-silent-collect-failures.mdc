@@ -1,0 +1,33 @@
+---
+description: Tracker collect must never fail silently — operator (Alonso) always sees health
+globs:
+  - initiative-1-tracker/tracker/lib/collect.js
+  - initiative-1-tracker/tracker/lib/collectHealth.js
+  - initiative-1-tracker/tracker/lib/runCollectAll.js
+  - initiative-1-tracker/tracker/scripts/publish-drop.js
+  - initiative-1-tracker/tracker/scripts/collect-health-status.js
+  - .cursor/skills/morningbrief/**
+  - **/morningbrief/**/*
+---
+
+# No silent collect failures
+
+## The rule
+
+Scrape/collect lanes must **never** swallow errors into empty arrays without a record. If a configured URL fails to fetch or parse, that failure is a first-class `lane_results` row with `status: "error"` and must land in the drop `manifest.collect_health`.
+
+Quiet content (`empty_window` — feed OK, nothing in the retention window) is **not** a failure. Parse/HTTP/WAF errors **are**.
+
+## Operator vs Billy
+
+| Audience | Collect health |
+|----------|----------------|
+| **Alonso (morningbrief)** | **Every run** — emit OK or failure block from `collect-health-status.js`. Operator-only. |
+| **Billy (tracker-feed)** | **Never** — do not paste collect health into Billy's brief table/viewer copy. |
+
+## When editing collect code
+
+- Do not `catch (_) { return []; }` on configured lanes without `pushLaneResult(..., { status: 'error', error })`.
+- RSS must use `rssHeaders()` (`accept-encoding: identity`) — advertising `br`/`gzip` silently zeros feeds.
+- `publish-drop.js` must persist `lane_failures` into SUMMARY + manifest.
+- Morningbrief Step 0/9 must run `collect-health-status.js` and show the section **even when healthy**.

@@ -6,10 +6,11 @@ const { formatRoiLine } = require('./briefRoi.js');
 
 const COMPETITOR_NAMES = {
   eliseai: 'EliseAI',
-  'funnel-leasing': 'Funnel Leasing',
-  leasehawk: 'LeaseHawk (ACE)',
+  'funnel-leasing': 'Funnel',
+  leasehawk: 'Funnel',
   'anyone-home': 'Anyone Home',
   jonah: 'Jonah',
+  'jonah-digital': 'Jonah',
   rentvision: 'RentVision',
 };
 

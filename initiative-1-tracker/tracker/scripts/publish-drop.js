@@ -40,7 +40,9 @@ async function main() {
   const { shutdownBrowser } = require('../lib/collect');
 
   const days = parseDays();
-  const { newCount, pruned, intelMeta } = await runFullCollect(days, { verbose: false });
+  const { newCount, pruned, intelMeta, laneResults } = await runFullCollect(days, {
+    verbose: false,
+  });
 
   // Close the Playwright browser if any lane spun it up. Without this the node
   // process hangs until the browser child times out (~30s).
@@ -73,21 +75,34 @@ async function main() {
 
   fs.writeFileSync(path.join(dropDir, 'signals.json'), signalsJson, 'utf8');
 
-  let collectHealth = { ok: true, regressions: [] };
+  let collectHealth = { ok: true, regressions: [], lane_failures: [], lane_results: [] };
   try {
     const { checkCollectHealth } = require('../lib/collectHealth.js');
     const { priorDropId, loadDropSignals: loadDropSigs } = require('../lib/briefPaths.js');
+    const { loadConfig } = require('../lib/loadConfig.js');
     const priorId = priorDropId(runId);
-    if (priorId) {
-      const currentArr = JSON.parse(signalsJson);
-      const priorArr = loadDropSigs(priorId);
-      collectHealth = checkCollectHealth(currentArr, priorArr);
-      if (!collectHealth.ok) {
-        for (const r of collectHealth.regressions) {
-          console.warn(
-            `publish-drop: COLLECT REGRESSION — ${r.competitor_id} dropped ${r.prior} → ${r.current} rows`,
-          );
-        }
+    const currentArr = JSON.parse(signalsJson);
+    const priorArr = priorId ? loadDropSigs(priorId) : [];
+    const cfg = loadConfig();
+    const ignoreCompetitorIds = [
+      ...(cfg.retired_competitor_ids || []),
+      ...(cfg.competitors || [])
+        .filter((c) => c.collect === false || c.alias_of)
+        .map((c) => c.id),
+    ];
+    collectHealth = checkCollectHealth(currentArr, priorArr, laneResults || [], {
+      ignoreCompetitorIds,
+    });
+    if (!collectHealth.ok) {
+      for (const r of collectHealth.regressions) {
+        console.warn(
+          `publish-drop: COLLECT REGRESSION — ${r.competitor_id} dropped ${r.prior} → ${r.current} rows`,
+        );
+      }
+      for (const f of collectHealth.lane_failures) {
+        console.warn(
+          `publish-drop: LANE FAILURE — ${f.competitor_id}/${f.lane}: ${f.error} (${f.url})`,
+        );
       }
     }
   } catch (e) {
@@ -113,17 +128,28 @@ async function main() {
   if (intelMeta && typeof intelMeta === 'object') {
     summaryLines.push('## Intel snapshot (from last run)', '', '```json', JSON.stringify(intelMeta, null, 2), '```', '');
   }
-  if (!collectHealth.ok && collectHealth.regressions.length) {
-    summaryLines.push(
-      '## Collect health warning',
-      '',
-      'One or more competitors dropped to **0 rows** vs the prior drop (possible lane failure):',
-      '',
-      ...collectHealth.regressions.map(
-        (r) => `- \`${r.competitor_id}\`: ${r.prior} → ${r.current} rows`,
-      ),
-      '',
-    );
+  if (!collectHealth.ok) {
+    summaryLines.push('## Collect health warning', '');
+    if (collectHealth.regressions.length) {
+      summaryLines.push(
+        'One or more competitors dropped to **0 rows** vs the prior drop (possible lane failure):',
+        '',
+        ...collectHealth.regressions.map(
+          (r) => `- \`${r.competitor_id}\`: ${r.prior} → ${r.current} rows`,
+        ),
+        '',
+      );
+    }
+    if (collectHealth.lane_failures.length) {
+      summaryLines.push(
+        'Configured scrape lanes **failed** (not silent empty — fix these):',
+        '',
+        ...collectHealth.lane_failures.map(
+          (f) => `- \`${f.competitor_id}\` / \`${f.lane}\`: ${f.error} — ${f.url}`,
+        ),
+        '',
+      );
+    }
   }
   fs.writeFileSync(path.join(dropDir, 'SUMMARY.md'), summaryLines.join('\n'), 'utf8');
 

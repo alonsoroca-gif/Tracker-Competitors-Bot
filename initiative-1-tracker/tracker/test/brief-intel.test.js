@@ -155,6 +155,23 @@ assert(g2Dropped.length === 1, 'buildSignalsTableRows drops G2 signals');
 const health = checkCollectHealth([], [{ competitor_id: 'jonah-digital' }, { competitor_id: 'jonah-digital' }, { competitor_id: 'jonah-digital' }, { competitor_id: 'jonah-digital' }, { competitor_id: 'jonah-digital' }]);
 assert(!health.ok && health.regressions[0].competitor_id === 'jonah-digital', 'collect health detects jonah regression');
 
+const laneHealth = checkCollectHealth([], [], [
+  {
+    competitor_id: 'funnel-leasing',
+    lane: 'blog',
+    url: 'https://funnelleasing.com/category/llm/feed/',
+    status: 'error',
+    signal_count: 0,
+    error: 'Non-whitespace before first tag',
+  },
+]);
+assert(
+  !laneHealth.ok &&
+    laneHealth.lane_failures.length === 1 &&
+    laneHealth.lane_failures[0].lane === 'blog',
+  'collect health surfaces RSS lane parse failures',
+);
+
 try {
   const latest = loadLatest();
   const baseline = lastPublishedBriefDropId(latest);

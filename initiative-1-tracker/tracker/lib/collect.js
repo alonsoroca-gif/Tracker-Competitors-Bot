@@ -38,11 +38,25 @@ function browserHeaders(extra = {}) {
   };
 }
 
+// rss-parser uses Node's http stack, which does NOT decompress Brotli (and
+// often mishandles gzip when Accept-Encoding advertises it). Advertising
+// `br`/`gzip` produced opaque bytes → "Non-whitespace before first tag" →
+// silent empty feeds for all of Funnel's RSS lanes (Jul 2026). Force
+// identity so the XML arrives plaintext.
+function rssHeaders(extra = {}) {
+  return {
+    'user-agent': DEFAULT_USER_AGENT,
+    accept: 'application/rss+xml,application/atom+xml,application/xml;q=0.9,*/*;q=0.8',
+    'accept-language': 'en-US,en;q=0.9',
+    'accept-encoding': 'identity',
+    referer: 'https://www.google.com/',
+    ...extra,
+  };
+}
+
 const parser = new Parser({
   timeout: 15000,
-  headers: browserHeaders({
-    accept: 'application/rss+xml,application/atom+xml,application/xml;q=0.9,*/*;q=0.8',
-  }),
+  headers: rssHeaders(),
 });
 
 const DEFAULT_TIMEOUT_MS = 15000;
@@ -305,7 +319,7 @@ function getSourceUrls(competitorId) {
   };
 }
 
-async function fetchText(url, timeoutMs = DEFAULT_TIMEOUT_MS) {
+async function fetchTextOnce(url, timeoutMs = DEFAULT_TIMEOUT_MS) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
 
@@ -328,6 +342,23 @@ async function fetchText(url, timeoutMs = DEFAULT_TIMEOUT_MS) {
   } finally {
     clearTimeout(timer);
   }
+}
+
+/** Retry once on 403/429 — common WAF blip (Jonah, Cloudflare), not a permanent ban. */
+async function fetchText(url, timeoutMs = DEFAULT_TIMEOUT_MS) {
+  let lastErr;
+  for (let attempt = 1; attempt <= 2; attempt++) {
+    try {
+      return await fetchTextOnce(url, timeoutMs);
+    } catch (err) {
+      lastErr = err;
+      const msg = String((err && err.message) || err);
+      const retryable = /\bHTTP (403|429)\b/.test(msg);
+      if (!retryable || attempt >= 2) throw err;
+      await sleep(1200 * attempt);
+    }
+  }
+  throw lastErr;
 }
 
 // =====================================================================
@@ -372,6 +403,23 @@ const PLAYWRIGHT_EXCLUDE_HOSTS = new Set([
   'www.g2.com',
   'g2.com',
 ]);
+
+// Hosts that often 403 undici/static fetch from CI (datacenter IP + bot score)
+// but succeed in a real Chromium session. Prefer Playwright first.
+const FORCE_PLAYWRIGHT_HOSTS = new Set(['jonahdigital.com']);
+
+function hostOf(url) {
+  try {
+    return new URL(url).hostname.replace(/^www\./i, '').toLowerCase();
+  } catch (_) {
+    return '';
+  }
+}
+
+function shouldForcePlaywright(url) {
+  return FORCE_PLAYWRIGHT_HOSTS.has(hostOf(url));
+}
+
 // Resource types we don't need for text extraction. Blocking them at the
 // network layer cuts page load from ~10–30s to ~2–5s on most marketing pages.
 const PLAYWRIGHT_BLOCK_RESOURCE_TYPES = new Set([
@@ -505,6 +553,22 @@ async function fetchRendered(url, timeoutMs = PLAYWRIGHT_TIMEOUT_MS) {
  */
 async function fetchTextWithFallback(url, opts = {}) {
   const { minBodyChars = PLAYWRIGHT_MIN_BODY_CHARS } = opts;
+  const forcePw = shouldForcePlaywright(url) && !PLAYWRIGHT_DISABLED && !isPlaywrightExcluded(url);
+
+  if (forcePw) {
+    try {
+      const rendered = await fetchRendered(url, PLAYWRIGHT_TIMEOUT_MS);
+      return {
+        html: rendered,
+        renderer: 'playwright',
+        fallbackReason: 'force_playwright_host',
+        bodyChars: rendered.length,
+      };
+    } catch (renderErr) {
+      // Fall through to static retry — better than failing cold.
+      pwLog('force-pw-fail', url, renderErr.message);
+    }
+  }
 
   let html = '';
   let staticError = null;
@@ -567,6 +631,22 @@ function pwLog(...args) {
 }
 
 async function fetchStaticOrRendered(url, extract) {
+  const forcePw = shouldForcePlaywright(url) && !PLAYWRIGHT_DISABLED && !isPlaywrightExcluded(url);
+  if (forcePw) {
+    pwLog('force-pw-first', url);
+    try {
+      const rendered = await fetchRendered(url, PLAYWRIGHT_TIMEOUT_MS);
+      const $r = cheerio.load(rendered);
+      $r('script, style, noscript, svg, iframe').remove();
+      const result = extract(rendered, $r);
+      if (!result || result.isEmpty !== true) {
+        return { ...result, html: rendered, renderer: 'playwright', fallbackReason: 'force_playwright_host' };
+      }
+    } catch (renderErr) {
+      pwLog('force-pw-fail', url, renderErr.message);
+    }
+  }
+
   let html = '';
   let staticError = null;
 
@@ -995,15 +1075,38 @@ function coerceItemDate(item) {
   return d.toISOString().slice(0, 10);
 }
 
+function pushLaneResult(session, lane) {
+  if (session && Array.isArray(session.laneResults)) {
+    session.laneResults.push(lane);
+  }
+}
+
+/**
+ * @returns {Promise<{ signals: object[], lane: object }>}
+ */
 async function extractFeedSignals(feedUrl, sourceType, competitorId, productId, days) {
-  if (!isValidPublicUrl(feedUrl)) return [];
+  const lane = {
+    competitor_id: competitorId,
+    lane: sourceType,
+    url: feedUrl,
+    status: 'ok',
+    signal_count: 0,
+    error: null,
+  };
+
+  if (!isValidPublicUrl(feedUrl)) {
+    lane.status = 'skipped_invalid';
+    return { signals: [], lane };
+  }
 
   let feed;
   try {
     await politeDelay();
     feed = await parser.parseURL(feedUrl);
-  } catch (_) {
-    return [];
+  } catch (err) {
+    lane.status = 'error';
+    lane.error = String((err && err.message) || err);
+    return { signals: [], lane };
   }
 
   const cutoff = cutoffISO(days);
@@ -1071,40 +1174,41 @@ async function extractFeedSignals(feedUrl, sourceType, competitorId, productId, 
     );
   }
 
-  return signals;
+  lane.signal_count = signals.length;
+  if (signals.length === 0) {
+    // Feed fetched OK; nothing in the retention window — not a failure.
+    lane.status = 'empty_window';
+  }
+  return { signals, lane };
 }
 
 async function extractPageSignals(pageUrl, pageKind, competitorId, productId) {
   if (!isValidPublicUrl(pageUrl)) return [];
 
-  try {
-    const out = await fetchStaticOrRendered(pageUrl, (html, $) => {
-      const meta = extractMeta($, pageUrl);
-      let signals = [];
-      if (pageKind === 'pricing_url') {
-        signals = extractPricingSignals(meta, pageUrl, competitorId, productId);
-      } else if (pageKind === 'features_url' || pageKind === 'docs_url') {
-        signals = extractFeatureSignals(meta, pageUrl, competitorId, productId);
-      } else if (pageKind === 'careers_url') {
-        signals = extractCareerSignals(meta, pageUrl, competitorId, productId);
-      }
-      // Empty when no signals were produced OR every signal is "thin" (short
-      // evidence_snippet). The thin-check catches SPAs whose static shell has
-      // just enough chrome text for the extractor to match one positioning
-      // keyword — technically a signal, practically useless.
-      const meaningful = signals.filter((s) => (s.evidence_snippet || '').length >= 50);
-      const isEmpty = signals.length === 0 || meaningful.length === 0;
-      return { signals, isEmpty };
-    });
-
-    const signals = out.signals || [];
-    for (const s of signals) {
-      s.metadata = { ...(s.metadata || {}), renderer: out.renderer };
+  const out = await fetchStaticOrRendered(pageUrl, (html, $) => {
+    const meta = extractMeta($, pageUrl);
+    let signals = [];
+    if (pageKind === 'pricing_url') {
+      signals = extractPricingSignals(meta, pageUrl, competitorId, productId);
+    } else if (pageKind === 'features_url' || pageKind === 'docs_url') {
+      signals = extractFeatureSignals(meta, pageUrl, competitorId, productId);
+    } else if (pageKind === 'careers_url') {
+      signals = extractCareerSignals(meta, pageUrl, competitorId, productId);
     }
-    return signals;
-  } catch (_) {
-    return [];
+    // Empty when no signals were produced OR every signal is "thin" (short
+    // evidence_snippet). The thin-check catches SPAs whose static shell has
+    // just enough chrome text for the extractor to match one positioning
+    // keyword — technically a signal, practically useless.
+    const meaningful = signals.filter((s) => (s.evidence_snippet || '').length >= 50);
+    const isEmpty = signals.length === 0 || meaningful.length === 0;
+    return { signals, isEmpty };
+  });
+
+  const signals = out.signals || [];
+  for (const s of signals) {
+    s.metadata = { ...(s.metadata || {}), renderer: out.renderer };
   }
+  return signals;
 }
 
 function dedupeSignals(signals) {
@@ -1607,7 +1711,7 @@ async function collectArticleIndexSignals(competitorId, productId, pageUrl) {
  * @param {string} competitorId
  * @param {string} productId
  * @param {number} [days=7]
- * @param {{ youtubeDiscovery?: Map<string, object[]> } | null} [session]  Per-batch cache so YouTube search runs once per competitor, not once per product row.
+ * @param {{ youtubeDiscovery?: Map<string, object[]>, laneResults?: object[] } | null} [session]
  */
 async function collect(competitorId, productId, days = 7, session = null) {
   let sourceUrls;
@@ -1620,11 +1724,11 @@ async function collect(competitorId, productId, days = 7, session = null) {
   const safeDays = parseDays(days);
   const collected = [];
 
+  // YouTube intentionally out of daily scrape (no API key / not a source we run).
   const feedTasks = [
     ['blog', sourceUrls.blog],
     ['press', sourceUrls.press],
     ['changelog', sourceUrls.changelog],
-    ['youtube', sourceUrls.youtube_rss],
     ['insights', sourceUrls.insights_url],
     ['media', sourceUrls.media_url],
     ['podcast', sourceUrls.podcast_url],
@@ -1632,7 +1736,14 @@ async function collect(competitorId, productId, days = 7, session = null) {
 
   for (const [sourceType, url] of feedTasks) {
     if (!url) continue;
-    const signals = await extractFeedSignals(url, sourceType, competitorId, productId, safeDays);
+    const { signals, lane } = await extractFeedSignals(
+      url,
+      sourceType,
+      competitorId,
+      productId,
+      safeDays
+    );
+    pushLaneResult(session, lane);
     collected.push(...signals);
   }
 
@@ -1645,76 +1756,107 @@ async function collect(competitorId, productId, days = 7, session = null) {
 
   for (const [pageKind, url] of pageTasks) {
     if (!url) continue;
-    const signals = await extractPageSignals(url, pageKind, competitorId, productId);
-    collected.push(...signals);
-  }
-
-  const ytCommentSignals = await collectYouTubeCommentSignals(
-    competitorId,
-    productId,
-    sourceUrls.youtube_comment_video_ids || []
-  );
-  collected.push(...ytCommentSignals);
-
-  let ytDiscoverySignals = [];
-  const discQueries = sourceUrls.youtube_discovery_queries || [];
-  const ytApiKey = process.env.YOUTUBE_DATA_API_KEY || '';
-  if (discQueries.length && ytApiKey) {
-    const discKey = [
-      competitorId,
-      safeDays,
-      discQueries.join('\t'),
-      sourceUrls.youtube_discovery_max_results ?? 5,
-      sourceUrls.youtube_discovery_max_queries ?? 4,
-    ].join('|');
-    const discMap = session && session.youtubeDiscovery;
-    if (discMap instanceof Map) {
-      if (!discMap.has(discKey)) {
-        const raw = await collectYouTubeDiscoverySignals(
-          competitorId,
-          productId,
-          discQueries,
-          sourceUrls.youtube_discovery_max_results ?? 5,
-          sourceUrls.youtube_discovery_max_queries ?? 4,
-          safeDays
-        );
-        discMap.set(discKey, raw);
-      }
-      ytDiscoverySignals = (discMap.get(discKey) || []).map((s) => ({ ...s, product_id: productId }));
-    } else {
-      ytDiscoverySignals = await collectYouTubeDiscoverySignals(
-        competitorId,
-        productId,
-        discQueries,
-        sourceUrls.youtube_discovery_max_results ?? 5,
-        sourceUrls.youtube_discovery_max_queries ?? 4,
-        safeDays
-      );
+    try {
+      const signals = await extractPageSignals(url, pageKind, competitorId, productId);
+      pushLaneResult(session, {
+        competitor_id: competitorId,
+        lane: pageKind,
+        url,
+        status: signals.length ? 'ok' : 'empty',
+        signal_count: signals.length,
+        error: null,
+      });
+      collected.push(...signals);
+    } catch (err) {
+      pushLaneResult(session, {
+        competitor_id: competitorId,
+        lane: pageKind,
+        url,
+        status: 'error',
+        signal_count: 0,
+        error: String((err && err.message) || err),
+      });
     }
   }
-  collected.push(...ytDiscoverySignals);
 
   if (sourceUrls.reviews_url) {
-    const otherReviewSignals = await collectGenericReviewSignals(
-      competitorId,
-      productId,
-      sourceUrls.reviews_url
-    );
-    collected.push(...otherReviewSignals);
+    try {
+      const otherReviewSignals = await collectGenericReviewSignals(
+        competitorId,
+        productId,
+        sourceUrls.reviews_url
+      );
+      pushLaneResult(session, {
+        competitor_id: competitorId,
+        lane: 'reviews_url',
+        url: sourceUrls.reviews_url,
+        status: otherReviewSignals.length ? 'ok' : 'empty',
+        signal_count: otherReviewSignals.length,
+        error: null,
+      });
+      collected.push(...otherReviewSignals);
+    } catch (err) {
+      pushLaneResult(session, {
+        competitor_id: competitorId,
+        lane: 'reviews_url',
+        url: sourceUrls.reviews_url,
+        status: 'error',
+        signal_count: 0,
+        error: String((err && err.message) || err),
+      });
+    }
   }
 
   const caseStudyUrls = Array.isArray(sourceUrls.case_studies_urls)
     ? sourceUrls.case_studies_urls
     : [];
   for (const url of caseStudyUrls) {
-    const signals = await collectCaseStudySignals(competitorId, productId, url);
-    collected.push(...signals);
+    try {
+      const signals = await collectCaseStudySignals(competitorId, productId, url);
+      pushLaneResult(session, {
+        competitor_id: competitorId,
+        lane: 'case_studies',
+        url,
+        status: signals.length ? 'ok' : 'empty',
+        signal_count: signals.length,
+        error: null,
+      });
+      collected.push(...signals);
+    } catch (err) {
+      pushLaneResult(session, {
+        competitor_id: competitorId,
+        lane: 'case_studies',
+        url,
+        status: 'error',
+        signal_count: 0,
+        error: String((err && err.message) || err),
+      });
+    }
   }
 
   const articlesUrls = Array.isArray(sourceUrls.articles_urls) ? sourceUrls.articles_urls : [];
   for (const url of articlesUrls) {
-    const signals = await collectArticleIndexSignals(competitorId, productId, url);
-    collected.push(...signals);
+    try {
+      const signals = await collectArticleIndexSignals(competitorId, productId, url);
+      pushLaneResult(session, {
+        competitor_id: competitorId,
+        lane: 'articles_index',
+        url,
+        status: signals.length ? 'ok' : 'empty',
+        signal_count: signals.length,
+        error: null,
+      });
+      collected.push(...signals);
+    } catch (err) {
+      pushLaneResult(session, {
+        competitor_id: competitorId,
+        lane: 'articles_index',
+        url,
+        status: 'error',
+        signal_count: 0,
+        error: String((err && err.message) || err),
+      });
+    }
   }
 
   return dedupeSignals(filterLastDays(collected, safeDays));
@@ -1726,4 +1868,6 @@ module.exports = {
   getSourceUrls,
   isValidPublicUrl,
   shutdownBrowser,
+  rssHeaders,
+  shouldForcePlaywright,
 };

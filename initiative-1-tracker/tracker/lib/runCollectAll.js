@@ -25,10 +25,19 @@ async function runFullCollect(retentionDays, opts = {}) {
   const config = loadConfig();
   let newCount = 0;
   const batchSignals = [];
-  const session = { youtubeDiscovery: new Map() };
+  const session = { youtubeDiscovery: new Map(), laneResults: [] };
   const products = config.products || [];
 
   for (const competitor of config.competitors || []) {
+    if (competitor.collect === false || competitor.alias_of) {
+      if (verbose) {
+        console.log(
+          `Skip collect for ${competitor.id} (alias_of=${competitor.alias_of || 'n/a'})`
+        );
+      }
+      continue;
+    }
+
     const placeholderProductId = (products[0] && products[0].id) || '';
     const baseSignals = await collect(competitor.id, placeholderProductId, d, session);
 
@@ -50,7 +59,17 @@ async function runFullCollect(retentionDays, opts = {}) {
 
   const pruned = pruneSignalsToRetentionDays(d);
   const intelMeta = buildLastRunIntelMeta(batchSignals, d);
-  return { newCount, pruned, batchSignals, intelMeta };
+  const laneResults = session.laneResults || [];
+  if (verbose) {
+    const failed = laneResults.filter((r) => r.status === 'error');
+    if (failed.length) {
+      console.warn(`Collect lane failures (${failed.length}):`);
+      for (const f of failed) {
+        console.warn(`  ${f.competitor_id}/${f.lane}: ${f.error} (${f.url})`);
+      }
+    }
+  }
+  return { newCount, pruned, batchSignals, intelMeta, laneResults };
 }
 
 module.exports = { runFullCollect };
