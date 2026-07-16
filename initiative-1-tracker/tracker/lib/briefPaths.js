@@ -13,7 +13,97 @@ const briefsRoot = path.join(repoRoot, 'tracker-briefs');
 const runsRoot = path.join(briefsRoot, 'runs');
 const latestPath = path.join(briefsRoot, 'latest.json');
 const runsIndexPath = path.join(briefsRoot, 'runs-index.json');
+const prototypeRegistryPath = path.join(briefsRoot, 'prototype-registry.json');
 const dropsRoot = path.join(repoRoot, 'tracker-drops');
+
+/** Stable key so Quiet-day empty prototypes.json cannot erase "already shipped". */
+function stablePrototypeKey(p) {
+  const id = String(p?.id || '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '');
+  const title = String(p?.title || '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '');
+  const competitor = String(p?.competitor_id || p?.competitor || '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '');
+  const slug = id || title || 'unknown';
+  return `${competitor || 'any'}::${slug}`;
+}
+
+function loadPrototypeRegistry() {
+  return readJson(prototypeRegistryPath, { version: 1, entries: {} });
+}
+
+/**
+ * Persist first-shipped prototypes across quiet days. Keys are stablePrototypeKey
+ * values; also index by bare id for older rows. Call after annotateCarriedOver.
+ */
+function upsertPrototypeRegistry(runId, prototypes, publishedAt = null) {
+  const reg = loadPrototypeRegistry();
+  if (!reg.entries || typeof reg.entries !== 'object') reg.entries = {};
+  let wrote = false;
+  for (const p of prototypes || []) {
+    if (!p?.id && !p?.title) continue;
+    const key = stablePrototypeKey(p);
+    const fp = prototypeContentFingerprint(p);
+    const existing = reg.entries[key] || (p.id ? reg.entries[p.id] : null);
+    if (!existing) {
+      reg.entries[key] = {
+        id: p.id || null,
+        title: p.title || null,
+        competitor_id: p.competitor_id || null,
+        first_shipped_run: runId,
+        first_shipped_at: publishedAt || new Date().toISOString(),
+        fingerprint: fp,
+      };
+      if (p.id && p.id !== key) {
+        reg.entries[p.id] = { ...reg.entries[key], alias_of: key };
+      }
+      wrote = true;
+    } else if (existing.fingerprint !== fp) {
+      // Keep first_shipped_*; record latest content fingerprint for change detection.
+      const targetKey = existing.alias_of || key;
+      const target = reg.entries[targetKey] || existing;
+      target.latest_fingerprint = fp;
+      target.latest_run = runId;
+      reg.entries[targetKey] = target;
+      wrote = true;
+    }
+  }
+  if (wrote) writeJson(prototypeRegistryPath, reg);
+  return reg;
+}
+
+function registryLookup(p, reg) {
+  const entries = reg?.entries || {};
+  const key = stablePrototypeKey(p);
+  if (entries[key] && !entries[key].alias_of) return { key, entry: entries[key] };
+  if (p?.id && entries[p.id]) {
+    const e = entries[p.id];
+    if (e.alias_of && entries[e.alias_of]) return { key: e.alias_of, entry: entries[e.alias_of] };
+    return { key: p.id, entry: e };
+  }
+  // Title-only fallback: match any entry with same normalized title (id drift).
+  const titleSlug = String(p?.title || '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '');
+  if (titleSlug) {
+    for (const [k, e] of Object.entries(entries)) {
+      if (e.alias_of) continue;
+      const et = String(e.title || '')
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-|-$/g, '');
+      if (et === titleSlug || k.endsWith(`::${titleSlug}`)) return { key: k, entry: e };
+    }
+  }
+  return null;
+}
 
 function readJson(filePath, fallback = null) {
   try {
@@ -213,23 +303,50 @@ function prototypeContentFingerprint(p) {
  * re-surfaced from an earlier run is `carried_over`; if its content differs from
  * the first-shipped version it is also `changed` (an update worth showing). An
  * unchanged carry-forward is noise and gets suppressed by the renderer.
+ *
+ * Quiet days used to wipe memory (empty prototypes.json → next Partial rebuild
+ * looked "new"). The persistent prototype-registry.json + stable keys survive
+ * those empty days so SightMap-style regenerations stay hidden unless content
+ * actually moved.
  */
 function annotateCarriedOver(currentRunId, prototypes) {
   const firstSeen = prototypeFirstSeenBefore(currentRunId);
+  const reg = loadPrototypeRegistry();
   return (prototypes || []).map((p) => {
     const prior = p?.id ? firstSeen[p.id] : null;
-    if (!prior) return { ...p, carried_over: false, changed: true };
-    // Compare the current prototype against the version first shipped.
-    const firstProto = (loadPrototypes(prior.run_id) || []).find((x) => x.id === p.id);
-    const changed = !firstProto
-      ? true
-      : prototypeContentFingerprint(p) !== prototypeContentFingerprint(firstProto);
+    const regHit = registryLookup(p, reg);
+
+    if (!prior && !regHit) {
+      return { ...p, carried_over: false, changed: true };
+    }
+
+    let firstProto = null;
+    let first_shipped_run = null;
+    let first_shipped_at = null;
+    let baselineFp = null;
+
+    if (prior) {
+      first_shipped_run = prior.run_id;
+      first_shipped_at = prior.published_at;
+      firstProto = (loadPrototypes(prior.run_id) || []).find((x) => x.id === p.id);
+      if (firstProto) baselineFp = prototypeContentFingerprint(firstProto);
+    }
+
+    if (regHit?.entry) {
+      first_shipped_run = first_shipped_run || regHit.entry.first_shipped_run;
+      first_shipped_at = first_shipped_at || regHit.entry.first_shipped_at;
+      baselineFp = baselineFp || regHit.entry.fingerprint;
+    }
+
+    const currentFp = prototypeContentFingerprint(p);
+    const changed = !baselineFp ? true : currentFp !== baselineFp;
+
     return {
       ...p,
       carried_over: true,
       changed,
-      first_shipped_run: prior.run_id,
-      first_shipped_at: prior.published_at,
+      first_shipped_run,
+      first_shipped_at,
     };
   });
 }
@@ -248,6 +365,7 @@ module.exports = {
   runsRoot,
   latestPath,
   dropsRoot,
+  prototypeRegistryPath,
   readJson,
   writeJson,
   runDir,
@@ -271,6 +389,11 @@ module.exports = {
   isBriefFreshForToday,
   priorPublishedRunId,
   prototypeFirstSeenBefore,
+  prototypeContentFingerprint,
+  stablePrototypeKey,
+  loadPrototypeRegistry,
+  upsertPrototypeRegistry,
+  registryLookup,
   annotateCarriedOver,
   lastPublishedBriefDropId,
 };

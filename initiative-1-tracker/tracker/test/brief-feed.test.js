@@ -106,6 +106,44 @@ check('changed prototype rendered with (updated) tag', mixedCards.includes('**Up
 check('unchanged prototype not shown as card in mixed set', !mixedCards.includes('**Live-PMS Siteplan'));
 check('mixed set notes 1 unchanged hidden', mixedCards.includes('1 unchanged prototype(s) hidden'));
 
+// --- prototype registry survives quiet days ---
+const {
+  annotateCarriedOver,
+  stablePrototypeKey,
+  upsertPrototypeRegistry,
+  loadPrototypes,
+  prototypeRegistryPath,
+  writeJson,
+  readJson,
+} = require('../lib/briefPaths');
+const registryBackup = readJson(prototypeRegistryPath, null);
+// Use the real shipped vignette shape so fingerprint matches the registry seed.
+const sightmapShipped = loadPrototypes('2026-07-10T13-46-50Z')[0] || {
+  id: 'live-pms-siteplan',
+  title: 'Live-PMS Siteplan',
+  competitor_id: 'jonah-digital',
+  brief: { what: 'x', benefits: 'y', why_build: 'z' },
+  roi: { verdict: 'pursue' },
+};
+upsertPrototypeRegistry(
+  '2026-06-01T00-00-00Z',
+  [sightmapShipped],
+  '2026-06-01T00:00:00.000Z',
+);
+const afterQuiet = annotateCarriedOver('2026-07-13T99-quiet-day', [sightmapShipped]);
+check('registry key is stable', stablePrototypeKey(sightmapShipped) === 'jonah-digital::live-pms-siteplan');
+check('regenerated SightMap after quiet days is carried_over', afterQuiet[0].carried_over === true);
+check('regenerated SightMap with same content is not changed', afterQuiet[0].changed === false);
+// restore registry so local runs don't keep test pollution
+if (registryBackup) writeJson(prototypeRegistryPath, registryBackup);
+else {
+  try {
+    fs.unlinkSync(prototypeRegistryPath);
+  } catch {
+    /* ok */
+  }
+}
+
 // --- signals ---
 const sigNew = { id: 1, competitor: 'EliseAI', headline: 'Brand new page', classification: 'Product', change_status: 'new' };
 const sigChanged = { id: 2, competitor: 'Jonah', headline: 'Pricing moved', classification: 'Pricing', change_status: 'changed' };

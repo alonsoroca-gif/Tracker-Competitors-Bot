@@ -118,6 +118,19 @@ Non-Product rows: `parity: "—"`.
 
 For each Tier — Now Product row, produce **one complete `prototypes.json` entry** per `initiative-1-tracker/docs/TRACKER-VIGNETTE-STANDARD.md` (fixture: `_sample-product-day`).
 
+### Do NOT rebuild a prototype that already shipped
+
+1. Read `tracker-briefs/prototype-registry.json` before creating anything.
+2. Stable key = `<competitor_id>::<slug>` (e.g. `jonah-digital::live-pms-siteplan`).
+3. If that key (or matching title) already exists → **skip PRD + vignette**. Leave `prototypes.json` without a duplicate. Feed/viewer will hide it via the registry even if an old agent re-adds it.
+4. Only rebuild when the **content fingerprint** would change for a real product delta (new scope, not a fresh Partial on the same Engrain/SightMap page).
+
+### Owned-stack Partials (SightMap / Engrain)
+
+If Layer 1/2 returns Partial/Borderline but Core already has Engrain SightMap widget + siteplan coordinates, `core-parity-check.js` **promotes to Existing**. Treat as **Won't chase** — no prototype. Do not invent a Live-PMS Siteplan vignette from an embed-presence signal alone.
+
+### Build steps (when truly net-new)
+
 1. **PRD** — `tracker-drop-cycle` §4.4 → `tracker-briefs/runs/<run_id>/prds/<slug>.md`
 2. **ROI (roi-analyst TL;DR)** — not the full 7-section report. Required fields:
    - `verdict`, `lever`, `summary`, `per_unit_annual`, `property_250`, `portfolio_10k`, `confidence`
@@ -128,7 +141,7 @@ For each Tier — Now Product row, produce **one complete `prototypes.json` entr
    - App chrome + primary interaction + service flow (not three orphan buttons)
    - Shows what the **service/interaction** delivers; ~340px-tall iframe-safe layout
    - No duplicate ROI/title inside HTML (viewer shell carries context)
-5. **Register** — append row to `prototypes.json` with all paths
+5. **Register** — append row to `prototypes.json` with stable `id` (slug). Feed render upserts `prototype-registry.json`.
 
 Skip when `product_row_count === 0`.
 

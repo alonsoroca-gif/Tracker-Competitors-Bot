@@ -104,9 +104,10 @@ function main() {
     recommended_start_mt: rec.start_mt,
     workload_level: rec.level,
     note:
-      netNewBrief.length !== netNewPriorDrop.length
-        ? `${rec.note} (Brief baseline: ${netNewBrief.length} net-new; prior drop diff: ${netNewPriorDrop.length} — use brief baseline for morningbrief.)`
-        : rec.note,
+      (netNewBrief.length !== netNewPriorDrop.length
+        ? `${rec.note} (Brief baseline: ${netNewBrief.length} URLs to classify; prior drop diff: ${netNewPriorDrop.length} — use brief baseline for morningbrief.)`
+        : rec.note) +
+      ' Counts are pre-filter intake — expect most to land as unchanged/hidden or Existing after dedup + parity.',
     calendar_gap_days: gapDays,
     published_row_count: publishedTable.length,
     sample_net_new: netNewBrief.slice(0, 5).map((s) => ({

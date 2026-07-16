@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "entries": {
+    "jonah-digital::live-pms-siteplan": {
+      "id": "live-pms-siteplan",
+      "title": "Live-PMS Siteplan",
+      "competitor_id": "jonah-digital",
+      "first_shipped_run": "2026-07-10T13-46-50Z",
+      "first_shipped_at": "2026-07-13T15:34:24.776Z",
+      "fingerprint": "05425310944907ae"
+    },
+    "live-pms-siteplan": {
+      "id": "live-pms-siteplan",
+      "title": "Live-PMS Siteplan",
+      "competitor_id": "jonah-digital",
+      "first_shipped_run": "2026-07-10T13-46-50Z",
+      "first_shipped_at": "2026-07-13T15:34:24.776Z",
+      "fingerprint": "05425310944907ae",
+      "alias_of": "jonah-digital::live-pms-siteplan"
+    }
+  }
+}

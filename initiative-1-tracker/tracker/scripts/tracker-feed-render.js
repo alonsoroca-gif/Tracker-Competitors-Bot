@@ -14,6 +14,7 @@ const {
   loadSignalsTable,
   loadPrototypes,
   annotateCarriedOver,
+  upsertPrototypeRegistry,
   listBriefRunIds,
   mtCalendarDay,
   isBriefFreshForToday,
@@ -81,6 +82,9 @@ function main() {
   );
   const signalsTable = classifySignalChanges(loadSignalsTable(runId), priorSignals);
   const prototypes = annotateCarriedOver(runId, loadPrototypes(runId));
+  // Durable memory across quiet days — so regenerating the same vignette after
+  // empty prototypes.json weeks does not look "new" again.
+  upsertPrototypeRegistry(runId, loadPrototypes(runId), (manifest && manifest.published_at) || null);
 
   if (!manifest) {
     process.stderr.write(`tracker-feed-render: missing manifest for ${runId}\n`);

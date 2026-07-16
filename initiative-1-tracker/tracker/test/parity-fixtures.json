@@ -84,7 +84,7 @@
       "Borderline",
       "Partial"
     ],
-    "rationale": "Fresh Core @main may score Existing (ProspectPortal property map modules). Accept Partial/Borderline on older snapshots."
+    "rationale": "Prefer Existing: Engrain SightMap aliases + ownership promote when Core hits CEngrainSightMapWidget / sitePlan coords. Partial/Borderline still accepted on thin Core snapshots."
   },
   {
     "id": "borderline-offline-tour-mode",

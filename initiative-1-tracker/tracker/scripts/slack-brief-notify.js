@@ -86,21 +86,29 @@ async function main() {
       process.stderr.write('slack-brief-notify: preflight failed\n');
       process.exit(2);
     }
-    text = `Tracker preflight — ${pf.run_id}: ${pf.net_new_urls} net-new vs brief (${pf.net_new_vs_prior_drop ?? '?'} vs prior drop), ~${pf.predicted_product_rows} Product rows, est ${pf.estimated_publish_minutes}min`;
+    text = `Tracker preflight — ${pf.run_id}: ${pf.net_new_urls} URLs to classify (~${pf.predicted_product_rows} look Product) — most often become unchanged/hidden after content-dedup + parity; est ${pf.estimated_publish_minutes}min`;
     blocks = [
       { type: 'header', text: { type: 'plain_text', text: 'Tracker publish preflight', emoji: true } },
       {
         type: 'section',
         fields: [
           { type: 'mrkdwn', text: `*Drop*\n\`${pf.run_id}\`` },
-          { type: 'mrkdwn', text: `*Net-new vs brief*\n${pf.net_new_urls}` },
-          { type: 'mrkdwn', text: `*Net-new vs prior drop*\n${pf.net_new_vs_prior_drop ?? '—'}` },
-          { type: 'mrkdwn', text: `*Predicted Product*\n${pf.predicted_product_rows}` },
+          { type: 'mrkdwn', text: `*URLs to classify*\n${pf.net_new_urls}` },
+          { type: 'mrkdwn', text: `*Vs prior drop*\n${pf.net_new_vs_prior_drop ?? '—'}` },
+          { type: 'mrkdwn', text: `*Heuristic Product*\n~${pf.predicted_product_rows}` },
           { type: 'mrkdwn', text: `*Est. minutes*\n~${pf.estimated_publish_minutes}` },
           { type: 'mrkdwn', text: `*Start*\n${pf.recommended_start_mt} MT` },
         ],
       },
-      { type: 'section', text: { type: 'mrkdwn', text: pf.note } },
+      {
+        type: 'section',
+        text: {
+          type: 'mrkdwn',
+          text:
+            `${pf.note || ''}\n\n` +
+            `_These counts are **intake volume before filters**. Content-hash dedup + Core parity usually hide most rows (unchanged pages / Existing in Core). A dry brief after a big preflight number is expected, not a scrape failure._`,
+        },
+      },
     ];
   } else if (args.mode === 'not-ready') {
     webhook = process.env.SLACK_WEBHOOK_URL_OPERATOR || '';

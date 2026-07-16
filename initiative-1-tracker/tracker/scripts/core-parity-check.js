@@ -826,7 +826,58 @@ const CORE_ALIASES = [
     when: /\bvoice ai|voice assistant|\bivr\b|call center|contact center|call analysis|call scoring|secret shop|call recording\b/i,
     add: ['callanalysis', 'dialplan', 'ivraction'],
   },
+  // SightMap / interactive siteplan — Core already ships Engrain widget + unit
+  // siteplan coordinates. Without these aliases L1 under-counts and Partial
+  // keeps regenerating Live-PMS Siteplan prototypes.
+  {
+    when: /\bsight\s?map\b|\bengrain\b|site[\s-]?plan|interactive map|unit pins?\b/i,
+    add: ['engrainsightmap', 'siteplanxpos', 'siteplanypos', 'loadsiteplandata'],
+  },
 ];
+
+/**
+ * When Core already owns the distinctive stack for a competitor concept,
+ * promote Partial/Borderline → Existing so we don't keep regenerating
+ * "delta" prototypes (SightMap every week). Requires ≥2 ownership markers
+ * in top hit paths (file/class names), not just body keyword noise.
+ */
+const OWNED_STACK_PROMOTE = [
+  {
+    when: /\bsight\s?map\b|\bengrain\b|site[\s-]?plan|interactive map|unit pins?\b/i,
+    markers: ['engrainsightmap', 'siteplanxpos', 'siteplanypos', 'loadsiteplandata'],
+    min_markers: 2,
+    reason:
+      'Core owns Engrain SightMap widget + siteplan coordinate stack — treat as Existing, not a Partial rebuild. Only re-open if the delta is explicitly beyond embed/coords (document that delta in needs_review).',
+  },
+];
+
+function promoteOwnedStacks(feature, result) {
+  if (!result || (result.parity !== 'Partial' && result.parity !== 'Borderline')) {
+    return result;
+  }
+  const blob = [feature.competitor_signal, feature.proposed_feature].filter(Boolean).join('\n');
+  const pathBlob = [
+    ...(result.top_files || []).map((f) => String(f.relativePath || '')),
+    ...(result.alias_terms || []),
+    ...(result.grounding_terms || []),
+  ]
+    .join('\n')
+    .toLowerCase();
+
+  for (const rule of OWNED_STACK_PROMOTE) {
+    if (!rule.when.test(blob)) continue;
+    const hits = rule.markers.filter((m) => pathBlob.includes(m.toLowerCase()));
+    if (hits.length >= (rule.min_markers || 2)) {
+      return {
+        ...result,
+        parity: 'Existing',
+        verdict_reason: `${rule.reason} (markers: ${hits.join(', ')}; was ${result.parity})`,
+        ownership_promoted: true,
+      };
+    }
+  }
+  return result;
+}
 
 /** Distinctive Core identifiers to search, derived from the competitor blob. */
 function aliasTermsFor(feature) {
@@ -992,7 +1043,7 @@ function checkOne(feature, applicationsDir, allApps, thresholds, fileCache) {
   const stats = { total_score: totalScore, files_with_hits: filesWithHits, apps_with_hits: appsWithHits };
   const { parity, reason } = verdictFor(stats, thresholds);
 
-  return {
+  const base = {
     id: feature.id,
     parity,
     verdict_reason: reason,
@@ -1009,6 +1060,7 @@ function checkOne(feature, applicationsDir, allApps, thresholds, fileCache) {
     grounding_terms: t,
     alias_terms: aliasT,
   };
+  return promoteOwnedStacks(feature, base);
 }
 
 function toMarkdownTable(results, features, opts = {}) {
