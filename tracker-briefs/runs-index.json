@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-07-16T21:37:46.669Z",
+  "updated_at": "2026-07-17T17:29:50.165Z",
   "runs": [
     {
       "run_id": "_sample-product-day",
@@ -9,6 +9,15 @@
       "prototype_count": 2,
       "summary": "Sample Product day for viewer QA — not wired to latest.json.",
       "fixture": true
+    },
+    {
+      "run_id": "2026-07-17T12-51-17Z",
+      "published_at": "2026-07-17T17:29:41.079Z",
+      "day_type": "mixed",
+      "net_new_count": 24,
+      "prototype_count": 0,
+      "summary": "24 catch-up URL(s) · 24 row(s) incl. 4 Product (all Existing → Won't chase) · 0 prototypes.",
+      "fixture": false
     },
     {
       "run_id": "2026-07-16T19-12-18Z",
