@@ -112,6 +112,30 @@ echo '[...]' | node initiative-1-tracker/tracker/scripts/core-parity-check.js --
 
 Non-Product rows: `parity: "—"`.
 
+### Locked narrative after parity (required)
+
+After writing `parity-results.json`, **always** merge explanations with:
+
+```bash
+node initiative-1-tracker/tracker/scripts/apply-parity-to-signals-table.js --drop <run_id>
+```
+
+Every Product / Existing / Won't chase row must keep this shape in `why_routing` **and** `signal_summary`:
+
+`[Competitor] shipped "[capability]": [what the product does — from their release blurb]. → Won't chase — already shipped in Core ([plain-English]; e.g. [top Core file]).`
+
+The description paragraph must explain **the product they shipped** (enough to decide prototype vs skip), not only the headline title.
+
+**Forbidden:** replacing the summary with only match-count jargon (`Anyone Home — Existing parity; 257 matches across 61 files…`). Match counts may live in `parity-results.json`; they are not the manager-facing explanation.
+
+PMM / Pricing / Talent / News Won't chase rows keep `We found a change on the … → Won't chase — …`.
+
+### Freshness model (no third net)
+
+1. **Primary aim:** last 7 days — post today → see by next morningbrief (Tue / Wed latest).
+2. **Safety net (changelog only):** longer lookback + feed pin + unpublished net-new so a missed scrape / weekend cannot bury a release forever.
+3. Brief assembly sorts **recent first**, then catch-up. Do not add another retention layer.
+
 ---
 
 ## Phase 4 — PRDs + prototypes (Product / Tier — Now only)

@@ -25,11 +25,21 @@ function parseArgs(argv) {
   return args;
 }
 
-function signalByUrl(signals) {
+function signalLookup(signals) {
   const map = new Map();
+  for (const s of signals) {
+    const url = String(s.source_url || '').trim().toLowerCase();
+    const cap = String(s.metadata?.capability_key || s.capability_key || '').trim();
+    if (url && cap) map.set(`${url}|${cap}`, s);
+    const heading = String(s.metadata?.capability_heading || s.capability_heading || '')
+      .toLowerCase()
+      .trim();
+    if (heading) map.set(`feat:${heading}`, s);
+    if (url && !map.has(url)) map.set(url, s);
+  }
   for (const s of dedupeSignalsByUrl(signals)) {
-    const key = String(s.source_url || '').trim().toLowerCase();
-    if (key) map.set(key, s);
+    const url = String(s.source_url || '').trim().toLowerCase();
+    if (url && !map.has(url)) map.set(url, s);
   }
   return map;
 }
@@ -43,12 +53,17 @@ function main() {
 
   const tablePath = path.join(runDir(drop), 'signals-table.json');
   const rows = loadSignalsTable(drop);
-  const byUrl = signalByUrl(loadDropSignals(drop));
+  const bySignal = signalLookup(loadDropSignals(drop));
 
   const updated = rows
     .map((row) => {
-    const key = String(row.source_url || '').trim().toLowerCase();
-    const raw = byUrl.get(key);
+    const url = String(row.source_url || '').trim().toLowerCase();
+    const cap = String(row.capability_key || '').trim();
+    const feat = String(row.capability_heading || '').toLowerCase().trim();
+    const raw =
+      (cap && bySignal.get(`${url}|${cap}`)) ||
+      (feat && bySignal.get(`feat:${feat}`)) ||
+      bySignal.get(url);
     if (!raw || isG2Signal(raw)) return null;
     const meta = classifySignal(raw);
     if (row.classification === 'Product' && row.parity && row.parity !== '—' && row.parity !== 'not_scanned') {
@@ -61,10 +76,10 @@ function main() {
     const analysis = buildSignalAnalysis(raw, meta);
     return {
       ...row,
-      classification: meta.classification,
-      classification_detail: meta.classification_detail,
+      classification: meta.classification || row.classification,
+      classification_detail: meta.classification_detail || row.classification_detail,
       routing: meta.routing,
-      tier: meta.tier,
+      tier: meta.tier || row.tier,
       why_routing: analysis,
       routing_reason: meta.why_routing,
       signal_summary: analysis,

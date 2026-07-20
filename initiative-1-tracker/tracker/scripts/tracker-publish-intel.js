@@ -37,6 +37,7 @@ const {
   weekendDropIds,
   allSignalsFromDrops,
   signalKey,
+  preferRecentSignals,
 } = require('../lib/briefNetNew.js');
 const { buildSignalsTableRows } = require('../lib/briefClassify.js');
 const { buildSpotlight } = require('./carryover-spotlight.js');
@@ -126,7 +127,14 @@ function gatherIntelSignals(dropId) {
     carryover = (spotlight.rows || []).map((c) => ({ ...c.row, _carryover: true }));
   }
 
-  const combined = [...weekendMandatory, ...catchUpFiltered, ...refreshed, ...carryover];
+  // Recency-first: this week's signals lead; changelog safety-net / catch-up
+  // (older unpublished) still included so we never miss a release.
+  const combined = preferRecentSignals([
+    ...weekendMandatory,
+    ...catchUpFiltered,
+    ...refreshed,
+    ...carryover,
+  ]);
   const sources = {
     net_new: catchUpFiltered.length + weekendMandatory.length,
     weekend_mandatory: weekendMandatory.length,

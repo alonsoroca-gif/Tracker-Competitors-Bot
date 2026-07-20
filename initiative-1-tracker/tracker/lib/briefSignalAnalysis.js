@@ -41,9 +41,13 @@ function pageContext(signal) {
   if (pk === 'careers' || /careers|\/jobs/i.test(url)) return 'careers page';
   if (pk === 'case studies') return 'case studies page';
   if (pk === 'features' || /\/features/i.test(url)) return 'features page';
+  if (pk === 'changelog' || /anyonehome-updates|\/changelog|\/releases?\//i.test(url)) {
+    return 'changelog';
+  }
   if (pk) return pk;
   const src = String(signal.source || '').replace(/_/g, ' ').trim();
   if (src === 'pricing page') return 'pricing page';
+  if (src === 'changelog') return 'changelog';
   if (src) return src;
   return 'site';
 }
@@ -188,15 +192,75 @@ function extractPmmFact(signal, detail) {
   return `${openChange(page)}${sn ? ` ${sn}.` : ' Marketing or site page updated.'}`;
 }
 
+/**
+ * Product description for prototype decisions — lead with what they shipped,
+ * not scrape meta. Uses the full capability blurb (not first-sentence chop).
+ */
 function extractProductFact(signal) {
   const page = pageContext(signal);
   const who = competitorShort(signal);
-  const body = firstChunk(signal.evidence_snippet || signal.snippet, 160);
+  const capability =
+    cleanText(signal.metadata?.capability_heading || '', 100) ||
+    cleanText(String(signal.headline || '').split('—').slice(1).join('—').trim(), 100);
+  const area = cleanText(signal.metadata?.capability_area || '', 40);
+  const productDesc = cleanText(signal.snippet || signal.evidence_snippet || '', 240);
 
-  if (body) {
-    return `${openChange(page)} ${who} updated their product messaging: ${body}.`;
+  if (page === 'changelog' && capability) {
+    const areaUseful =
+      area &&
+      area.length >= 4 &&
+      !capability.toLowerCase().includes(area.toLowerCase()) &&
+      !area.toLowerCase().includes(capability.toLowerCase().slice(0, 12));
+    const where = areaUseful ? `${area} → ${capability}` : capability;
+    if (productDesc) {
+      return `${who} shipped "${where}": ${productDesc}`;
+    }
+    return `${who} shipped "${where}" on their changelog.`;
   }
-  return `${openChange(page)} ${who} published a product-shaped capability update.`;
+
+  if (capability && productDesc) {
+    return `${who} shipped "${capability}": ${productDesc}`;
+  }
+  if (productDesc) {
+    return `${who} shipped a product update: ${productDesc}`;
+  }
+  return `${who} published a product-shaped capability update on their ${page}.`;
+}
+
+/**
+ * Plain-English Core reason for Existing / Partial / Gap.
+ * Never emit bare "N matches across files" as the only explanation.
+ */
+function parityExplanation(meta) {
+  const parity = String(meta.parity || '').toLowerCase();
+  const plain = cleanText(meta.parity_plain || meta.core_summary || '', 180);
+  const anchor = cleanText(meta.parity_anchor || meta.top_file || '', 120);
+
+  if (parity === 'existing') {
+    if (plain && anchor) {
+      return `Won't chase — already shipped in Core (${plain}; e.g. ${anchor}).`;
+    }
+    if (plain) {
+      return `Won't chase — already shipped in Core (${plain}).`;
+    }
+    if (anchor) {
+      return `Won't chase — already shipped in Core (parity Existing; e.g. ${anchor}).`;
+    }
+    return "Won't chase — already shipped in Core; no prototype.";
+  }
+  if (parity === 'partial') {
+    if (plain) {
+      return `Tier — Now candidate — Core has a partial foundation (${plain}); delta still needed.`;
+    }
+    return 'Tier — Now candidate — Core has a partial foundation; delta still needed.';
+  }
+  if (parity === 'gap') {
+    if (plain) {
+      return `Tier — Now candidate — no matching Core capability found (${plain}).`;
+    }
+    return 'Tier — Now candidate — no matching Core capability found; prototype warranted.';
+  }
+  return '';
 }
 
 function routingTail(meta) {
@@ -213,11 +277,8 @@ function routingTail(meta) {
   if (cls === 'News') {
     return "Won't chase — press/narrative; monitor only.";
   }
-  if (cls === 'Product' && parity === 'existing') {
-    return "Won't chase — Core already ships this; no prototype.";
-  }
-  if (cls === 'Product' && (parity === 'partial' || parity === 'gap')) {
-    return 'Tier — Now candidate — parity gap vs Core; prototype warranted.';
+  if (cls === 'Product' && (parity === 'existing' || parity === 'partial' || parity === 'gap')) {
+    return parityExplanation(meta) || 'Needs Core parity scan — prototype if Gap/Partial, skip if Existing.';
   }
   if (cls === 'Product') {
     return 'Needs Core parity scan — prototype if Gap/Partial, skip if Existing.';
@@ -255,7 +316,175 @@ function buildSignalAnalysis(signal, meta) {
       break;
   }
 
-  return `${cleanText(fact, 260)} → ${routingTail(meta)}`;
+  // Product rows lead with what the competitor shipped (prototype context).
+  // PMM/Pricing/etc. keep the "We found…" opener. Parity may refine the
+  // routing tail, but must never replace the fact with match-count jargon.
+  const factBudget = meta.classification === 'Product' ? 360 : 280;
+  return `${cleanText(fact, factBudget)} → ${routingTail(meta)}`;
+}
+
+const NOISE_MATCH_TERMS = new Set([
+  'team',
+  'help',
+  'keep',
+  'release',
+  'july',
+  'june',
+  'may',
+  'anyone',
+  'enhancements',
+  'update',
+  'updates',
+  'new',
+]);
+
+function capabilityLabel(row, signal) {
+  return (
+    cleanText(signal?.metadata?.capability_heading || row.capability_heading || '', 80) ||
+    cleanText(String(row.headline || signal?.headline || '').split('—').slice(1).join('—').trim(), 80) ||
+    cleanText(row.headline || signal?.headline || '', 80)
+  );
+}
+
+function pickParityAnchor(parity = {}, capability = '') {
+  if (parity.top_file || parity.anchor) {
+    return String(parity.top_file || parity.anchor);
+  }
+  const files = Array.isArray(parity.top_files) ? parity.top_files : [];
+  if (!files.length) return '';
+
+  const caps = String(capability || '')
+    .toLowerCase()
+    .split(/[^a-z0-9]+/)
+    .filter((t) => t.length >= 3 && !NOISE_MATCH_TERMS.has(t));
+
+  let best = null;
+  let bestScore = 0;
+  for (const f of files) {
+    const rel = String(f.relativePath || '');
+    if (/node_modules|OldNodeModules|vendor\/|dist\/|\.min\.js$/i.test(rel)) continue;
+
+    const terms = (f.matched_terms || []).map((t) => String(t).toLowerCase());
+    const meaningful = terms.filter((t) => !NOISE_MATCH_TERMS.has(t) && t.length >= 3);
+    let score = meaningful.length * 8;
+    let capabilityHit = false;
+    for (const c of caps) {
+      if (terms.some((t) => t.includes(c) || c.includes(t))) {
+        score += 25;
+        capabilityHit = true;
+      }
+      if (rel.toLowerCase().includes(c)) {
+        score += 15;
+        capabilityHit = true;
+      }
+    }
+    if (
+      /consent|sms|opt.?in|guest|pricing|siteplan|tour|lease|outage|maintenance|work.?order|service.?request|reminder/i.test(
+        rel,
+      )
+    ) {
+      score += 10;
+      capabilityHit = true;
+    }
+    // Penalize weak keyword collisions on unrelated domains
+    if (
+      caps.some((c) => /outage|maintenance|service/.test(c)) &&
+      /voip|phone.?number|invoice|employee|hr\/|competitor/i.test(rel)
+    ) {
+      score -= 40;
+    }
+    if (
+      caps.some((c) => /sms|opt.?in|consent|tour|reminder/.test(c)) &&
+      /employee|hr\/|invoice|fee.?guide|monitor|gateway/i.test(rel)
+    ) {
+      score -= 40;
+    }
+    if (!capabilityHit && meaningful.length === 0) score = 0;
+    if (score > bestScore) {
+      bestScore = score;
+      best = f;
+    }
+  }
+  // Omit junk anchors — plain-English capability name is enough without a misleading path
+  if (!best || bestScore < 20) return '';
+  return String(best.relativePath || '');
+}
+
+function plainFromParity(row, signal, parity = {}) {
+  const explicit = parity.plain || stripMatchCountJargon(parity.reason || parity.verdict_reason || '');
+  if (explicit) return explicit;
+
+  const capability = capabilityLabel(row, signal);
+  if (!capability) return '';
+
+  const verdict = String(parity.verdict || parity.parity || row.parity || '').toLowerCase();
+  if (verdict === 'existing') {
+    return `same class of capability as "${capability}"`;
+  }
+  if (verdict === 'partial') {
+    return `related foundation for "${capability}"`;
+  }
+  if (verdict === 'gap') {
+    return `no clear Core match for "${capability}"`;
+  }
+  return '';
+}
+
+/**
+ * Merge Layer-1/2 parity into an existing table row without destroying the fact.
+ * @param {object} row signals-table row
+ * @param {object} signal raw collect signal (for fact rebuild)
+ * @param {object} parity parity-results row or { verdict, reason, top_files, plain }
+ */
+function applyParityToRowAnalysis(row, signal, parity = {}) {
+  const verdict = String(parity.verdict || parity.parity || row.parity || '').trim();
+  const sig = signal || rowAsSignal(row);
+  const capability = capabilityLabel(row, sig);
+  const meta = {
+    classification: row.classification || 'Product',
+    classification_detail: row.classification_detail || 'capability',
+    routing: verdict.toLowerCase() === 'existing' ? "Won't chase" : row.routing,
+    parity: verdict,
+    parity_plain: plainFromParity(row, sig, parity),
+    parity_anchor: pickParityAnchor(parity, capability),
+  };
+  const analysis = buildSignalAnalysis(sig, meta);
+  return {
+    ...row,
+    parity: verdict || row.parity,
+    parity_l2: verdict || row.parity_l2,
+    routing: meta.routing,
+    tier: verdict.toLowerCase() === 'existing' ? "Won't chase" : row.tier,
+    why_routing: analysis,
+    signal_summary: analysis,
+    routing_reason: routingTail(meta),
+  };
+}
+
+function stripMatchCountJargon(reason) {
+  const s = String(reason || '');
+  if (/matches across \d+ files/i.test(s)) {
+    return '';
+  }
+  return cleanText(s.replace(/\s*—\s*likely already shipped\.?/i, ''), 180);
+}
+
+function rowAsSignal(row) {
+  return {
+    competitor: row.competitor,
+    competitor_id: row.competitor_id,
+    source_url: row.source_url,
+    source: row.source_url && /anyonehome-updates|changelog/i.test(row.source_url) ? 'changelog' : '',
+    headline: row.headline,
+    snippet: row.snippet,
+    evidence_snippet: row.snippet,
+    metadata: {
+      page_kind: row.source_url && /anyonehome-updates|changelog/i.test(row.source_url) ? 'changelog' : '',
+      capability_heading: row.capability_heading,
+      capability_area: row.capability_area,
+      capability_key: row.capability_key,
+    },
+  };
 }
 
 /** Only prefix when the reader needs timing context catch-up does not provide. */
@@ -268,8 +497,11 @@ function applyContextPrefix(analysis, signal) {
 
 module.exports = {
   buildSignalAnalysis,
+  applyParityToRowAnalysis,
   applyContextPrefix,
   cleanText,
   conversionClaimSentence,
   meaningfulPrices,
+  extractProductFact,
+  parityExplanation,
 };

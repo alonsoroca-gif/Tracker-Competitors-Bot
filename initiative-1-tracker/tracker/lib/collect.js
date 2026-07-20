@@ -9,6 +9,13 @@ const { loadConfig } = require('./loadConfig');
 const { attachIntelPillarMetadata } = require('./intelPillar');
 const { fetchYouTubeCommentThreads } = require('./youtubeComments');
 const { searchYouTubeVideos, listVideoDetails } = require('./youtubeDiscovery');
+const {
+  splitPageSubrows,
+  shouldSplitSource,
+  CHANGELOG_LOOKBACK_DAYS,
+  CHANGELOG_FEED_PIN_COUNT,
+  CHANGELOG_ABSOLUTE_MAX_DAYS,
+} = require('./splitPageSubrows');
 
 // Browser-like UA. The previous self-identifying "CompetitorTracker/1.0"
 // string was triggering Cloudflare/WAF challenges for some hosts (verified by
@@ -187,11 +194,23 @@ function cutoffISO(days) {
   return d.toISOString().slice(0, 10);
 }
 
+/** Changelog / release feeds keep a longer window so Monday catch-up doesn't bury them. */
+function lookbackDaysForSignal(signal, days) {
+  const base = parseDays(days);
+  if (signal && (signal.type === 'changelog' || signal.source === 'changelog')) {
+    return Math.max(base, CHANGELOG_LOOKBACK_DAYS);
+  }
+  return base;
+}
+
 function filterLastDays(signals, days) {
-  const cutoff = cutoffISO(days);
-  return (Array.isArray(signals) ? signals : []).filter(
-    (s) => s && typeof s.date === 'string' && s.date >= cutoff
-  );
+  return (Array.isArray(signals) ? signals : []).filter((s) => {
+    if (!s || typeof s.date !== 'string') return false;
+    // Changelog items still sitting at the top of the RSS feed (pinned during
+    // extract) must survive the final filter even if slightly outside lookback.
+    if (s.metadata && s.metadata.feed_pinned) return true;
+    return s.date >= cutoffISO(lookbackDaysForSignal(s, days));
+  });
 }
 
 function envSuffixForCompetitor(competitorId) {
@@ -1043,7 +1062,9 @@ function extractNamedEntities(text) {
 }
 
 async function fetchArticleEvidence(url) {
-  if (!isValidPublicUrl(url)) return { title: '', description: '', content: '', renderer: null };
+  if (!isValidPublicUrl(url)) {
+    return { title: '', description: '', content: '', html: '', renderer: null };
+  }
 
   try {
     const { html, renderer } = await fetchTextWithFallback(url);
@@ -1061,10 +1082,12 @@ async function fetchArticleEvidence(url) {
       title: meta.title,
       description: meta.description,
       content: normalizeWhitespace(articleText.join('\n\n') || meta.bodyText).slice(0, 6000),
+      // Keep HTML for multi-subrow split (changelog / release pages).
+      html: typeof html === 'string' ? html : '',
       renderer,
     };
   } catch (_) {
-    return { title: '', description: '', content: '', renderer: null };
+    return { title: '', description: '', content: '', html: '', renderer: null };
   }
 }
 
@@ -1109,13 +1132,37 @@ async function extractFeedSignals(feedUrl, sourceType, competitorId, productId, 
     return { signals: [], lane };
   }
 
-  const cutoff = cutoffISO(days);
+  // Changelog feeds use a longer lookback so release notes aren't buried before
+  // Monday catch-up (Anyone Home Jun 18 → empty_window by early July taught this).
+  const laneDays =
+    sourceType === 'changelog' ? Math.max(parseDays(days), CHANGELOG_LOOKBACK_DAYS) : parseDays(days);
+  const cutoff = cutoffISO(laneDays);
+  const absoluteCutoff = cutoffISO(CHANGELOG_ABSOLUTE_MAX_DAYS);
   const items = Array.isArray(feed.items) ? feed.items.slice(0, 20) : [];
   const signals = [];
 
-  for (const item of items) {
+  const typeMap = {
+    blog: 'blog',
+    press: 'press',
+    changelog: 'changelog',
+    youtube: 'youtube',
+    insights: 'insights',
+    media: 'media',
+    podcast: 'podcast',
+  };
+  const signalType = typeMap[sourceType] || 'blog';
+
+  for (let itemIndex = 0; itemIndex < items.length; itemIndex++) {
+    const item = items[itemIndex];
     const date = coerceItemDate(item);
-    if (date < cutoff) continue;
+    const withinWindow = date >= cutoff;
+    // Still in the top of the RSS feed? Keep it even if slightly outside the window
+    // (pre-dated "21 July Release" posts that sit in the feed for weeks).
+    const pinnedInFeed =
+      sourceType === 'changelog' &&
+      itemIndex < CHANGELOG_FEED_PIN_COUNT &&
+      date >= absoluteCutoff;
+    if (!withinWindow && !pinnedInFeed) continue;
 
     const title = normalizeWhitespace(item.title || '');
     const link = item.link || item.guid || feedUrl;
@@ -1133,22 +1180,61 @@ async function extractFeedSignals(feedUrl, sourceType, competitorId, productId, 
       .filter(Boolean)
       .join(' • ');
 
-    const typeMap = {
-      blog: 'blog',
-      press: 'press',
-      changelog: 'changelog',
-      youtube: 'youtube',
-      insights: 'insights',
-      media: 'media',
-      podcast: 'podcast',
+    const baseMeta = {
+      page_kind: sourceType,
+      feed_title: normalizeWhitespace(feed.title || ''),
+      feed_pinned: Boolean(pinnedInFeed && !withinWindow),
     };
+
+    // Multi-subrow split: one release page → N capability signals (v1: changelog).
+    if (shouldSplitSource(sourceType) && article.html) {
+      const { subrows, strategy } = splitPageSubrows(article.html, {
+        pageTitle: title || article.title,
+        sourceUrl: link,
+        competitorId,
+      });
+      if (subrows.length >= 2) {
+        for (const row of subrows) {
+          signals.push(
+            buildSignalBase({
+              competitorId,
+              productId,
+              source: sourceType,
+              type: signalType,
+              event_type,
+              headline: row.headline,
+              source_url: link,
+              date,
+              snippet: row.blurb,
+              evidence_snippet: [row.area, row.heading, row.blurb].filter(Boolean).join(' — '),
+              confidence: scoreConfidence({
+                evidenceCount: 2,
+                hasHeadings: true,
+                directPage: true,
+              }),
+              importance,
+              entities,
+              metadata: {
+                ...baseMeta,
+                split_strategy: strategy,
+                capability_key: row.capability_key,
+                capability_heading: row.heading,
+                capability_area: row.area,
+                parent_release_title: title || article.title,
+              },
+            })
+          );
+        }
+        continue;
+      }
+    }
 
     signals.push(
       buildSignalBase({
         competitorId,
         productId,
         source: sourceType,
-        type: typeMap[sourceType] || 'blog',
+        type: signalType,
         event_type,
         headline: title || article.title || `${sourceType} update`,
         source_url: link,
@@ -1166,10 +1252,7 @@ async function extractFeedSignals(feedUrl, sourceType, competitorId, productId, 
         }),
         importance,
         entities,
-        metadata: {
-          page_kind: sourceType,
-          feed_title: normalizeWhitespace(feed.title || ''),
-        },
+        metadata: baseMeta,
       })
     );
   }
@@ -1216,6 +1299,8 @@ function dedupeSignals(signals) {
   const out = [];
 
   for (const s of signals) {
+    const capabilityKey =
+      (s.metadata && s.metadata.capability_key) || (s.headline || '').slice(0, 80);
     const key = [
       s.date,
       s.competitor_id,
@@ -1223,6 +1308,7 @@ function dedupeSignals(signals) {
       s.type,
       s.event_type,
       s.source_url,
+      capabilityKey,
       (s.snippet || '').slice(0, 120),
     ].join('|');
 
@@ -1865,6 +1951,7 @@ async function collect(competitorId, productId, days = 7, session = null) {
 module.exports = {
   collect,
   filterLastDays,
+  lookbackDaysForSignal,
   getSourceUrls,
   isValidPublicUrl,
   shutdownBrowser,

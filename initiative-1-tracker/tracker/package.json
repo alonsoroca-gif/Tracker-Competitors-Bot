@@ -10,7 +10,7 @@
     "collect": "node index.js collect",
     "drop": "node scripts/publish-drop.js",
     "slack-notify": "node scripts/slack-drop-notify.js",
-    "test": "node test/run.js && node test/parity-check.test.js",
+    "test": "node test/run.js && node test/parity-check.test.js && node test/split-page-subrows.test.js",
     "test:parity": "node test/parity-check.test.js",
     "test:parity-github": "node test/parity-github.test.js",
     "verify:core": "node scripts/verify-core-setup.js",

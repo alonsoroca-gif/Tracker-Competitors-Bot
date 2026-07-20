@@ -5,7 +5,7 @@
 
 const { loadConfig } = require('./loadConfig');
 const { buildSignalAnalysis, applyContextPrefix } = require('./briefSignalAnalysis.js');
-const { contentFingerprint, signalKey } = require('./briefNetNew.js');
+const { contentFingerprint, signalKey, preferRecentSignals } = require('./briefNetNew.js');
 
 function isG2Signal(signal) {
   const type = String(signal?.type || '').toLowerCase();
@@ -181,8 +181,18 @@ function dedupeSignalsByUrl(signals) {
  */
 function buildSignalsTableRows(signals, opts = {}) {
   const nameMap = competitorNameMap();
-  const deduped = dedupeSignalsByUrl(signals).filter((s) => !isG2Signal(s));
-  deduped.sort((a, b) => (b.importance || 0) - (a.importance || 0));
+  const deduped = preferRecentSignals(
+    dedupeSignalsByUrl(signals).filter((s) => !isG2Signal(s)),
+  );
+  // Within the same freshness band, keep higher-importance first.
+  deduped.sort((a, b) => {
+    const fa = a._freshness === 'recent' ? 0 : 1;
+    const fb = b._freshness === 'recent' ? 0 : 1;
+    if (fa !== fb) return fa - fb;
+    const dateCmp = String(b.date || '').localeCompare(String(a.date || ''));
+    if (dateCmp) return dateCmp;
+    return (b.importance || 0) - (a.importance || 0);
+  });
 
   return deduped.map((s, idx) => {
     const c = classifySignal(s);
@@ -210,6 +220,7 @@ function buildSignalsTableRows(signals, opts = {}) {
       // separate from the dense L1/L2 analysis so the viewer can lead with it.
       routing_reason: c.why_routing,
       signal_summary: analysis,
+      freshness: s._freshness || null,
       tier: c.tier,
       source_url: s.source_url || '',
       content_hash: contentFingerprint(s),

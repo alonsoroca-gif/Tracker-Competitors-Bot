@@ -410,6 +410,36 @@ function weekendIntelPendingForMonday(
   };
 }
 
+/** Primary freshness window — what we aim to brief every weekday. */
+const PRIMARY_SIGNAL_DAYS = 7;
+
+/**
+ * Recency-first ordering for the brief. Safety-net / catch-up signals (older than
+ * the primary window, or feed_pinned outside the window) stay in the set so we
+ * never miss unpublished releases — they just sort after this week's fresh ones.
+ * No third retention net: collect lookback + unpublished net-new is enough.
+ */
+function preferRecentSignals(signals, opts = {}) {
+  const primaryDays = opts.primaryDays ?? PRIMARY_SIGNAL_DAYS;
+  const now = opts.nowMs ?? Date.now();
+  const list = Array.isArray(signals) ? signals : [];
+
+  const tagged = list.map((s) => {
+    const dateMs = Date.parse(s && s.date);
+    const ageDays = Number.isFinite(dateMs)
+      ? Math.max(0, (now - dateMs) / (24 * 60 * 60 * 1000))
+      : 999;
+    const pinnedCatchup = Boolean(s && s.metadata && s.metadata.feed_pinned);
+    const freshness = pinnedCatchup || ageDays > primaryDays ? 'catchup' : 'recent';
+    return { ...s, _freshness: freshness, _age_days: Math.round(ageDays) };
+  });
+
+  const byDateDesc = (a, b) => String(b.date || '').localeCompare(String(a.date || ''));
+  const recent = tagged.filter((s) => s._freshness === 'recent').sort(byDateDesc);
+  const catchup = tagged.filter((s) => s._freshness === 'catchup').sort(byDateDesc);
+  return [...recent, ...catchup];
+}
+
 /** Rough pre-publish estimate — not a substitute for interpret classification. */
 function predictProductCandidates(netNew) {
   return (netNew || []).filter((s) => {
@@ -475,6 +505,8 @@ module.exports = {
   weekendDropIds,
   allSignalsFromDrops,
   weekendIntelPendingForMonday,
+  preferRecentSignals,
+  PRIMARY_SIGNAL_DAYS,
   predictProductCandidates,
   estimatePublishMinutes,
   countProductRowsPendingParity,

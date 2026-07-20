@@ -134,6 +134,88 @@ assert(
   'article analysis names actual titles',
 );
 
+const { applyParityToRowAnalysis } = require('../lib/briefSignalAnalysis.js');
+const changelogSignal = {
+  competitor: 'Anyone Home',
+  competitor_id: 'anyone-home',
+  source: 'changelog',
+  source_url: 'https://anyonehome-updates.com/21-july-2026-release/',
+  headline: '21 July 2026 Release — SMS Opt-in Enhancements',
+  snippet:
+    'Anyone Home now requires prospects and residents to explicitly opt in before receiving SMS communications.',
+  metadata: {
+    page_kind: 'changelog',
+    capability_heading: 'SMS Opt-in Enhancements',
+    capability_area: 'Lead Manager',
+    capability_key: '501b095c167a3059',
+  },
+};
+const existingRow = {
+  id: 7,
+  classification: 'Product',
+  classification_detail: 'capability',
+  competitor: 'Anyone Home',
+  competitor_id: 'anyone-home',
+  headline: changelogSignal.headline,
+  snippet: changelogSignal.snippet,
+  source_url: changelogSignal.source_url,
+  capability_heading: 'SMS Opt-in Enhancements',
+  capability_key: '501b095c167a3059',
+  parity: 'not_scanned',
+  routing: 'Tier — Now',
+  tier: 'Tier — Now',
+};
+const existingMerged = applyParityToRowAnalysis(existingRow, changelogSignal, {
+  parity: 'Existing',
+  verdict_reason: '257 matches across 61 files in 11 apps — likely already shipped',
+  top_files: [
+    {
+      relativePath: 'Api/app/Libraries/Internal/Comms/Services/Consents/ConsentService.php',
+      matched_terms: ['opt-in', 'requires'],
+      score: 12,
+    },
+    {
+      relativePath: 'Application/HR/Employees/EmployeeExitProcess/CEmployeeExitProcessManager.class.php',
+      matched_terms: ['team', 'release'],
+      score: 9,
+    },
+  ],
+});
+assert(
+  /^Anyone Home shipped "/.test(existingMerged.why_routing) &&
+    existingMerged.why_routing.includes('SMS Opt-in Enhancements') &&
+    existingMerged.why_routing.includes('explicitly opt in') &&
+    existingMerged.why_routing.includes("Won't chase — already shipped in Core") &&
+    existingMerged.why_routing.includes('ConsentService.php') &&
+    !/257 matches across/i.test(existingMerged.why_routing),
+  'Existing Product leads with product shipped + Core plain English, not match-count jargon',
+);
+assert(existingMerged.signal_summary === existingMerged.why_routing, 'summary mirrors why_routing');
+
+const { preferRecentSignals } = require('../lib/briefNetNew.js');
+const ordered = preferRecentSignals(
+  [
+    {
+      source_url: 'https://example.com/old',
+      date: '2026-05-19T12:00:00.000Z',
+      type: 'changelog',
+      metadata: { feed_pinned: true },
+    },
+    {
+      source_url: 'https://example.com/new',
+      date: '2026-07-19T12:00:00.000Z',
+      type: 'changelog',
+    },
+  ],
+  { nowMs: Date.parse('2026-07-20T18:00:00.000Z') },
+);
+assert(
+  ordered[0].source_url.includes('/new') &&
+    ordered[0]._freshness === 'recent' &&
+    ordered[1]._freshness === 'catchup',
+  'preferRecentSignals puts this-week signals before safety-net catch-up',
+);
+
 const table = buildSignalsTableRows([
   sample,
   { ...pmm, source_url: 'https://www.featuredcustomers.com/vendor/funnel-leasing' },

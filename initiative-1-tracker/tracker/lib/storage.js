@@ -1,6 +1,7 @@
 const path = require('path');
 const fs = require('fs');
 const { readSignalsArray, writeSignalsArray } = require('./signalsAtRest');
+const { CHANGELOG_LOOKBACK_DAYS } = require('./splitPageSubrows');
 
 const DATA_DIR = path.join(__dirname, '..', 'data');
 const SIGNALS_FILE = path.join(DATA_DIR, 'signals.json');
@@ -19,16 +20,26 @@ function retentionCutoffDate(days) {
 
 /**
  * Drop stored signals older than the rolling window (inclusive of cutoff date).
+ * Changelog / feed-pinned release rows keep a longer window so capability splits
+ * are not deleted right after collect (RSS pubDate can be weeks old).
  * @returns {{ kept: number, removed: number }}
  */
 function pruneSignalsToRetentionDays(days) {
   ensureDataDir();
   if (!fs.existsSync(SIGNALS_FILE)) return { kept: 0, removed: 0 };
-  const cutoff = retentionCutoffDate(days);
+  const baseDays = Math.min(365, Math.max(1, parseInt(days, 10) || 7));
+  const baseCutoff = retentionCutoffDate(baseDays);
+  const changelogCutoff = retentionCutoffDate(Math.max(baseDays, CHANGELOG_LOOKBACK_DAYS));
   const list = readSignalsArray(SIGNALS_FILE);
   if (!Array.isArray(list) || !list.length) return { kept: 0, removed: 0 };
   const before = list.length;
-  const keptList = list.filter((s) => s && typeof s.date === 'string' && s.date >= cutoff);
+  const keptList = list.filter((s) => {
+    if (!s || typeof s.date !== 'string') return false;
+    if (s.metadata && s.metadata.feed_pinned) return true;
+    const cutoff =
+      s.type === 'changelog' || s.source === 'changelog' ? changelogCutoff : baseCutoff;
+    return s.date >= cutoff;
+  });
   writeSignalsArray(SIGNALS_FILE, keptList);
   return { kept: keptList.length, removed: before - keptList.length };
 }
@@ -50,7 +61,10 @@ function writeSignals(signals, replace = false) {
     existing = Array.isArray(signals) ? signals.slice() : [];
     added = existing.length;
   } else {
-    const key = (s) => `${s.date}|${s.competitor_id}|${s.product_id}|${s.type}|${(s.snippet || '').slice(0, 80)}`;
+    const key = (s) =>
+      `${s.date}|${s.competitor_id}|${s.product_id}|${s.type}|${
+        (s.metadata && s.metadata.capability_key) || ''
+      }|${(s.snippet || '').slice(0, 80)}`;
     const seen = new Set(existing.map(key));
     for (const s of signals) {
       if (!seen.has(key(s))) {
