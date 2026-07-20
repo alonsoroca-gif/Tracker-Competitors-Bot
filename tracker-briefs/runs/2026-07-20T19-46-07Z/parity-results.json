@@ -1,0 +1,2435 @@
+[
+  {
+    "id": "4",
+    "parity": "Existing",
+    "verdict_reason": "385 matches across 62 files in 9 apps — likely already shipped",
+    "total_score": 385,
+    "files_with_hits": 62,
+    "apps_with_hits": 9,
+    "top_apps": [
+      {
+        "app": "ProspectPortal",
+        "score": 122,
+        "files": 17
+      },
+      {
+        "app": "Scripts",
+        "score": 66,
+        "files": 11
+      },
+      {
+        "app": "Services",
+        "score": 66,
+        "files": 9
+      },
+      {
+        "app": "Entrata",
+        "score": 61,
+        "files": 11
+      },
+      {
+        "app": "ClientAdmin",
+        "score": 32,
+        "files": 5
+      }
+    ],
+    "top_files": [
+      {
+        "relativePath": "Application/Development/CacheDeployments/CCacheDeploymentManager.class.php",
+        "app": "ClientAdmin",
+        "score": 15,
+        "matched_terms": [
+          "centralized",
+          "operations"
+        ]
+      },
+      {
+        "relativePath": "Application/PropertySystem/PropertyPageSystem/GuestCard/CGuestCardModule.class.php",
+        "app": "ProspectPortal",
+        "score": 15,
+        "matched_terms": [
+          "guestcard",
+          "selfguidedtour",
+          "automation"
+        ]
+      },
+      {
+        "relativePath": "Application/PropertySystem/ApplicationSystem/ApplicationAuthentication/CApplicationAuthenticationModule.class.php",
+        "app": "ProspectPortal",
+        "score": 15,
+        "matched_terms": [
+          "guestcard",
+          "overview",
+          "journey"
+        ]
+      },
+      {
+        "relativePath": "Application/Admin/Tools/CRotateGatewayApiKeysScript.class.php",
+        "app": "Scripts",
+        "score": 15,
+        "matched_terms": [
+          "every",
+          "platform",
+          "stage"
+        ]
+      },
+      {
+        "relativePath": "Application/Admin/Scheduled/CPostEftChargesScript.class.php",
+        "app": "Scripts",
+        "score": 15,
+        "matched_terms": [
+          "stage",
+          "operations",
+          "detected",
+          "every"
+        ]
+      },
+      {
+        "relativePath": "Application/ServiceHandlers/Ils/v1/r1/CInternetListingServiceHandler.class.php",
+        "app": "Services",
+        "score": 15,
+        "matched_terms": [
+          "guestcard",
+          "solution"
+        ]
+      }
+    ],
+    "grounding_terms": [
+      "eliseai",
+      "industry",
+      "leading",
+      "platform",
+      "overview",
+      "detected",
+      "solution",
+      "themes",
+      "always-on",
+      "automation",
+      "centralized",
+      "operations",
+      "agentic",
+      "powers",
+      "every",
+      "stage",
+      "journey",
+      "omnichannel",
+      "singular"
+    ],
+    "alias_terms": [
+      "leasingai",
+      "chatbotinsight",
+      "eliservicehandler",
+      "selfguidedtour",
+      "guestcard"
+    ]
+  },
+  {
+    "id": "5",
+    "parity": "Existing",
+    "verdict_reason": "131 matches across 31 files in 8 apps — likely already shipped",
+    "total_score": 131,
+    "files_with_hits": 31,
+    "apps_with_hits": 8,
+    "top_apps": [
+      {
+        "app": "ClientAdmin",
+        "score": 34,
+        "files": 7
+      },
+      {
+        "app": "ProspectPortal",
+        "score": 27,
+        "files": 4
+      },
+      {
+        "app": "Entrata",
+        "score": 24,
+        "files": 4
+      },
+      {
+        "app": "Scripts",
+        "score": 21,
+        "files": 7
+      },
+      {
+        "app": "ResidentPortal",
+        "score": 10,
+        "files": 4
+      }
+    ],
+    "top_files": [
+      {
+        "relativePath": "Application/AssignApplicationModules.php",
+        "app": "ClientAdmin",
+        "score": 15,
+        "matched_terms": [
+          "callanalysis",
+          "dialplan",
+          "help",
+          "leasingai",
+          "automation"
+        ]
+      },
+      {
+        "relativePath": "Api/app/Actions/Internal/OnlineApplicationWaitlist/V1/ApplicationWaitlistTagsAction.php",
+        "app": "Entrata",
+        "score": 15,
+        "matched_terms": [
+          "comprehensive",
+          "automation",
+          "online",
+          "experience"
+        ]
+      },
+      {
+        "relativePath": "Application/CProspectPortalApp.class.php",
+        "app": "ProspectPortal",
+        "score": 15,
+        "matched_terms": [
+          "solution",
+          "keywords",
+          "repeated",
+          "online",
+          "help"
+        ]
+      },
+      {
+        "relativePath": "Application/HR/EmployeeAssessments/CEmployeeAssessmentManager.class.php",
+        "app": "ClientAdmin",
+        "score": 8,
+        "matched_terms": [
+          "role",
+          "experience"
+        ]
+      },
+      {
+        "relativePath": "Application/Admin/Tools/CRotateGatewayApiKeysScript.class.php",
+        "app": "Scripts",
+        "score": 8,
+        "matched_terms": [
+          "role",
+          "platform"
+        ]
+      },
+      {
+        "relativePath": "Application/FeeGuide/CFeeGuideModule.class.php",
+        "app": "ProspectPortal",
+        "score": 5,
+        "matched_terms": [
+          "help",
+          "comprehensive",
+          "experience"
+        ]
+      }
+    ],
+    "grounding_terms": [
+      "funnel",
+      "multifamily",
+      "detected",
+      "solution",
+      "themes",
+      "online",
+      "help",
+      "centralization",
+      "role",
+      "specialization",
+      "automation",
+      "ideal",
+      "renter",
+      "experience",
+      "comprehensive",
+      "platform",
+      "repeated",
+      "keywords"
+    ],
+    "alias_terms": [
+      "leasingai",
+      "chatbotinsight",
+      "eliservicehandler",
+      "callanalysis",
+      "dialplan",
+      "ivraction"
+    ]
+  },
+  {
+    "id": "6",
+    "parity": "Existing",
+    "verdict_reason": "Layer 2: Core ships call analysis scorecards (CCallAnalysisCategories) + Chat contact center — Leasing Call Analysis positioning already covered.",
+    "total_score": 846,
+    "files_with_hits": 119,
+    "apps_with_hits": 15,
+    "top_apps": [
+      {
+        "app": "Services",
+        "score": 191,
+        "files": 20
+      },
+      {
+        "app": "ProspectPortal",
+        "score": 163,
+        "files": 21
+      },
+      {
+        "app": "Scripts",
+        "score": 141,
+        "files": 19
+      },
+      {
+        "app": "CallCenter",
+        "score": 80,
+        "files": 12
+      },
+      {
+        "app": "ClientAdmin",
+        "score": 66,
+        "files": 9
+      }
+    ],
+    "top_files": [
+      {
+        "relativePath": "Application/SoapServers/CMoneyGramRealTimeBillPaymentRequestSoap.class.php",
+        "app": "AdminSync",
+        "score": 15,
+        "matched_terms": [
+          "call",
+          "contact"
+        ]
+      },
+      {
+        "relativePath": "Application/DialPlan/CDialPlanDirective.class.php",
+        "app": "CallCenter",
+        "score": 15,
+        "matched_terms": [
+          "dialplan",
+          "call",
+          "center"
+        ]
+      },
+      {
+        "relativePath": "Application/DialPlan/CNewDialplanDirective.class.php",
+        "app": "CallCenter",
+        "score": 15,
+        "matched_terms": [
+          "dialplan",
+          "call",
+          "center"
+        ]
+      },
+      {
+        "relativePath": "Application/DialPlan/CNewDialplanDirectory.class.php",
+        "app": "CallCenter",
+        "score": 15,
+        "matched_terms": [
+          "dialplan",
+          "contact",
+          "call",
+          "center"
+        ]
+      },
+      {
+        "relativePath": "App/Controllers/Voip/CallAgentsCallAnalysis/CallAgentsCallAnalysisReportManager.php",
+        "app": "ClientAdmin",
+        "score": 15,
+        "matched_terms": [
+          "callanalysis",
+          "call",
+          "analysis"
+        ]
+      },
+      {
+        "relativePath": "Application/Development/OperationsExecutiveDashboard/COperationsExecutiveDashboardManager.class.php",
+        "app": "ClientAdmin",
+        "score": 15,
+        "matched_terms": [
+          "callanalysis",
+          "call",
+          "center"
+        ]
+      }
+    ],
+    "grounding_terms": [
+      "anyone",
+      "software",
+      "solutions",
+      "call",
+      "analysis",
+      "contact",
+      "center",
+      "detected",
+      "solution",
+      "themes",
+      "revolutionizing",
+      "self-guided",
+      "chatbot",
+      "repeated",
+      "keywords"
+    ],
+    "alias_terms": [
+      "leasingai",
+      "chatbotinsight",
+      "eliservicehandler",
+      "selfguidedtour",
+      "guestcard",
+      "callanalysis",
+      "dialplan",
+      "ivraction"
+    ],
+    "parity_l2": "Existing"
+  },
+  {
+    "id": "18",
+    "parity": "Existing",
+    "verdict_reason": "257 matches across 61 files in 11 apps — likely already shipped",
+    "total_score": 257,
+    "files_with_hits": 61,
+    "apps_with_hits": 11,
+    "top_apps": [
+      {
+        "app": "ClientAdmin",
+        "score": 57,
+        "files": 13
+      },
+      {
+        "app": "ProspectPortal",
+        "score": 52,
+        "files": 10
+      },
+      {
+        "app": "Scripts",
+        "score": 52,
+        "files": 15
+      },
+      {
+        "app": "Services",
+        "score": 43,
+        "files": 8
+      },
+      {
+        "app": "Entrata",
+        "score": 20,
+        "files": 3
+      }
+    ],
+    "top_files": [
+      {
+        "relativePath": "Api/app/Libraries/Internal/Comms/Services/Consents/ConsentService.php",
+        "app": "Entrata",
+        "score": 12,
+        "matched_terms": [
+          "opt-in",
+          "requires"
+        ]
+      },
+      {
+        "relativePath": "Application/CProspectPortalApp.class.php",
+        "app": "ProspectPortal",
+        "score": 11,
+        "matched_terms": [
+          "explicitly",
+          "release",
+          "team",
+          "help"
+        ]
+      },
+      {
+        "relativePath": "Application/ServiceHandlers/Internal/v1/r1/CDeployServiceHandler.class.php",
+        "app": "Services",
+        "score": 11,
+        "matched_terms": [
+          "release",
+          "team"
+        ]
+      },
+      {
+        "relativePath": "Application/HR/Employees/EmployeeExitProcess/CEmployeeExitProcessManager.class.php",
+        "app": "ClientAdmin",
+        "score": 9,
+        "matched_terms": [
+          "team",
+          "release"
+        ]
+      },
+      {
+        "relativePath": "Application/FeeGuide/CFeeGuideModule.class.php",
+        "app": "ProspectPortal",
+        "score": 9,
+        "matched_terms": [
+          "keep",
+          "help",
+          "team",
+          "explicitly"
+        ]
+      },
+      {
+        "relativePath": "Application/Accounting/InvoiceProcessing/CInvoiceProcessManager.class.php",
+        "app": "ClientAdmin",
+        "score": 7,
+        "matched_terms": [
+          "keep",
+          "explicitly"
+        ]
+      }
+    ],
+    "grounding_terms": [
+      "anyone",
+      "july",
+      "release",
+      "opt-in",
+      "enhancements",
+      "help",
+      "keep",
+      "team",
+      "compliant",
+      "evolving",
+      "regulations",
+      "requires",
+      "explicitly",
+      "receiving",
+      "communications"
+    ],
+    "alias_terms": []
+  },
+  {
+    "id": "19",
+    "parity": "Existing",
+    "verdict_reason": "861 matches across 154 files in 17 apps — likely already shipped",
+    "total_score": 861,
+    "files_with_hits": 154,
+    "apps_with_hits": 17,
+    "top_apps": [
+      {
+        "app": "ClientAdmin",
+        "score": 228,
+        "files": 38
+      },
+      {
+        "app": "Scripts",
+        "score": 162,
+        "files": 34
+      },
+      {
+        "app": "Services",
+        "score": 110,
+        "files": 15
+      },
+      {
+        "app": "ResidentPortal",
+        "score": 85,
+        "files": 17
+      },
+      {
+        "app": "ProspectPortal",
+        "score": 83,
+        "files": 15
+      }
+    ],
+    "top_files": [
+      {
+        "relativePath": "Application/AssignApplicationModules.php",
+        "app": "ClientAdmin",
+        "score": 15,
+        "matched_terms": [
+          "notifications",
+          "dashboard",
+          "communications",
+          "release",
+          "alerts",
+          "notification"
+        ]
+      },
+      {
+        "relativePath": "App/Controllers/Utilities/UEM/UemDashboard/UemDashboardV2.php",
+        "app": "ClientAdmin",
+        "score": 15,
+        "matched_terms": [
+          "dashboard",
+          "enabled"
+        ]
+      },
+      {
+        "relativePath": "Application/HR/Employees/Profile/CEmployeeProfileManager.class.php",
+        "app": "ClientAdmin",
+        "score": 15,
+        "matched_terms": [
+          "dashboard",
+          "previous",
+          "notification"
+        ]
+      },
+      {
+        "relativePath": "App/Controllers/Utilities/UEM/EnergyStar/EnergyStarDashboardV2.php",
+        "app": "ClientAdmin",
+        "score": 15,
+        "matched_terms": [
+          "dashboard",
+          "enabled"
+        ]
+      },
+      {
+        "relativePath": "Application/HR/Employees/EmployeeExitProcess/CEmployeeExitProcessManager.class.php",
+        "app": "ClientAdmin",
+        "score": 15,
+        "matched_terms": [
+          "dashboard",
+          "notification",
+          "previous",
+          "notifications",
+          "release"
+        ]
+      },
+      {
+        "relativePath": "Api/app/Actions/Internal/Comms/V1/Consents/ConsentPreferencesAction.php",
+        "app": "Entrata",
+        "score": 15,
+        "matched_terms": [
+          "communications",
+          "enabled"
+        ]
+      }
+    ],
+    "grounding_terms": [
+      "anyone",
+      "july",
+      "release",
+      "notification",
+      "expansion",
+      "ready",
+      "notify",
+      "pop-notifications",
+      "dashboard",
+      "bell",
+      "alerts",
+      "enabled",
+      "independently",
+      "inbound",
+      "communications",
+      "previous",
+      "allow",
+      "pop-up",
+      "notifications",
+      "divided"
+    ],
+    "alias_terms": []
+  },
+  {
+    "id": "20",
+    "parity": "Existing",
+    "verdict_reason": "1438 matches across 237 files in 26 apps — likely already shipped",
+    "total_score": 1438,
+    "files_with_hits": 237,
+    "apps_with_hits": 26,
+    "top_apps": [
+      {
+        "app": "Scripts",
+        "score": 441,
+        "files": 60
+      },
+      {
+        "app": "ClientAdmin",
+        "score": 263,
+        "files": 44
+      },
+      {
+        "app": "ProspectPortal",
+        "score": 161,
+        "files": 28
+      },
+      {
+        "app": "Services",
+        "score": 161,
+        "files": 25
+      },
+      {
+        "app": "ResidentPortal",
+        "score": 114,
+        "files": 18
+      }
+    ],
+    "top_files": [
+      {
+        "relativePath": "Application/Accounting/AccountingTools/CAccountingToolsManager.class.php",
+        "app": "ClientAdmin",
+        "score": 15,
+        "matched_terms": [
+          "many",
+          "select"
+        ]
+      },
+      {
+        "relativePath": "Application/Development/Diagnostics/CDiagnosticManager.class.php",
+        "app": "ClientAdmin",
+        "score": 15,
+        "matched_terms": [
+          "enable",
+          "select"
+        ]
+      },
+      {
+        "relativePath": "Application/Monitor/CGateWayMonitorCriticalScriptsHandler.class.php",
+        "app": "Gateway",
+        "score": 15,
+        "matched_terms": [
+          "select",
+          "reminder",
+          "notification",
+          "enabled",
+          "minutes",
+          "enable",
+          "upcoming",
+          "notifications"
+        ]
+      },
+      {
+        "relativePath": "Application/ContactButton/CContactButtonModule.class.php",
+        "app": "ProspectPortal",
+        "score": 15,
+        "matched_terms": [
+          "enabled",
+          "enable",
+          "select",
+          "minutes"
+        ]
+      },
+      {
+        "relativePath": "Jobs/Queued/Reminders/CPopulateReminderPushNotificationsTransferProcessor.php",
+        "app": "ResidentPortal",
+        "score": 15,
+        "matched_terms": [
+          "reminder",
+          "notifications",
+          "notification"
+        ]
+      },
+      {
+        "relativePath": "Application/CResidentPortalApp.class.php",
+        "app": "ResidentPortal",
+        "score": 15,
+        "matched_terms": [
+          "minutes",
+          "select",
+          "enable",
+          "enabled",
+          "keep"
+        ]
+      }
+    ],
+    "grounding_terms": [
+      "anyone",
+      "july",
+      "release",
+      "reminder",
+      "pop-up",
+      "keep",
+      "upcoming",
+      "enable",
+      "pop-notifications",
+      "agent-assisted",
+      "allow",
+      "notifications",
+      "enabled",
+      "select",
+      "many",
+      "minutes",
+      "notification",
+      "appears",
+      "displays"
+    ],
+    "alias_terms": []
+  },
+  {
+    "id": "21",
+    "parity": "Existing",
+    "verdict_reason": "2132 matches across 319 files in 17 apps — likely already shipped",
+    "total_score": 2132,
+    "files_with_hits": 319,
+    "apps_with_hits": 17,
+    "top_apps": [
+      {
+        "app": "Scripts",
+        "score": 564,
+        "files": 74
+      },
+      {
+        "app": "ClientAdmin",
+        "score": 454,
+        "files": 63
+      },
+      {
+        "app": "Services",
+        "score": 358,
+        "files": 40
+      },
+      {
+        "app": "ProspectPortal",
+        "score": 264,
+        "files": 34
+      },
+      {
+        "app": "ResidentPortal",
+        "score": 149,
+        "files": 30
+      }
+    ],
+    "top_files": [
+      {
+        "relativePath": "Application/Development/Scripts/ScriptInfo/CScriptInfoManager.class.php",
+        "app": "ClientAdmin",
+        "score": 15,
+        "matched_terms": [
+          "standard",
+          "method",
+          "continue"
+        ]
+      },
+      {
+        "relativePath": "Application/AssignApplicationModules.php",
+        "app": "ClientAdmin",
+        "score": 15,
+        "matched_terms": [
+          "standard",
+          "release"
+        ]
+      },
+      {
+        "relativePath": "Application/Development/EntrataReportsNew/Info/CEntrataReportInfoManagerNew.class.php",
+        "app": "ClientAdmin",
+        "score": 15,
+        "matched_terms": [
+          "standard",
+          "continue",
+          "method"
+        ]
+      },
+      {
+        "relativePath": "App/Controllers/Utilities/DataEntryDashboard/DataEntryDashboardManager.php",
+        "app": "ClientAdmin",
+        "score": 15,
+        "matched_terms": [
+          "method",
+          "continue",
+          "standard"
+        ]
+      },
+      {
+        "relativePath": "Application/Development/PropertySettingKeys/CPropertySettingKeyManager.class.php",
+        "app": "ClientAdmin",
+        "score": 15,
+        "matched_terms": [
+          "standard",
+          "continue"
+        ]
+      },
+      {
+        "relativePath": "Application/Development/Deployments/CodeDeployments/CCodeDeploymentManager.class.php",
+        "app": "ClientAdmin",
+        "score": 15,
+        "matched_terms": [
+          "release",
+          "standard",
+          "continue",
+          "method"
+        ]
+      }
+    ],
+    "grounding_terms": [
+      "anyone",
+      "july",
+      "release",
+      "account-level",
+      "proration",
+      "standard",
+      "admins",
+      "configure",
+      "across",
+      "portfolio",
+      "quote",
+      "including",
+      "enablement",
+      "calculation",
+      "method",
+      "property-level",
+      "continue",
+      "override"
+    ],
+    "alias_terms": []
+  },
+  {
+    "id": "22",
+    "parity": "Existing",
+    "verdict_reason": "2252 matches across 335 files in 19 apps — likely already shipped",
+    "total_score": 2252,
+    "files_with_hits": 335,
+    "apps_with_hits": 19,
+    "top_apps": [
+      {
+        "app": "Entrata",
+        "score": 535,
+        "files": 83
+      },
+      {
+        "app": "ClientAdmin",
+        "score": 469,
+        "files": 67
+      },
+      {
+        "app": "ProspectPortal",
+        "score": 317,
+        "files": 37
+      },
+      {
+        "app": "Services",
+        "score": 288,
+        "files": 37
+      },
+      {
+        "app": "Scripts",
+        "score": 240,
+        "files": 43
+      }
+    ],
+    "top_files": [
+      {
+        "relativePath": "Application/Development/EntrataReportsNew/Info/CEntrataReportInfoManagerNew.class.php",
+        "app": "ClientAdmin",
+        "score": 15,
+        "matched_terms": [
+          "filters",
+          "options",
+          "report",
+          "selected",
+          "details",
+          "filter"
+        ]
+      },
+      {
+        "relativePath": "Application/HR/EmployeeApplications/EmployeeApplicationProfile/CEmployeeApplicationProfileManager.class.php",
+        "app": "ClientAdmin",
+        "score": 15,
+        "matched_terms": [
+          "selected",
+          "details"
+        ]
+      },
+      {
+        "relativePath": "App/Controllers/Utilities/UEM/EnergyStar/EnergyStarDashboardV2.php",
+        "app": "ClientAdmin",
+        "score": 15,
+        "matched_terms": [
+          "filters",
+          "selected",
+          "filter",
+          "details",
+          "report"
+        ]
+      },
+      {
+        "relativePath": "Application/HR/EmployeeCompensations/CEmployeeCompensationsManager.class.php",
+        "app": "ClientAdmin",
+        "score": 15,
+        "matched_terms": [
+          "report",
+          "details",
+          "filter",
+          "release"
+        ]
+      },
+      {
+        "relativePath": "Application/Clients/BillingRequests/CBillingRequestManager.class.php",
+        "app": "ClientAdmin",
+        "score": 15,
+        "matched_terms": [
+          "selected",
+          "details"
+        ]
+      },
+      {
+        "relativePath": "Application/HR/EmployeeApplications/EmployeeApplicationOffer/CEmployeeApplicationOfferManager.class.php",
+        "app": "ClientAdmin",
+        "score": 15,
+        "matched_terms": [
+          "details",
+          "selected"
+        ]
+      }
+    ],
+    "grounding_terms": [
+      "anyone",
+      "july",
+      "release",
+      "enhanced",
+      "details",
+      "report",
+      "filters",
+      "filter",
+      "smarter",
+      "realtor",
+      "inquiry",
+      "affordable",
+      "referral",
+      "multi-select",
+      "dropdowns",
+      "options",
+      "selected",
+      "making",
+      "easier"
+    ],
+    "alias_terms": []
+  },
+  {
+    "id": "23",
+    "parity": "Existing",
+    "verdict_reason": "2140 matches across 344 files in 19 apps — likely already shipped",
+    "total_score": 2140,
+    "files_with_hits": 344,
+    "apps_with_hits": 19,
+    "top_apps": [
+      {
+        "app": "Entrata",
+        "score": 399,
+        "files": 69
+      },
+      {
+        "app": "ClientAdmin",
+        "score": 380,
+        "files": 61
+      },
+      {
+        "app": "ProspectPortal",
+        "score": 362,
+        "files": 39
+      },
+      {
+        "app": "Scripts",
+        "score": 283,
+        "files": 48
+      },
+      {
+        "app": "Services",
+        "score": 259,
+        "files": 42
+      }
+    ],
+    "top_files": [
+      {
+        "relativePath": "Application/Support/ArPayments/CManageArPayments.class.php",
+        "app": "Admin",
+        "score": 15,
+        "matched_terms": [
+          "available",
+          "directly",
+          "card",
+          "review",
+          "column"
+        ]
+      },
+      {
+        "relativePath": "Application/HR/EmployeeAssessments/CEmployeeAssessmentManager.class.php",
+        "app": "ClientAdmin",
+        "score": 15,
+        "matched_terms": [
+          "review",
+          "listing",
+          "available"
+        ]
+      },
+      {
+        "relativePath": "Application/HR/EmployeeApplications/CEmployeeApplicationsManager.class.php",
+        "app": "ClientAdmin",
+        "score": 15,
+        "matched_terms": [
+          "filter",
+          "score",
+          "column",
+          "scores"
+        ]
+      },
+      {
+        "relativePath": "Application/Development/AiAgent/CAiAgentManager.class.php",
+        "app": "ClientAdmin",
+        "score": 15,
+        "matched_terms": [
+          "listing",
+          "options",
+          "available"
+        ]
+      },
+      {
+        "relativePath": "Application/Development/EntrataReportsNew/Info/CEntrataReportInfoManagerNew.class.php",
+        "app": "ClientAdmin",
+        "score": 15,
+        "matched_terms": [
+          "options",
+          "column",
+          "filter",
+          "available",
+          "using"
+        ]
+      },
+      {
+        "relativePath": "App/Controllers/Utilities/UtilityBills/UtilityBillsManager.php",
+        "app": "ClientAdmin",
+        "score": 15,
+        "matched_terms": [
+          "available",
+          "filter",
+          "directly",
+          "listing",
+          "using"
+        ]
+      }
+    ],
+    "grounding_terms": [
+      "anyone",
+      "july",
+      "release",
+      "encasa",
+      "score",
+      "visibility",
+      "glance",
+      "scores",
+      "available",
+      "inside",
+      "imported",
+      "viewed",
+      "directly",
+      "guest",
+      "card",
+      "review",
+      "using",
+      "column",
+      "filter",
+      "options",
+      "listing"
+    ],
+    "alias_terms": []
+  },
+  {
+    "id": "29",
+    "parity": "Existing",
+    "verdict_reason": "126 matches across 22 files in 7 apps — likely already shipped",
+    "total_score": 126,
+    "files_with_hits": 22,
+    "apps_with_hits": 7,
+    "top_apps": [
+      {
+        "app": "ProspectPortal",
+        "score": 63,
+        "files": 8
+      },
+      {
+        "app": "Services",
+        "score": 35,
+        "files": 5
+      },
+      {
+        "app": "Scripts",
+        "score": 10,
+        "files": 3
+      },
+      {
+        "app": "ResidentPortal",
+        "score": 7,
+        "files": 2
+      },
+      {
+        "app": "Entrata",
+        "score": 5,
+        "files": 1
+      }
+    ],
+    "top_files": [
+      {
+        "relativePath": "Application/PropertySystem/PropertyPageSystem/GuestCard/CGuestCardModule.class.php",
+        "app": "ProspectPortal",
+        "score": 15,
+        "matched_terms": [
+          "guestcard",
+          "selfguidedtour",
+          "automation",
+          "future"
+        ]
+      },
+      {
+        "relativePath": "Application/CProspectPortalApp.class.php",
+        "app": "ProspectPortal",
+        "score": 15,
+        "matched_terms": [
+          "solution",
+          "guestcard",
+          "keywords",
+          "repeated"
+        ]
+      },
+      {
+        "relativePath": "Application/ServiceHandlers/Ils/v1/r1/CInternetListingServiceHandler.class.php",
+        "app": "Services",
+        "score": 15,
+        "matched_terms": [
+          "guestcard",
+          "solution",
+          "providers"
+        ]
+      },
+      {
+        "relativePath": "Application/PropertySystem/ApplicationSystem/ApplicationAuthentication/CApplicationAuthenticationModule.class.php",
+        "app": "ProspectPortal",
+        "score": 13,
+        "matched_terms": [
+          "guestcard",
+          "future"
+        ]
+      },
+      {
+        "relativePath": "Application/ServiceHandlers/External/v1/r2/CLeadServiceHandler.class.php",
+        "app": "Services",
+        "score": 13,
+        "matched_terms": [
+          "selfguidedtour",
+          "guestcard",
+          "future"
+        ]
+      },
+      {
+        "relativePath": "Application/PropertySystem/ApplicationSystem/ApplicationApplicationList/CApplicationApplicationListModule.class.php",
+        "app": "ProspectPortal",
+        "score": 8,
+        "matched_terms": [
+          "guestcard",
+          "solution"
+        ]
+      }
+    ],
+    "grounding_terms": [
+      "eliseai",
+      "industry",
+      "leading",
+      "housing",
+      "healthcare",
+      "homepage",
+      "detected",
+      "solution",
+      "themes",
+      "driving",
+      "future",
+      "improves",
+      "intelligent",
+      "solutions",
+      "providers",
+      "ai-powered",
+      "repeated",
+      "keywords",
+      "automation"
+    ],
+    "alias_terms": [
+      "leasingai",
+      "chatbotinsight",
+      "eliservicehandler",
+      "selfguidedtour",
+      "guestcard"
+    ],
+    "parity_l2": "Existing"
+  },
+  {
+    "id": "30",
+    "parity": "Existing",
+    "verdict_reason": "Layer 2: Core ships voice/AI leasing across ClientAdmin/CallCenter/Chat — Funnel homepage Voice AI + conversion marketing is signal-only refresh.",
+    "total_score": 170,
+    "files_with_hits": 29,
+    "apps_with_hits": 9,
+    "top_apps": [
+      {
+        "app": "ClientAdmin",
+        "score": 66,
+        "files": 6
+      },
+      {
+        "app": "Gateway",
+        "score": 25,
+        "files": 2
+      },
+      {
+        "app": "Services",
+        "score": 22,
+        "files": 6
+      },
+      {
+        "app": "MshIntegrations",
+        "score": 20,
+        "files": 4
+      },
+      {
+        "app": "Scripts",
+        "score": 16,
+        "files": 4
+      }
+    ],
+    "top_files": [
+      {
+        "relativePath": "Application/HR/EmployeeApplications/CEmployeeApplicationsManager.class.php",
+        "app": "ClientAdmin",
+        "score": 15,
+        "matched_terms": [
+          "score",
+          "experience"
+        ]
+      },
+      {
+        "relativePath": "Application/AssignApplicationModules.php",
+        "app": "ClientAdmin",
+        "score": 15,
+        "matched_terms": [
+          "marketing",
+          "callanalysis",
+          "dialplan",
+          "leasingai"
+        ]
+      },
+      {
+        "relativePath": "Application/Development/OperationsExecutiveDashboard/COperationsExecutiveDashboardManager.class.php",
+        "app": "ClientAdmin",
+        "score": 15,
+        "matched_terms": [
+          "callanalysis",
+          "score"
+        ]
+      },
+      {
+        "relativePath": "Application/CallAnalysisCallDispute/CGatewayCallAnalysisCallDisputeHandler.class.php",
+        "app": "Gateway",
+        "score": 15,
+        "matched_terms": [
+          "callanalysis",
+          "score"
+        ]
+      },
+      {
+        "relativePath": "Application/HR/EmployeeCompensations/CEmployeeCompensationsManager.class.php",
+        "app": "ClientAdmin",
+        "score": 11,
+        "matched_terms": [
+          "secret",
+          "software",
+          "experience"
+        ]
+      },
+      {
+        "relativePath": "Application/Utility/CUtilityWebhook.class.php",
+        "app": "Gateway",
+        "score": 10,
+        "matched_terms": [
+          "secret",
+          "compared",
+          "conversion"
+        ]
+      }
+    ],
+    "grounding_terms": [
+      "funnel",
+      "software",
+      "experience",
+      "voice",
+      "conversion",
+      "marketing",
+      "homepage",
+      "detected",
+      "solution",
+      "themes",
+      "score",
+      "virtual",
+      "assistant",
+      "secret",
+      "shop",
+      "ai-handled",
+      "compared",
+      "non-ai"
+    ],
+    "alias_terms": [
+      "leasingai",
+      "chatbotinsight",
+      "eliservicehandler",
+      "callanalysis",
+      "dialplan",
+      "ivraction"
+    ],
+    "parity_l2": "Existing"
+  },
+  {
+    "id": "31",
+    "parity": "Existing",
+    "verdict_reason": "Layer 2: Core ships call analysis scorecards (CCallAnalysisCategories) + Chat contact center — Leasing Call Analysis positioning already covered.",
+    "total_score": 846,
+    "files_with_hits": 119,
+    "apps_with_hits": 15,
+    "top_apps": [
+      {
+        "app": "Services",
+        "score": 191,
+        "files": 20
+      },
+      {
+        "app": "ProspectPortal",
+        "score": 163,
+        "files": 21
+      },
+      {
+        "app": "Scripts",
+        "score": 141,
+        "files": 19
+      },
+      {
+        "app": "CallCenter",
+        "score": 80,
+        "files": 12
+      },
+      {
+        "app": "ClientAdmin",
+        "score": 66,
+        "files": 9
+      }
+    ],
+    "top_files": [
+      {
+        "relativePath": "Application/SoapServers/CMoneyGramRealTimeBillPaymentRequestSoap.class.php",
+        "app": "AdminSync",
+        "score": 15,
+        "matched_terms": [
+          "call",
+          "contact"
+        ]
+      },
+      {
+        "relativePath": "Application/DialPlan/CDialPlanDirective.class.php",
+        "app": "CallCenter",
+        "score": 15,
+        "matched_terms": [
+          "dialplan",
+          "call",
+          "center"
+        ]
+      },
+      {
+        "relativePath": "Application/DialPlan/CNewDialplanDirective.class.php",
+        "app": "CallCenter",
+        "score": 15,
+        "matched_terms": [
+          "dialplan",
+          "call",
+          "center"
+        ]
+      },
+      {
+        "relativePath": "Application/DialPlan/CNewDialplanDirectory.class.php",
+        "app": "CallCenter",
+        "score": 15,
+        "matched_terms": [
+          "dialplan",
+          "contact",
+          "call",
+          "center"
+        ]
+      },
+      {
+        "relativePath": "App/Controllers/Voip/CallAgentsCallAnalysis/CallAgentsCallAnalysisReportManager.php",
+        "app": "ClientAdmin",
+        "score": 15,
+        "matched_terms": [
+          "callanalysis",
+          "call",
+          "analysis"
+        ]
+      },
+      {
+        "relativePath": "Application/Development/OperationsExecutiveDashboard/COperationsExecutiveDashboardManager.class.php",
+        "app": "ClientAdmin",
+        "score": 15,
+        "matched_terms": [
+          "callanalysis",
+          "call",
+          "center"
+        ]
+      }
+    ],
+    "grounding_terms": [
+      "anyone",
+      "software",
+      "solutions",
+      "call",
+      "analysis",
+      "contact",
+      "center",
+      "detected",
+      "solution",
+      "themes",
+      "revolutionizing",
+      "self-guided",
+      "chatbot",
+      "repeated",
+      "keywords"
+    ],
+    "alias_terms": [
+      "leasingai",
+      "chatbotinsight",
+      "eliservicehandler",
+      "selfguidedtour",
+      "guestcard",
+      "callanalysis",
+      "dialplan",
+      "ivraction"
+    ],
+    "parity_l2": "Existing"
+  },
+  {
+    "id": "32",
+    "parity": "Existing",
+    "verdict_reason": "90 matches across 22 files in 8 apps — likely already shipped",
+    "total_score": 90,
+    "files_with_hits": 22,
+    "apps_with_hits": 8,
+    "top_apps": [
+      {
+        "app": "ProspectPortal",
+        "score": 39,
+        "files": 7
+      },
+      {
+        "app": "Scripts",
+        "score": 17,
+        "files": 5
+      },
+      {
+        "app": "ResidentPortal",
+        "score": 11,
+        "files": 4
+      },
+      {
+        "app": "Entrata",
+        "score": 9,
+        "files": 1
+      },
+      {
+        "app": "MshIntegrations",
+        "score": 5,
+        "files": 1
+      }
+    ],
+    "top_files": [
+      {
+        "relativePath": "Application/CProspectPortalApp.class.php",
+        "app": "ProspectPortal",
+        "score": 10,
+        "matched_terms": [
+          "solution",
+          "keywords",
+          "repeated"
+        ]
+      },
+      {
+        "relativePath": "Api/app/Actions/Internal/OnlineApplicationWaitlist/V1/ApplicationWaitlistTagsAction.php",
+        "app": "Entrata",
+        "score": 9,
+        "matched_terms": [
+          "integration",
+          "experience"
+        ]
+      },
+      {
+        "relativePath": "Application/PropertySystem/PropertySitePlan/CPropertySitePlanModule.class.php",
+        "app": "ProspectPortal",
+        "score": 8,
+        "matched_terms": [
+          "siteplanxpos",
+          "siteplanypos"
+        ]
+      },
+      {
+        "relativePath": "Application/PropertySystem/CheckAvailability/CCheckAvailabilityModule.class.php",
+        "app": "ProspectPortal",
+        "score": 6,
+        "matched_terms": [
+          "integration",
+          "siteplanxpos",
+          "siteplanypos",
+          "loadsiteplandata"
+        ]
+      },
+      {
+        "relativePath": "Application/Admin/Scheduled/CPropertiesContractTerminationScript.class.php",
+        "app": "Scripts",
+        "score": 6,
+        "matched_terms": [
+          "integration",
+          "keywords"
+        ]
+      },
+      {
+        "relativePath": "Application/CMshIntegrationsApp.class.php",
+        "app": "MshIntegrations",
+        "score": 5,
+        "matched_terms": [
+          "integration",
+          "detected"
+        ]
+      }
+    ],
+    "grounding_terms": [
+      "jonah",
+      "digital",
+      "agency",
+      "multifamily",
+      "add-ons",
+      "engrain",
+      "sightmap",
+      "scheduler",
+      "detected",
+      "solution",
+      "themes",
+      "experience",
+      "retail",
+      "integration",
+      "repeated",
+      "keywords",
+      "cues"
+    ],
+    "alias_terms": [
+      "engrainsightmap",
+      "siteplanxpos",
+      "siteplanypos",
+      "loadsiteplandata"
+    ]
+  },
+  {
+    "id": "38",
+    "parity": "Existing",
+    "verdict_reason": "296 matches across 64 files in 11 apps — likely already shipped",
+    "total_score": 296,
+    "files_with_hits": 64,
+    "apps_with_hits": 11,
+    "top_apps": [
+      {
+        "app": "ClientAdmin",
+        "score": 69,
+        "files": 14
+      },
+      {
+        "app": "Services",
+        "score": 66,
+        "files": 11
+      },
+      {
+        "app": "ProspectPortal",
+        "score": 60,
+        "files": 11
+      },
+      {
+        "app": "Scripts",
+        "score": 45,
+        "files": 12
+      },
+      {
+        "app": "ResidentVerifyPortal",
+        "score": 14,
+        "files": 2
+      }
+    ],
+    "top_files": [
+      {
+        "relativePath": "Application/PropertySystem/CPropertySystemModule.class.php",
+        "app": "ProspectPortal",
+        "score": 15,
+        "matched_terms": [
+          "expiration",
+          "ensure"
+        ]
+      },
+      {
+        "relativePath": "Application/ServiceHandlers/EntrataMaintenance/v1/r2/CEntrataMaintenanceServiceHandler.class.php",
+        "app": "Services",
+        "score": 15,
+        "matched_terms": [
+          "removed",
+          "edit"
+        ]
+      },
+      {
+        "relativePath": "App/Controllers/Voip/CallPhoneNumberExpirations/CallPhoneNumberExpirationsReportManager.php",
+        "app": "ClientAdmin",
+        "score": 14,
+        "matched_terms": [
+          "expirations",
+          "expire",
+          "expiration",
+          "ensure"
+        ]
+      },
+      {
+        "relativePath": "Application/Competitor/Services/NodeJs/OldNodeModules/config/lib/config.js",
+        "app": "Scripts",
+        "score": 13,
+        "matched_terms": [
+          "prior",
+          "extend",
+          "automatically",
+          "removed",
+          "release"
+        ]
+      },
+      {
+        "relativePath": "Api/app/Libraries/Internal/RVScreening/Services/OfferScreeningConditionAndSatisfyService.php",
+        "app": "ResidentVerifyPortal",
+        "score": 12,
+        "matched_terms": [
+          "prior",
+          "edit",
+          "removed"
+        ]
+      },
+      {
+        "relativePath": "Application/Development/AiAgent/CAiAgentManager.class.php",
+        "app": "ClientAdmin",
+        "score": 9,
+        "matched_terms": [
+          "edit",
+          "removed"
+        ]
+      }
+    ],
+    "grounding_terms": [
+      "anyone",
+      "june",
+      "release",
+      "outage",
+      "expiration",
+      "expirations",
+      "ensure",
+      "automatically",
+      "removed",
+      "pre-determined",
+      "extend",
+      "simply",
+      "edit",
+      "prior",
+      "outages",
+      "expire"
+    ],
+    "alias_terms": []
+  },
+  {
+    "id": "39",
+    "parity": "Existing",
+    "verdict_reason": "2619 matches across 400 files in 20 apps — likely already shipped",
+    "total_score": 2619,
+    "files_with_hits": 400,
+    "apps_with_hits": 20,
+    "top_apps": [
+      {
+        "app": "Scripts",
+        "score": 688,
+        "files": 103
+      },
+      {
+        "app": "ClientAdmin",
+        "score": 521,
+        "files": 85
+      },
+      {
+        "app": "Services",
+        "score": 300,
+        "files": 37
+      },
+      {
+        "app": "Entrata",
+        "score": 261,
+        "files": 43
+      },
+      {
+        "app": "ProspectPortal",
+        "score": 253,
+        "files": 34
+      }
+    ],
+    "top_files": [
+      {
+        "relativePath": "Application/Support/ArPayments/CManageArPayments.class.php",
+        "app": "Admin",
+        "score": 15,
+        "matched_terms": [
+          "directly",
+          "card",
+          "select",
+          "click",
+          "automatically",
+          "simply"
+        ]
+      },
+      {
+        "relativePath": "Application/DialPlan/CDialPlanDirective.class.php",
+        "app": "CallCenter",
+        "score": 15,
+        "matched_terms": [
+          "event",
+          "events"
+        ]
+      },
+      {
+        "relativePath": "Application/DialPlan/CNewDialplanDirective.class.php",
+        "app": "CallCenter",
+        "score": 15,
+        "matched_terms": [
+          "events",
+          "event"
+        ]
+      },
+      {
+        "relativePath": "Application/DialPlan/CNewDialplanDirectory.class.php",
+        "app": "CallCenter",
+        "score": 15,
+        "matched_terms": [
+          "event",
+          "events"
+        ]
+      },
+      {
+        "relativePath": "Application/Clients/CClientsManager.class.php",
+        "app": "ClientAdmin",
+        "score": 15,
+        "matched_terms": [
+          "select",
+          "click",
+          "access",
+          "open",
+          "release"
+        ]
+      },
+      {
+        "relativePath": "Application/Accounting/AccountingTools/CAccountingToolsManager.class.php",
+        "app": "ClientAdmin",
+        "score": 15,
+        "matched_terms": [
+          "select",
+          "open"
+        ]
+      }
+    ],
+    "grounding_terms": [
+      "anyone",
+      "june",
+      "release",
+      "access",
+      "navigate",
+      "guest",
+      "card",
+      "directly",
+      "events",
+      "simply",
+      "select",
+      "event",
+      "click",
+      "open",
+      "automatically"
+    ],
+    "alias_terms": []
+  },
+  {
+    "id": "40",
+    "parity": "Existing",
+    "verdict_reason": "3945 matches across 564 files in 21 apps — likely already shipped",
+    "total_score": 3945,
+    "files_with_hits": 564,
+    "apps_with_hits": 21,
+    "top_apps": [
+      {
+        "app": "ClientAdmin",
+        "score": 1177,
+        "files": 184
+      },
+      {
+        "app": "Scripts",
+        "score": 715,
+        "files": 93
+      },
+      {
+        "app": "ProspectPortal",
+        "score": 451,
+        "files": 48
+      },
+      {
+        "app": "Services",
+        "score": 398,
+        "files": 47
+      },
+      {
+        "app": "ResidentPortal",
+        "score": 269,
+        "files": 45
+      }
+    ],
+    "top_files": [
+      {
+        "relativePath": "Application/Support/ArPayments/CManageArPayments.class.php",
+        "app": "Admin",
+        "score": 15,
+        "matched_terms": [
+          "display",
+          "days",
+          "last",
+          "update"
+        ]
+      },
+      {
+        "relativePath": "App/Controllers/Utilities/UEM/EnergyStar/EnergyStarDashboardV2.php",
+        "app": "ClientAdmin",
+        "score": 15,
+        "matched_terms": [
+          "display",
+          "using",
+          "update"
+        ]
+      },
+      {
+        "relativePath": "Application/Development/EntrataReportsNew/Info/CEntrataReportInfoManagerNew.class.php",
+        "app": "ClientAdmin",
+        "score": 15,
+        "matched_terms": [
+          "update",
+          "display",
+          "using"
+        ]
+      },
+      {
+        "relativePath": "Application/HR/Employees/EmployeeExitProcess/CEmployeeExitProcessManager.class.php",
+        "app": "ClientAdmin",
+        "score": 15,
+        "matched_terms": [
+          "update",
+          "last",
+          "release"
+        ]
+      },
+      {
+        "relativePath": "Application/HR/EmployeeAssessments/CEmployeeAssessmentManager.class.php",
+        "app": "ClientAdmin",
+        "score": 15,
+        "matched_terms": [
+          "update",
+          "whether",
+          "last"
+        ]
+      },
+      {
+        "relativePath": "App/Controllers/Utilities/UEM/Audits/NewProviderChargeAudit.php",
+        "app": "ClientAdmin",
+        "score": 15,
+        "matched_terms": [
+          "days",
+          "update",
+          "display",
+          "whether"
+        ]
+      }
+    ],
+    "grounding_terms": [
+      "anyone",
+      "june",
+      "release",
+      "display",
+      "using",
+      "determine",
+      "whether",
+      "showing",
+      "last",
+      "days",
+      "update",
+      "admins",
+      "navigate"
+    ],
+    "alias_terms": []
+  },
+  {
+    "id": "41",
+    "parity": "Existing",
+    "verdict_reason": "1416 matches across 333 files in 21 apps — likely already shipped",
+    "total_score": 1416,
+    "files_with_hits": 333,
+    "apps_with_hits": 21,
+    "top_apps": [
+      {
+        "app": "Scripts",
+        "score": 312,
+        "files": 71
+      },
+      {
+        "app": "ClientAdmin",
+        "score": 280,
+        "files": 70
+      },
+      {
+        "app": "Services",
+        "score": 221,
+        "files": 46
+      },
+      {
+        "app": "ProspectPortal",
+        "score": 205,
+        "files": 35
+      },
+      {
+        "app": "Entrata",
+        "score": 134,
+        "files": 41
+      }
+    ],
+    "top_files": [
+      {
+        "relativePath": "Application/Accounting/InvoiceProcessing/CInvoiceProcessManager.class.php",
+        "app": "ClientAdmin",
+        "score": 15,
+        "matched_terms": [
+          "extends",
+          "window"
+        ]
+      },
+      {
+        "relativePath": "Application/Monitor/CGateWayMonitorCriticalScriptsHandler.class.php",
+        "app": "Gateway",
+        "score": 15,
+        "matched_terms": [
+          "extends",
+          "window",
+          "days",
+          "under"
+        ]
+      },
+      {
+        "relativePath": "Application/ContactButton/CContactButtonModule.class.php",
+        "app": "ProspectPortal",
+        "score": 15,
+        "matched_terms": [
+          "extends",
+          "guestcard",
+          "days"
+        ]
+      },
+      {
+        "relativePath": "Application/PropertySystem/PropertyPageSystem/GuestCard/CGuestCardModule.class.php",
+        "app": "ProspectPortal",
+        "score": 15,
+        "matched_terms": [
+          "guestcard",
+          "extends",
+          "selfguidedtour",
+          "window"
+        ]
+      },
+      {
+        "relativePath": "Application/CProspectPortalApp.class.php",
+        "app": "ProspectPortal",
+        "score": 15,
+        "matched_terms": [
+          "extends",
+          "guestcard",
+          "release",
+          "communities"
+        ]
+      },
+      {
+        "relativePath": "Application/PropertySystem/ApplicationSystem/ApplicationAuthentication/CApplicationAuthenticationModule.class.php",
+        "app": "ProspectPortal",
+        "score": 15,
+        "matched_terms": [
+          "guestcard",
+          "extends",
+          "days",
+          "window"
+        ]
+      }
+    ],
+    "grounding_terms": [
+      "anyone",
+      "june",
+      "release",
+      "window",
+      "extends",
+      "days",
+      "lease-up",
+      "communities",
+      "under",
+      "construction",
+      "advanced",
+      "notice",
+      "showings",
+      "extended",
+      "advance",
+      "adjust"
+    ],
+    "alias_terms": [
+      "selfguidedtour",
+      "guestcard"
+    ]
+  },
+  {
+    "id": "42",
+    "parity": "Existing",
+    "verdict_reason": "920 matches across 179 files in 17 apps — likely already shipped",
+    "total_score": 920,
+    "files_with_hits": 179,
+    "apps_with_hits": 17,
+    "top_apps": [
+      {
+        "app": "Scripts",
+        "score": 260,
+        "files": 41
+      },
+      {
+        "app": "ClientAdmin",
+        "score": 136,
+        "files": 29
+      },
+      {
+        "app": "Services",
+        "score": 126,
+        "files": 23
+      },
+      {
+        "app": "ResidentPortal",
+        "score": 110,
+        "files": 21
+      },
+      {
+        "app": "ProspectPortal",
+        "score": 101,
+        "files": 18
+      }
+    ],
+    "top_files": [
+      {
+        "relativePath": "Application/Support/ArPayments/CManageArPayments.class.php",
+        "app": "Admin",
+        "score": 15,
+        "matched_terms": [
+          "created",
+          "manually",
+          "fees",
+          "click",
+          "edit",
+          "adjust"
+        ]
+      },
+      {
+        "relativePath": "Application/PropertySystem/ApplicationSystem/ApplicationPayments/CApplicationPaymentsModule.class.php",
+        "app": "ProspectPortal",
+        "score": 15,
+        "matched_terms": [
+          "created",
+          "fields",
+          "fees",
+          "override",
+          "manually",
+          "integrated"
+        ]
+      },
+      {
+        "relativePath": "Service/Controllers/Customer/CInsurance.class.php",
+        "app": "ResidentPortal",
+        "score": 15,
+        "matched_terms": [
+          "created",
+          "quote",
+          "fields",
+          "fees"
+        ]
+      },
+      {
+        "relativePath": "Application/Admin/Scheduled/CPostEftChargesScript.class.php",
+        "app": "Scripts",
+        "score": 15,
+        "matched_terms": [
+          "fees",
+          "created"
+        ]
+      },
+      {
+        "relativePath": "Application/Admin/Scheduled/CPostEftChargesIntlScript.class.php",
+        "app": "Scripts",
+        "score": 15,
+        "matched_terms": [
+          "fees",
+          "pull"
+        ]
+      },
+      {
+        "relativePath": "Application/Competitor/Services/NodeJs/OldNodeModules/phantom/shim.js",
+        "app": "Scripts",
+        "score": 15,
+        "matched_terms": [
+          "allows",
+          "quote",
+          "override",
+          "created",
+          "manually",
+          "release"
+        ]
+      }
+    ],
+    "grounding_terms": [
+      "anyone",
+      "june",
+      "release",
+      "override",
+      "integrated",
+      "quote",
+      "fees",
+      "adjust",
+      "click",
+      "allows",
+      "manually",
+      "edit",
+      "created",
+      "integrations",
+      "fields",
+      "pull",
+      "originating",
+      "admins"
+    ],
+    "alias_terms": []
+  },
+  {
+    "id": "43",
+    "parity": "Existing",
+    "verdict_reason": "1551 matches across 263 files in 19 apps — likely already shipped",
+    "total_score": 1551,
+    "files_with_hits": 263,
+    "apps_with_hits": 19,
+    "top_apps": [
+      {
+        "app": "ProspectPortal",
+        "score": 393,
+        "files": 41
+      },
+      {
+        "app": "Scripts",
+        "score": 346,
+        "files": 80
+      },
+      {
+        "app": "Services",
+        "score": 265,
+        "files": 38
+      },
+      {
+        "app": "Entrata",
+        "score": 200,
+        "files": 35
+      },
+      {
+        "app": "ClientAdmin",
+        "score": 125,
+        "files": 25
+      }
+    ],
+    "top_files": [
+      {
+        "relativePath": "Application/Support/ArPayments/CManageArPayments.class.php",
+        "app": "Admin",
+        "score": 15,
+        "matched_terms": [
+          "available",
+          "start"
+        ]
+      },
+      {
+        "relativePath": "Application/Accounting/Reports/CPayrollReportManager.class.php",
+        "app": "ClientAdmin",
+        "score": 15,
+        "matched_terms": [
+          "start",
+          "floor"
+        ]
+      },
+      {
+        "relativePath": "Api/app/Actions/Internal/OnlineApplicationWaitlist/V1/ApplicationWaitlistFloorplansAction.php",
+        "app": "Entrata",
+        "score": 15,
+        "matched_terms": [
+          "start",
+          "floor",
+          "plan",
+          "floorplan"
+        ]
+      },
+      {
+        "relativePath": "Api/app/Actions/Internal/FloorplanUnitAvailability/V1/AvailableFloorplansWithPricesAction.php",
+        "app": "Entrata",
+        "score": 15,
+        "matched_terms": [
+          "floorplan",
+          "available"
+        ]
+      },
+      {
+        "relativePath": "Application/MultiPropertyWebsite/CMultiPropertyWebsitesModule.class.php",
+        "app": "ProspectPortal",
+        "score": 15,
+        "matched_terms": [
+          "specials",
+          "floorplan",
+          "start",
+          "available",
+          "floor",
+          "inside",
+          "including"
+        ]
+      },
+      {
+        "relativePath": "Application/PropertySystem/PropertyPageSystem/PropertyFloorplans/CPropertyFloorplansModule.class.php",
+        "app": "ProspectPortal",
+        "score": 15,
+        "matched_terms": [
+          "floorplan",
+          "floor",
+          "plan",
+          "option",
+          "available",
+          "start",
+          "creating",
+          "specials"
+        ]
+      }
+    ],
+    "grounding_terms": [
+      "anyone",
+      "june",
+      "release",
+      "quote",
+      "floor",
+      "plan",
+      "specials",
+      "customize",
+      "quotable",
+      "concessions",
+      "creating",
+      "inside",
+      "option",
+      "including",
+      "quoted",
+      "floorplan",
+      "available",
+      "utilizing",
+      "designs",
+      "start"
+    ],
+    "alias_terms": []
+  },
+  {
+    "id": "44",
+    "parity": "Existing",
+    "verdict_reason": "1023 matches across 178 files in 19 apps — likely already shipped",
+    "total_score": 1023,
+    "files_with_hits": 178,
+    "apps_with_hits": 19,
+    "top_apps": [
+      {
+        "app": "Scripts",
+        "score": 226,
+        "files": 41
+      },
+      {
+        "app": "Services",
+        "score": 198,
+        "files": 29
+      },
+      {
+        "app": "ProspectPortal",
+        "score": 160,
+        "files": 31
+      },
+      {
+        "app": "ClientAdmin",
+        "score": 126,
+        "files": 29
+      },
+      {
+        "app": "CallCenter",
+        "score": 59,
+        "files": 5
+      }
+    ],
+    "top_files": [
+      {
+        "relativePath": "Application/SoapServers/CMoneyGramRealTimeBillPaymentRequestSoap.class.php",
+        "app": "AdminSync",
+        "score": 15,
+        "matched_terms": [
+          "existing",
+          "call"
+        ]
+      },
+      {
+        "relativePath": "Application/DialPlan/CDialPlanDirective.class.php",
+        "app": "CallCenter",
+        "score": 15,
+        "matched_terms": [
+          "call",
+          "line"
+        ]
+      },
+      {
+        "relativePath": "Application/DialPlan/CNewDialplanDirective.class.php",
+        "app": "CallCenter",
+        "score": 15,
+        "matched_terms": [
+          "call",
+          "line"
+        ]
+      },
+      {
+        "relativePath": "Application/DialPlan/CNewDialplanDirectory.class.php",
+        "app": "CallCenter",
+        "score": 15,
+        "matched_terms": [
+          "call",
+          "line"
+        ]
+      },
+      {
+        "relativePath": "Application/Development/OperationsExecutiveDashboard/COperationsExecutiveDashboardManager.class.php",
+        "app": "ClientAdmin",
+        "score": 15,
+        "matched_terms": [
+          "graph",
+          "chart",
+          "line",
+          "score",
+          "call"
+        ]
+      },
+      {
+        "relativePath": "Application/CallAnalysisCallDispute/CGatewayCallAnalysisCallDisputeHandler.class.php",
+        "app": "Gateway",
+        "score": 15,
+        "matched_terms": [
+          "call",
+          "score"
+        ]
+      }
+    ],
+    "grounding_terms": [
+      "anyone",
+      "june",
+      "release",
+      "call",
+      "score",
+      "chart",
+      "enhancement",
+      "even",
+      "visuals",
+      "addition",
+      "existing",
+      "line",
+      "graph",
+      "option",
+      "configured",
+      "donut"
+    ],
+    "alias_terms": []
+  }
+]
