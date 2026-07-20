@@ -5,7 +5,7 @@
 
 const { loadConfig } = require('./loadConfig');
 const { buildSignalAnalysis, applyContextPrefix } = require('./briefSignalAnalysis.js');
-const { contentFingerprint } = require('./briefNetNew.js');
+const { contentFingerprint, signalKey } = require('./briefNetNew.js');
 
 function isG2Signal(signal) {
   const type = String(signal?.type || '').toLowerCase();
@@ -162,16 +162,16 @@ function classifySignal(signal) {
   };
 }
 
-/** One table row per unique source_url (prefer highest-importance signal). */
+/** One table row per unique source_url (+ capability_key when split). */
 function dedupeSignalsByUrl(signals) {
-  const byUrl = new Map();
+  const byKey = new Map();
   for (const s of signals || []) {
-    const key = String(s.source_url || '').trim().toLowerCase();
+    const key = signalKey(s);
     if (!key) continue;
-    const prev = byUrl.get(key);
-    if (!prev || (s.importance || 0) > (prev.importance || 0)) byUrl.set(key, s);
+    const prev = byKey.get(key);
+    if (!prev || (s.importance || 0) > (prev.importance || 0)) byKey.set(key, s);
   }
-  return [...byUrl.values()];
+  return [...byKey.values()];
 }
 
 /**
@@ -193,6 +193,8 @@ function buildSignalsTableRows(signals, opts = {}) {
       competitor_id: s.competitor_id || '',
       competitor: displayName(s, nameMap),
       headline: String(s.headline || s.snippet || 'Competitor update').trim().slice(0, 120),
+      capability_key: s.metadata?.capability_key || null,
+      capability_heading: s.metadata?.capability_heading || null,
       // Persist the scraped excerpt (whitespace-normalized, widened to 1000) so a
       // later "changed" classification can show the actual old→new body diff and
       // score its significance. content_hash is computed from this same text.

@@ -1,0 +1,116 @@
+[
+  {
+    "id": "16",
+    "competitor_signal": "Anyone Home 21 July 2026 Release — SMS Opt-in Enhancements: To help keep your team compliant with evolving SMS regulations, Anyone Home now requires prospects and residents to explicitly opt in before receiving SMS communications.",
+    "proposed_feature": "SMS Opt-in Enhancements",
+    "product_id": "lead-manager"
+  },
+  {
+    "id": "17",
+    "competitor_signal": "Anyone Home 21 July 2026 Release — Email and SMS Notification Settings Expansion: Ready, Set, Notify! Pop-notifications and dashboard bell alerts can now be enabled independently for inbound email and SMS communications. The previous Allow SMS/Email Pop-up Notifications setting has been divided into four separate setting",
+    "proposed_feature": "Email and SMS Notification Settings Expansion",
+    "product_id": "lead-manager"
+  },
+  {
+    "id": "18",
+    "competitor_signal": "Anyone Home 21 July 2026 Release — New Tour Reminder Pop-up: Keep an eye on upcoming tours! Anyone Home users can now enable pop-notifications for upcoming agent-assisted tours. When Allow Tour Reminder Pop-up Notifications is enabled, users can select how many minutes before a tour the notification ",
+    "proposed_feature": "New Tour Reminder Pop-up",
+    "product_id": "lead-manager"
+  },
+  {
+    "id": "19",
+    "competitor_signal": "Anyone Home 21 July 2026 Release — Admin Account-level Proration Settings: Set the Standard! Anyone Home Admins can now configure default proration settings across their property portfolio from Settings > Quote > Quote Settings, including both proration enablement and calculation method. Note: Property-level prora",
+    "proposed_feature": "Admin Account-level Proration Settings",
+    "product_id": "lead-manager"
+  },
+  {
+    "id": "20",
+    "competitor_signal": "Anyone Home 21 July 2026 Release — Enhanced Lead Details Report Filters: Filter Smarter! The Realtor Inquiry, Affordable Inquiry, and Resident Referral filters in the Lead Details report are now multi-select dropdowns that default to all options selected, making it easier to view all leads.",
+    "proposed_feature": "Enhanced Lead Details Report Filters",
+    "product_id": "lead-manager"
+  },
+  {
+    "id": "21",
+    "competitor_signal": "Anyone Home 21 July 2026 Release — Encasa Lead Score Visibility: Score at a Glance! Encasa Lead Scores are now available inside Anyone Home. Imported Lead Scores can be viewed directly on a lead’s guest card, and Anyone Home users can also review all Lead Scores using new column and filter options on Lea",
+    "proposed_feature": "Encasa Lead Score Visibility",
+    "product_id": "lead-manager"
+  },
+  {
+    "id": "34",
+    "competitor_signal": "Anyone Home 30 June 2026 Release — Service Outage Expiration Date: Introducing Service Outage expirations! Schedule an expiration date for your Service Outage to ensure it is automatically removed from the system at a pre-determined date. To extend a Service Outage, simply edit the Service Outage prior to ",
+    "proposed_feature": "Service Outage Expiration Date",
+    "product_id": "lead-manager"
+  },
+  {
+    "id": "35",
+    "competitor_signal": "Anyone Home 30 June 2026 Release — Access Leads from Calendar View: Anyone Home users can now navigate to a lead’s guest card directly from events scheduled for them in the Schedule’s Calendar view. Simply select the event and click on the new Open Guest Card button to be automatically routed to their lead ",
+    "proposed_feature": "Access Leads from Calendar View",
+    "product_id": "lead-manager"
+  },
+  {
+    "id": "36",
+    "competitor_signal": "Anyone Home 30 June 2026 Release — Admin Setting for Lead Display Date Default: Using the new My Leads Display setting, Anyone Home Admin users can now determine whether the My Leads view defaults to showing ‘All’ leads or the last ‘90 days’ of leads.To update this setting, Admins can navigate to Settings > Lead Settin",
+    "proposed_feature": "Admin Setting for Lead Display Date Default",
+    "product_id": "lead-manager"
+  },
+  {
+    "id": "37",
+    "competitor_signal": "Anyone Home 30 June 2026 Release — Tour Scheduling Window Extends to 60 Days: For lease-up communities under construction or properties that request advanced notice for showings, Anyone Home has extended how far in advance prospects and agents can schedule a tour from 30 days to 60 days.To adjust your property’s Futu",
+    "proposed_feature": "Tour Scheduling Window Extends to 60 Days",
+    "product_id": "lead-manager"
+  },
+  {
+    "id": "38",
+    "competitor_signal": "Anyone Home 30 June 2026 Release — Override Integrated Quote Fees: Adjust integrated property fees with the click of a button! Anyone Home now allows Admin users to manually edit fees created via integrations. Use this feature to adjust fee fields in Anyone Home that don’t pull in from the originating PMS.",
+    "proposed_feature": "Override Integrated Quote Fees",
+    "product_id": "lead-manager"
+  },
+  {
+    "id": "39",
+    "competitor_signal": "Anyone Home 30 June 2026 Release — Quote Floor Plan and Unit Specials: Customize quotable concessions! When creating a quote inside Anyone Home, users will now have the option of including floor plan and unit specials for the quoted floorplan or unit.This feature is only available to users utilizing Anyone Hom",
+    "proposed_feature": "Quote Floor Plan and Unit Specials",
+    "product_id": "lead-manager"
+  },
+  {
+    "id": "40",
+    "competitor_signal": "Anyone Home 30 June 2026 Release — Call Score KPI Chart Enhancement: Introducing even more Call Score KPI visuals! In addition to the existing Line Graph option, the Call Score KPI can now be configured as a Donut Chart.",
+    "proposed_feature": "Call Score KPI Chart Enhancement",
+    "product_id": "lead-manager"
+  },
+  {
+    "id": "41",
+    "competitor_signal": "Anyone Home 9 June 2026 Release — Expose & Edit Billed Property for Agent Phone Numbers: Improved billing visibility and control. The billed property for each agent-assigned SMS number is now visible directly on a user’s contact record. This new SMS Billed Property field will be editable by Admin users by navigating to Settings",
+    "proposed_feature": "Expose & Edit Billed Property for Agent Phone Numbers",
+    "product_id": "lead-manager"
+  },
+  {
+    "id": "42",
+    "competitor_signal": "Anyone Home 9 June 2026 Release — Service Request Detail ‘Pet’ Filter: Easily view all service requests at once. The Service Request Details report’s Pet filter is now a multi-select dropdown that defaults to including all options.",
+    "proposed_feature": "Service Request Detail ‘Pet’ Filter",
+    "product_id": "lead-manager"
+  },
+  {
+    "id": "43",
+    "competitor_signal": "Anyone Home 9 June 2026 Release — New Quote Header Enhancements: Updated quote designs deliver a cleaner, more polished look. Property information now appears in the header across Embedded and Flyer Quotes, Community Fee Guide, and Property Policies Page layouts, along with refreshed footer styling based",
+    "proposed_feature": "New Quote Header Enhancements",
+    "product_id": "lead-manager"
+  },
+  {
+    "id": "44",
+    "competitor_signal": "Anyone Home 9 June 2026 Release — New Quote Fee Deletion: Gain more control over your quotable fees. In Settings > Quotes > Fee Management, Anyone Home Admin users can now delete manually added property fees by clicking the Action column icon and selecting Delete.Deleting a fee removes a fee from ",
+    "proposed_feature": "New Quote Fee Deletion",
+    "product_id": "lead-manager"
+  },
+  {
+    "id": "45",
+    "competitor_signal": "Anyone Home 9 June 2026 Release — New Quote Disclaimer Management: Customize how disclaimers appear in your quotes. In Settings > Quotes > Disclaimer Management, Anyone Home Admin users can now choose whether the short or long disclaimer text displays in New Quote designs.",
+    "proposed_feature": "New Quote Disclaimer Management",
+    "product_id": "lead-manager"
+  },
+  {
+    "id": "46",
+    "competitor_signal": "Anyone Home 9 June 2026 Release — AMC Lease Balance and Renewal Status: Expanded leasing data is now available through AMC integrations. Lease Balance and Renewal Status indicators will automatically populate when resident data is pulled, giving teams greater insight into resident accounts.",
+    "proposed_feature": "AMC Lease Balance and Renewal Status",
+    "product_id": "lead-manager"
+  }
+]

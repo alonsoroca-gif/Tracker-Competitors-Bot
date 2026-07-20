@@ -201,6 +201,47 @@ assert(
   'signalKey normalizes a signal/row object',
 );
 
+const splitUrl = 'https://anyonehome-updates.com/30-june-2026-release/';
+assert(
+  signalKey({ source_url: splitUrl, metadata: { capability_key: 'abc123' } }) ===
+    `${splitUrl}|abc123`,
+  'signalKey includes capability_key for changelog splits',
+);
+assert(
+  signalKey({ source_url: splitUrl }) === splitUrl,
+  'signalKey without capability_key stays URL-only',
+);
+
+const pagePublished = publishedUrlKeys([{ source_url: splitUrl, headline: '30 June 2026 Release' }]);
+const capSignal = {
+  source_url: splitUrl,
+  metadata: { capability_key: '4dfa6b5a9831878c' },
+  headline: '30 June 2026 Release — Service Outage Expiration Date',
+};
+assert(
+  pagePublished.has(splitUrl) &&
+    !pagePublished.has(`${splitUrl}|4dfa6b5a9831878c`) &&
+    !pagePublished.has(signalKey(capSignal)),
+  'page-level publish does not suppress capability subrows',
+);
+
+const capTable = buildSignalsTableRows([
+  capSignal,
+  {
+    source_url: splitUrl,
+    metadata: { capability_key: 'd05dbc829dd8933f' },
+    headline: '30 June 2026 Release — Access Leads from Calendar View',
+    competitor_id: 'anyone-home',
+    event_type: 'integration_launch',
+    type: 'changelog',
+  },
+]);
+assert(capTable.length === 2, 'buildSignalsTableRows keeps distinct capability splits on same URL');
+assert(
+  capTable.every((r) => r.capability_key),
+  'capability splits stamp capability_key on table rows',
+);
+
 const publishedRows = [
   { source_url: 'https://jonahdigital.com/add-ons/' },
   { source_url: 'https://eliseai.com/' },

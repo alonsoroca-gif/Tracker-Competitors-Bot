@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-07-20T15:03:47.491Z",
+  "updated_at": "2026-07-20T19:14:33.190Z",
   "runs": [
     {
       "run_id": "_sample-product-day",
@@ -9,6 +9,15 @@
       "prototype_count": 2,
       "summary": "Sample Product day for viewer QA — not wired to latest.json.",
       "fixture": true
+    },
+    {
+      "run_id": "2026-07-20T19-11-54Z",
+      "published_at": "2026-07-20T19:14:29.294Z",
+      "day_type": "mixed",
+      "net_new_count": 58,
+      "prototype_count": 0,
+      "summary": "58 net-new/catch-up signals · 25 in-scope rows · 19 Product · 0 Tier — Now · capability-split test publish.",
+      "fixture": false
     },
     {
       "run_id": "2026-07-20T13-32-07Z",

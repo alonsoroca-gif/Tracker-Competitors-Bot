@@ -26,6 +26,7 @@ const {
   isMondayMt,
   lastPublishedBriefDropId,
   listDropIds,
+  priorPublishedRunId,
 } = require('../lib/briefPaths.js');
 const {
   netNewBetween,
@@ -35,6 +36,7 @@ const {
   calendarDaysSinceBriefReady,
   weekendDropIds,
   allSignalsFromDrops,
+  signalKey,
 } = require('../lib/briefNetNew.js');
 const { buildSignalsTableRows } = require('../lib/briefClassify.js');
 const { buildSpotlight } = require('./carryover-spotlight.js');
@@ -50,11 +52,27 @@ function parseArgs(argv) {
   return args;
 }
 
-function gatherIntelSignals(dropId) {
-  const priorBrief = loadLatest();
-  const baselineDropId = lastPublishedBriefDropId(priorBrief);
+function resolvePriorBrief(dropId) {
+  const latest = loadLatest();
+  if (!latest?.run_id) return { priorBrief: null, publishedTable: [] };
+
+  // Mid-publish latest.json points at the in-flight run — diff against last ready brief.
+  if (latest.status === 'publishing' && latest.run_id === dropId) {
+    const priorRunId = priorPublishedRunId(dropId);
+    if (priorRunId) {
+      const priorBrief = { ...latest, run_id: priorRunId, status: 'ready' };
+      return { priorBrief, publishedTable: loadSignalsTable(priorRunId) };
+    }
+  }
+
   const publishedTable =
-    priorBrief?.run_id && priorBrief.run_id !== dropId ? loadSignalsTable(priorBrief.run_id) : [];
+    latest.run_id && latest.run_id !== dropId ? loadSignalsTable(latest.run_id) : [];
+  return { priorBrief: latest, publishedTable };
+}
+
+function gatherIntelSignals(dropId) {
+  const { priorBrief, publishedTable } = resolvePriorBrief(dropId);
+  const baselineDropId = lastPublishedBriefDropId(priorBrief);
   const publishedKeys = publishedUrlKeys(publishedTable);
   const current = loadDropSignals(dropId);
   const allDrops = listDropIds();
@@ -73,25 +91,21 @@ function gatherIntelSignals(dropId) {
     });
   }
 
-  const weekendUrls = new Set(weekendMandatory.map((s) => String(s.source_url || '').toLowerCase()));
+  const weekendKeys = new Set(weekendMandatory.map((s) => signalKey(s)).filter(Boolean));
 
   const catchUp =
     baselineDropId && priorBrief?.run_id !== dropId
       ? catchUpNetNewInDropWindow(allDrops, baselineDropId, dropId, loadDropSignals, publishedKeys)
       : netNewBetween(current, baselineDropId ? loadDropSignals(baselineDropId) : []);
 
-  const catchUpFiltered = catchUp.filter(
-    (s) => !weekendUrls.has(String(s.source_url || '').toLowerCase()),
-  );
+  const catchUpFiltered = catchUp.filter((s) => !weekendKeys.has(signalKey(s)));
   catchUpFiltered.forEach((s) => {
     if (s._catchup_drop) s._catchup = true;
   });
 
-  const catchUpUrlSet = new Set(catchUpFiltered.map((s) => String(s.source_url || '').toLowerCase()));
+  const catchUpKeySet = new Set(catchUpFiltered.map((s) => signalKey(s)).filter(Boolean));
   const refreshed = contentChangedVsPublished(current, publishedTable).filter(
-    (s) =>
-      !weekendUrls.has(String(s.source_url || '').toLowerCase()) &&
-      !catchUpUrlSet.has(String(s.source_url || '').toLowerCase()),
+    (s) => !weekendKeys.has(signalKey(s)) && !catchUpKeySet.has(signalKey(s)),
   );
   refreshed.forEach((s) => {
     s._content_refresh = true;
@@ -241,4 +255,4 @@ if (require.main === module) {
   main();
 }
 
-module.exports = { main, gatherIntelSignals };
+module.exports = { main, gatherIntelSignals, resolvePriorBrief };

@@ -4,12 +4,25 @@
 
 const crypto = require('crypto');
 
+function capabilityKeyPart(s) {
+  if (!s || typeof s !== 'object') return '';
+  return String(
+    (s.metadata && s.metadata.capability_key) || s.capability_key || '',
+  )
+    .trim()
+    .toLowerCase();
+}
+
 function signalKey(s) {
   // Accept either a signal/row object or a raw source_url string. Several callers
   // pass `row.source_url` directly; without the string branch this returned ''
   // for those, silently emptying publishedUrlKeys and disabling dedup.
   if (typeof s === 'string') return s.trim().toLowerCase();
-  return ((s && s.source_url) || '').trim().toLowerCase();
+  const url = ((s && s.source_url) || '').trim().toLowerCase();
+  if (!url) return '';
+  const cap = capabilityKeyPart(s);
+  // Changelog capability splits share a URL but are distinct brief rows.
+  return cap ? `${url}|${cap}` : url;
 }
 
 /** Collapse whitespace + lowercase so formatting jitter never counts as change. */
@@ -145,7 +158,7 @@ function contentChangedBetween(currentSignals, baselineSignals) {
 function publishedUrlKeys(signalsTableRows) {
   const keys = new Set();
   for (const r of signalsTableRows || []) {
-    const key = signalKey(r.source_url || '');
+    const key = signalKey(r);
     if (key) keys.add(key);
   }
   return keys;
@@ -195,7 +208,7 @@ function catchUpNetNewInDropWindow(dropIds, baselineDropId, latestDropId, loadSi
 function contentChangedVsPublished(currentSignals, publishedTableRows) {
   const publishedByUrl = new Map();
   for (const r of publishedTableRows || []) {
-    const key = signalKey(r.source_url || '');
+    const key = signalKey(r);
     if (key) publishedByUrl.set(key, r);
   }
   const seen = new Set();
@@ -247,7 +260,7 @@ function classifySignalChanges(currentRows, priorRows) {
   // than asking the supervisor to take "unchanged" on faith.
   const firstRunByHash = new Map();
   for (const r of priorRows || []) {
-    const key = signalKey(r.source_url || '');
+    const key = signalKey(r);
     if (!key) continue;
     let entry = priorByUrl.get(key);
     if (!entry) {
@@ -270,7 +283,7 @@ function classifySignalChanges(currentRows, priorRows) {
     entry.last = r; // priorRows is oldest→newest, so this ends on the most recent
   }
   return (currentRows || []).map((r) => {
-    const key = signalKey(r.source_url || '');
+    const key = signalKey(r);
     const entry = key ? priorByUrl.get(key) : null;
     if (!entry) return { ...r, change_status: 'new' };
     // Unchanged only if the body-aware hash was seen before. If the URL's prior
@@ -446,6 +459,7 @@ function countProductRowsPendingParity(signalsTable) {
 }
 
 module.exports = {
+  capabilityKeyPart,
   signalKey,
   normalizeText,
   contentFingerprint,

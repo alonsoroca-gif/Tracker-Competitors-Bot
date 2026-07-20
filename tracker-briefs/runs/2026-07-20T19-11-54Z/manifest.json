@@ -1,0 +1,31 @@
+{
+  "run_id": "2026-07-20T19-11-54Z",
+  "drop_run_id": "2026-07-20T19-11-54Z",
+  "published_at": "2026-07-20T19:14:29.294Z",
+  "source": "tracker-publish",
+  "day_type": "mixed",
+  "net_new_count": 58,
+  "weekend_mandatory_count": 33,
+  "weekend_drop_ids": [
+    "2026-06-20T13-15-11Z",
+    "2026-06-21T13-27-53Z",
+    "2026-06-27T12-58-33Z",
+    "2026-06-28T13-07-20Z",
+    "2026-07-04T12-49-36Z",
+    "2026-07-05T12-55-58Z",
+    "2026-07-11T12-43-26Z",
+    "2026-07-12T12-40-52Z",
+    "2026-07-18T12-41-51Z",
+    "2026-07-19T12-40-15Z"
+  ],
+  "catch_up_count": 25,
+  "content_refreshed_count": 0,
+  "carryover_count": 0,
+  "calendar_gap_days": 999,
+  "product_row_count": 19,
+  "tier_now_product_count": 0,
+  "prototype_count": 0,
+  "interpretation_pointer": "2026-07-20T19-11-54Z",
+  "prior_brief_run_id": "2026-07-20T13-32-07Z",
+  "summary": "58 net-new/catch-up signals · 25 in-scope rows · 19 Product · 0 Tier — Now · capability-split test publish."
+}
