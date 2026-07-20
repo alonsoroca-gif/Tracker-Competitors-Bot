@@ -1,0 +1,465 @@
+[
+  {
+    "id": "8",
+    "parity": "Existing",
+    "verdict_reason": "422 matches across 69 files in 13 apps — likely already shipped",
+    "total_score": 422,
+    "files_with_hits": 69,
+    "apps_with_hits": 13,
+    "top_apps": [
+      {
+        "app": "Vendor",
+        "score": 125,
+        "files": 12
+      },
+      {
+        "app": "ClientAdmin",
+        "score": 105,
+        "files": 18
+      },
+      {
+        "app": "Entrata",
+        "score": 37,
+        "files": 5
+      },
+      {
+        "app": "Gateway",
+        "score": 35,
+        "files": 5
+      },
+      {
+        "app": "Scripts",
+        "score": 32,
+        "files": 8
+      }
+    ],
+    "top_files": [
+      {
+        "relativePath": "Application/AssignApplicationModules.php",
+        "app": "ClientAdmin",
+        "score": 15,
+        "matched_terms": [
+          "dashboard",
+          "release",
+          "alerts",
+          "notification",
+          "plus",
+          "workflow"
+        ]
+      },
+      {
+        "relativePath": "Application/Dashboard/QuickSearch/CQuickSearchManager.class.php",
+        "app": "ClientAdmin",
+        "score": 15,
+        "matched_terms": [
+          "dashboard",
+          "independent"
+        ]
+      },
+      {
+        "relativePath": "Application/Monitor/CGateWayMonitorCriticalScriptsHandler.class.php",
+        "app": "Gateway",
+        "score": 15,
+        "matched_terms": [
+          "alerts",
+          "notification"
+        ]
+      },
+      {
+        "relativePath": "Application/Compliance/Insurance/CEndureComplianceInsurance.class.php",
+        "app": "Vendor",
+        "score": 15,
+        "matched_terms": [
+          "compliance",
+          "dashboard",
+          "notification"
+        ]
+      },
+      {
+        "relativePath": "Application/Compliance/Documents/CEndureComplianceDocument.class.php",
+        "app": "Vendor",
+        "score": 15,
+        "matched_terms": [
+          "compliance",
+          "notification"
+        ]
+      },
+      {
+        "relativePath": "Application/Compliance/Credits/CEndureComplianceCredits.class.php",
+        "app": "Vendor",
+        "score": 15,
+        "matched_terms": [
+          "compliance",
+          "notification",
+          "plus"
+        ]
+      }
+    ],
+    "grounding_terms": [
+      "anyone",
+      "july",
+      "release",
+      "opt-in",
+      "enhancements",
+      "requiring",
+      "explicit",
+      "notification",
+      "expansion",
+      "independent",
+      "pop-notifications",
+      "dashboard",
+      "bell",
+      "alerts",
+      "inbound",
+      "compliance",
+      "workflow",
+      "plus",
+      "granular"
+    ],
+    "alias_terms": []
+  },
+  {
+    "id": "10",
+    "parity": "Existing",
+    "verdict_reason": "102 matches across 16 files in 9 apps — likely already shipped",
+    "total_score": 102,
+    "files_with_hits": 16,
+    "apps_with_hits": 9,
+    "top_apps": [
+      {
+        "app": "ProspectPortal",
+        "score": 54,
+        "files": 6
+      },
+      {
+        "app": "Services",
+        "score": 15,
+        "files": 2
+      },
+      {
+        "app": "MshIntegrations",
+        "score": 14,
+        "files": 2
+      },
+      {
+        "app": "Scripts",
+        "score": 8,
+        "files": 1
+      },
+      {
+        "app": "ResidentPortal",
+        "score": 3,
+        "files": 1
+      }
+    ],
+    "top_files": [
+      {
+        "relativePath": "Application/ContactButton/CContactButtonModule.class.php",
+        "app": "ProspectPortal",
+        "score": 15,
+        "matched_terms": [
+          "guestcard",
+          "self-guided"
+        ]
+      },
+      {
+        "relativePath": "Application/PropertySystem/PropertyPageSystem/GuestCard/CGuestCardModule.class.php",
+        "app": "ProspectPortal",
+        "score": 15,
+        "matched_terms": [
+          "guestcard",
+          "selfguidedtour",
+          "automation",
+          "future"
+        ]
+      },
+      {
+        "relativePath": "Application/PropertySystem/ApplicationSystem/ApplicationAuthentication/CApplicationAuthenticationModule.class.php",
+        "app": "ProspectPortal",
+        "score": 13,
+        "matched_terms": [
+          "guestcard",
+          "future"
+        ]
+      },
+      {
+        "relativePath": "Application/ServiceHandlers/External/v1/r2/CLeadServiceHandler.class.php",
+        "app": "Services",
+        "score": 13,
+        "matched_terms": [
+          "selfguidedtour",
+          "guestcard",
+          "future"
+        ]
+      },
+      {
+        "relativePath": "Api/app/Libraries/MshChatgptServices/CMshChatgptServiceLibrary.class.php",
+        "app": "MshIntegrations",
+        "score": 12,
+        "matched_terms": [
+          "self-guided",
+          "guestcard"
+        ]
+      },
+      {
+        "relativePath": "Application/Admin/Tools/CRotateGatewayApiKeysScript.class.php",
+        "app": "Scripts",
+        "score": 8,
+        "matched_terms": [
+          "future",
+          "platform"
+        ]
+      }
+    ],
+    "grounding_terms": [
+      "eliseai",
+      "homepage",
+      "driving",
+      "future",
+      "healthcare",
+      "ai-powered",
+      "solutions",
+      "omnichannel",
+      "automation",
+      "self-guided",
+      "platform",
+      "unified",
+      "housing"
+    ],
+    "alias_terms": [
+      "leasingai",
+      "chatbotinsight",
+      "eliservicehandler",
+      "selfguidedtour",
+      "guestcard"
+    ]
+  },
+  {
+    "id": "11",
+    "parity": "Existing",
+    "verdict_reason": "183 matches across 21 files in 7 apps — likely already shipped",
+    "total_score": 183,
+    "files_with_hits": 21,
+    "apps_with_hits": 7,
+    "top_apps": [
+      {
+        "app": "ProspectPortal",
+        "score": 74,
+        "files": 7
+      },
+      {
+        "app": "Services",
+        "score": 47,
+        "files": 6
+      },
+      {
+        "app": "MshIntegrations",
+        "score": 19,
+        "files": 3
+      },
+      {
+        "app": "Gateway",
+        "score": 17,
+        "files": 2
+      },
+      {
+        "app": "ClientAdmin",
+        "score": 15,
+        "files": 1
+      }
+    ],
+    "top_files": [
+      {
+        "relativePath": "Application/AssignApplicationModules.php",
+        "app": "ClientAdmin",
+        "score": 15,
+        "matched_terms": [
+          "callanalysis",
+          "dialplan",
+          "leasingai",
+          "automation"
+        ]
+      },
+      {
+        "relativePath": "Application/ContactButton/CContactButtonModule.class.php",
+        "app": "ProspectPortal",
+        "score": 15,
+        "matched_terms": [
+          "guestcard",
+          "virtual"
+        ]
+      },
+      {
+        "relativePath": "Application/PropertySystem/PropertyPageSystem/GuestCard/CGuestCardModule.class.php",
+        "app": "ProspectPortal",
+        "score": 15,
+        "matched_terms": [
+          "guestcard",
+          "selfguidedtour",
+          "automation"
+        ]
+      },
+      {
+        "relativePath": "Application/ServiceHandlers/Ils/v1/r1/CInternetListingServiceHandler.class.php",
+        "app": "Services",
+        "score": 15,
+        "matched_terms": [
+          "guestcard",
+          "virtual"
+        ]
+      },
+      {
+        "relativePath": "Application/PropertySystem/ApplicationSystem/ApplicationAuthentication/CApplicationAuthenticationModule.class.php",
+        "app": "ProspectPortal",
+        "score": 14,
+        "matched_terms": [
+          "guestcard",
+          "analytics"
+        ]
+      },
+      {
+        "relativePath": "Api/app/Libraries/MshChatgptServices/CMshChatgptServiceLibrary.class.php",
+        "app": "MshIntegrations",
+        "score": 13,
+        "matched_terms": [
+          "virtual",
+          "guestcard"
+        ]
+      }
+    ],
+    "grounding_terms": [
+      "funnel",
+      "homepage",
+      "virtual",
+      "assistant",
+      "secret",
+      "shop",
+      "scoring",
+      "ai-handled",
+      "conversion",
+      "claims",
+      "centralized",
+      "multifamily",
+      "automation",
+      "voice",
+      "analytics"
+    ],
+    "alias_terms": [
+      "leasingai",
+      "chatbotinsight",
+      "eliservicehandler",
+      "selfguidedtour",
+      "guestcard",
+      "callanalysis",
+      "dialplan",
+      "ivraction"
+    ]
+  },
+  {
+    "id": "17",
+    "parity": "Gap",
+    "verdict_reason": "Layer 2 override: ClientAdmin COutage is internal ops; no property maintenance service-outage expiration module in Entrata/Facilities.",
+    "total_score": 218,
+    "files_with_hits": 36,
+    "apps_with_hits": 9,
+    "top_apps": [
+      {
+        "app": "Services",
+        "score": 64,
+        "files": 9
+      },
+      {
+        "app": "Entrata",
+        "score": 39,
+        "files": 6
+      },
+      {
+        "app": "ResidentPortal",
+        "score": 29,
+        "files": 5
+      },
+      {
+        "app": "ClientAdmin",
+        "score": 25,
+        "files": 6
+      },
+      {
+        "app": "Scripts",
+        "score": 20,
+        "files": 5
+      }
+    ],
+    "top_files": [
+      {
+        "relativePath": "Application/PropertySystem/CPropertySystemModule.class.php",
+        "app": "ProspectPortal",
+        "score": 15,
+        "matched_terms": [
+          "expiration",
+          "expiry"
+        ]
+      },
+      {
+        "relativePath": "Application/ServiceHandlers/External/v1/r1/CWorkOrderServiceHandler.class.php",
+        "app": "Services",
+        "score": 15,
+        "matched_terms": [
+          "workflow",
+          "maintenance"
+        ]
+      },
+      {
+        "relativePath": "Application/Monitor/CGateWayMonitorCriticalScriptsHandler.class.php",
+        "app": "Gateway",
+        "score": 12,
+        "matched_terms": [
+          "maintenance",
+          "outage"
+        ]
+      },
+      {
+        "relativePath": "Routes/external.routes.php",
+        "app": "Services",
+        "score": 11,
+        "matched_terms": [
+          "maintenance",
+          "expiration"
+        ]
+      },
+      {
+        "relativePath": "Application/ServiceHandlers/Internal/v1/r1/CDeployServiceHandler.class.php",
+        "app": "Services",
+        "score": 10,
+        "matched_terms": [
+          "release",
+          "maintenance",
+          "expiration"
+        ]
+      },
+      {
+        "relativePath": "Application/ServiceHandlers/Internal/v1/r1/CGraviteeApiGatewayServiceHandler.php",
+        "app": "Services",
+        "score": 10,
+        "matched_terms": [
+          "maintenance",
+          "expiry"
+        ]
+      }
+    ],
+    "grounding_terms": [
+      "anyone",
+      "june",
+      "release",
+      "maintenance",
+      "outage",
+      "expiration",
+      "outages",
+      "auto-removal",
+      "edit-to-extend",
+      "expiry",
+      "workflow"
+    ],
+    "alias_terms": [],
+    "parity_l2": "Gap"
+  }
+]

@@ -1,0 +1,26 @@
+[
+  {
+    "id": "8",
+    "competitor_signal": "Anyone Home 21 July 2026 Release: SMS Opt-in Enhancements requiring explicit prospect/resident opt-in before SMS; CRM Email and SMS Notification Settings Expansion with independent pop-notifications and dashboard bell alerts for inbound email and SMS",
+    "proposed_feature": "SMS compliance opt-in workflow plus granular CRM notification settings (pop-notifications and bell alerts independently for inbound email vs SMS)",
+    "product_id": "lead-manager"
+  },
+  {
+    "id": "10",
+    "competitor_signal": "EliseAI homepage: Driving the Future of Property Management and Healthcare with AI, AI-Powered Solutions, omnichannel leasing automation, self-guided tours, CRM",
+    "proposed_feature": "Omnichannel AI leasing automation platform with self-guided tours and unified CRM for housing and healthcare",
+    "product_id": "prospect-portal"
+  },
+  {
+    "id": "11",
+    "competitor_signal": "Funnel homepage: Virtual Assistant secret shop scoring, AI-handled prospect tour conversion claims, centralized multifamily CRM with AI automation and voice AI",
+    "proposed_feature": "Centralized multifamily CRM with AI virtual assistant, voice AI, and conversion analytics for tour scheduling",
+    "product_id": "lead-manager"
+  },
+  {
+    "id": "17",
+    "competitor_signal": "Anyone Home 30 June 2026 Release: Maintenance Service Outage Expiration Date — schedule expiration for service outages with auto-removal and edit-to-extend before expiry",
+    "proposed_feature": "Maintenance service outage module with scheduled expiration dates, auto-removal at end date, and edit-to-extend workflow",
+    "product_id": "maintenance"
+  }
+]

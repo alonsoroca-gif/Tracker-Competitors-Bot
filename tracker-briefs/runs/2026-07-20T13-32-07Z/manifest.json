@@ -1,0 +1,23 @@
+{
+  "run_id": "2026-07-20T13-32-07Z",
+  "drop_run_id": "2026-07-20T13-32-07Z",
+  "published_at": "2026-07-20T15:05:00.000Z",
+  "source": "tracker-publish",
+  "day_type": "weekend_catch_up",
+  "net_new_count": 33,
+  "weekend_mandatory_count": 33,
+  "weekend_drop_ids": [
+    "2026-07-18T12-41-51Z",
+    "2026-07-19T12-40-15Z"
+  ],
+  "catch_up_count": 0,
+  "content_refreshed_count": 0,
+  "carryover_count": 0,
+  "calendar_gap_days": 3,
+  "product_row_count": 9,
+  "tier_now_product_count": 0,
+  "prototype_count": 0,
+  "prior_brief_run_id": "2026-07-17T12-51-17Z",
+  "interpretation_pointer": "2026-07-20T13-32-07Z",
+  "summary": "33 weekend collect(s) (Sat/Sun drops incl. 2026-07-18, 2026-07-19) · 33 intel rows · 9 Product rows parity-scanned · 0 Tier-Now (8 Existing, 1 Gap→Later) · 0 prototypes."
+}
