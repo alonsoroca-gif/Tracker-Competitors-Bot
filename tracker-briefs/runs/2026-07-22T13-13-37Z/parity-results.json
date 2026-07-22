@@ -1,0 +1,509 @@
+[
+  {
+    "id": "6",
+    "parity": "Existing",
+    "verdict_reason": "Layer 2: Core ships guest card + application auth modules covering AI leasing CRM journey (tours, lead nurturing, self-guided tours).",
+    "total_score": 385,
+    "files_with_hits": 62,
+    "apps_with_hits": 9,
+    "top_apps": [
+      {
+        "app": "ProspectPortal",
+        "score": 122,
+        "files": 17
+      },
+      {
+        "app": "Scripts",
+        "score": 66,
+        "files": 11
+      },
+      {
+        "app": "Services",
+        "score": 66,
+        "files": 9
+      },
+      {
+        "app": "Entrata",
+        "score": 61,
+        "files": 11
+      },
+      {
+        "app": "ClientAdmin",
+        "score": 32,
+        "files": 5
+      }
+    ],
+    "top_files": [
+      {
+        "relativePath": "Application/Development/CacheDeployments/CCacheDeploymentManager.class.php",
+        "app": "ClientAdmin",
+        "score": 15,
+        "matched_terms": [
+          "centralized",
+          "operations"
+        ]
+      },
+      {
+        "relativePath": "Application/PropertySystem/PropertyPageSystem/GuestCard/CGuestCardModule.class.php",
+        "app": "ProspectPortal",
+        "score": 15,
+        "matched_terms": [
+          "guestcard",
+          "selfguidedtour",
+          "automation"
+        ]
+      },
+      {
+        "relativePath": "Application/PropertySystem/ApplicationSystem/ApplicationAuthentication/CApplicationAuthenticationModule.class.php",
+        "app": "ProspectPortal",
+        "score": 15,
+        "matched_terms": [
+          "guestcard",
+          "overview",
+          "journey"
+        ]
+      },
+      {
+        "relativePath": "Application/Admin/Tools/CRotateGatewayApiKeysScript.class.php",
+        "app": "Scripts",
+        "score": 15,
+        "matched_terms": [
+          "every",
+          "platform",
+          "stage"
+        ]
+      },
+      {
+        "relativePath": "Application/Admin/Scheduled/CPostEftChargesScript.class.php",
+        "app": "Scripts",
+        "score": 15,
+        "matched_terms": [
+          "stage",
+          "operations",
+          "detected",
+          "every"
+        ]
+      },
+      {
+        "relativePath": "Application/ServiceHandlers/Ils/v1/r1/CInternetListingServiceHandler.class.php",
+        "app": "Services",
+        "score": 15,
+        "matched_terms": [
+          "guestcard",
+          "solution"
+        ]
+      }
+    ],
+    "grounding_terms": [
+      "eliseai",
+      "industry",
+      "leading",
+      "platform",
+      "overview",
+      "detected",
+      "solution",
+      "themes",
+      "always-on",
+      "automation",
+      "centralized",
+      "operations",
+      "agentic",
+      "powers",
+      "every",
+      "stage",
+      "journey",
+      "omnichannel",
+      "singular"
+    ],
+    "alias_terms": [
+      "leasingai",
+      "chatbotinsight",
+      "eliservicehandler",
+      "selfguidedtour",
+      "guestcard"
+    ],
+    "plain": "guest card + application auth modules cover the same leasing CRM journey",
+    "top_file": "Application/PropertySystem/ApplicationSystem/ApplicationAuthentication/CApplicationAuthenticationModule.class.php",
+    "parity_l2": "Existing"
+  },
+  {
+    "id": "7",
+    "parity": "Existing",
+    "verdict_reason": "Layer 2: AssignApplicationModules wires leasing AI, call analysis, and online application modules — Funnel CRM positioning already covered.",
+    "total_score": 131,
+    "files_with_hits": 31,
+    "apps_with_hits": 8,
+    "top_apps": [
+      {
+        "app": "ClientAdmin",
+        "score": 34,
+        "files": 7
+      },
+      {
+        "app": "ProspectPortal",
+        "score": 27,
+        "files": 4
+      },
+      {
+        "app": "Entrata",
+        "score": 24,
+        "files": 4
+      },
+      {
+        "app": "Scripts",
+        "score": 21,
+        "files": 7
+      },
+      {
+        "app": "ResidentPortal",
+        "score": 10,
+        "files": 4
+      }
+    ],
+    "top_files": [
+      {
+        "relativePath": "Application/AssignApplicationModules.php",
+        "app": "ClientAdmin",
+        "score": 15,
+        "matched_terms": [
+          "callanalysis",
+          "dialplan",
+          "help",
+          "leasingai",
+          "automation"
+        ]
+      },
+      {
+        "relativePath": "Api/app/Actions/Internal/OnlineApplicationWaitlist/V1/ApplicationWaitlistTagsAction.php",
+        "app": "Entrata",
+        "score": 15,
+        "matched_terms": [
+          "comprehensive",
+          "automation",
+          "online",
+          "experience"
+        ]
+      },
+      {
+        "relativePath": "Application/CProspectPortalApp.class.php",
+        "app": "ProspectPortal",
+        "score": 15,
+        "matched_terms": [
+          "solution",
+          "keywords",
+          "repeated",
+          "online",
+          "help"
+        ]
+      },
+      {
+        "relativePath": "Application/HR/EmployeeAssessments/CEmployeeAssessmentManager.class.php",
+        "app": "ClientAdmin",
+        "score": 8,
+        "matched_terms": [
+          "role",
+          "experience"
+        ]
+      },
+      {
+        "relativePath": "Application/Admin/Tools/CRotateGatewayApiKeysScript.class.php",
+        "app": "Scripts",
+        "score": 8,
+        "matched_terms": [
+          "role",
+          "platform"
+        ]
+      },
+      {
+        "relativePath": "Application/FeeGuide/CFeeGuideModule.class.php",
+        "app": "ProspectPortal",
+        "score": 5,
+        "matched_terms": [
+          "help",
+          "comprehensive",
+          "experience"
+        ]
+      }
+    ],
+    "grounding_terms": [
+      "funnel",
+      "multifamily",
+      "detected",
+      "solution",
+      "themes",
+      "online",
+      "help",
+      "centralization",
+      "role",
+      "specialization",
+      "automation",
+      "ideal",
+      "renter",
+      "experience",
+      "comprehensive",
+      "platform",
+      "repeated",
+      "keywords"
+    ],
+    "alias_terms": [
+      "leasingai",
+      "chatbotinsight",
+      "eliservicehandler",
+      "callanalysis",
+      "dialplan",
+      "ivraction"
+    ],
+    "plain": "AssignApplicationModules wires leasing AI, call analysis, and online application modules",
+    "top_file": "Application/AssignApplicationModules.php",
+    "parity_l2": "Existing"
+  },
+  {
+    "id": "8",
+    "parity": "Existing",
+    "verdict_reason": "Layer 2: Core ships call analysis scorecards (CCallAnalysisCategories) + Chat contact center — Leasing Call Analysis positioning already covered.",
+    "total_score": 846,
+    "files_with_hits": 119,
+    "apps_with_hits": 15,
+    "top_apps": [
+      {
+        "app": "Services",
+        "score": 191,
+        "files": 20
+      },
+      {
+        "app": "ProspectPortal",
+        "score": 163,
+        "files": 21
+      },
+      {
+        "app": "Scripts",
+        "score": 141,
+        "files": 19
+      },
+      {
+        "app": "CallCenter",
+        "score": 80,
+        "files": 12
+      },
+      {
+        "app": "ClientAdmin",
+        "score": 66,
+        "files": 9
+      }
+    ],
+    "top_files": [
+      {
+        "relativePath": "Application/SoapServers/CMoneyGramRealTimeBillPaymentRequestSoap.class.php",
+        "app": "AdminSync",
+        "score": 15,
+        "matched_terms": [
+          "call",
+          "contact"
+        ]
+      },
+      {
+        "relativePath": "Application/DialPlan/CDialPlanDirective.class.php",
+        "app": "CallCenter",
+        "score": 15,
+        "matched_terms": [
+          "dialplan",
+          "call",
+          "center"
+        ]
+      },
+      {
+        "relativePath": "Application/DialPlan/CNewDialplanDirective.class.php",
+        "app": "CallCenter",
+        "score": 15,
+        "matched_terms": [
+          "dialplan",
+          "call",
+          "center"
+        ]
+      },
+      {
+        "relativePath": "Application/DialPlan/CNewDialplanDirectory.class.php",
+        "app": "CallCenter",
+        "score": 15,
+        "matched_terms": [
+          "dialplan",
+          "contact",
+          "call",
+          "center"
+        ]
+      },
+      {
+        "relativePath": "App/Controllers/Voip/CallAgentsCallAnalysis/CallAgentsCallAnalysisReportManager.php",
+        "app": "ClientAdmin",
+        "score": 15,
+        "matched_terms": [
+          "callanalysis",
+          "call",
+          "analysis"
+        ]
+      },
+      {
+        "relativePath": "Application/Development/OperationsExecutiveDashboard/COperationsExecutiveDashboardManager.class.php",
+        "app": "ClientAdmin",
+        "score": 15,
+        "matched_terms": [
+          "callanalysis",
+          "call",
+          "center"
+        ]
+      }
+    ],
+    "grounding_terms": [
+      "anyone",
+      "software",
+      "solutions",
+      "call",
+      "analysis",
+      "contact",
+      "center",
+      "detected",
+      "solution",
+      "themes",
+      "revolutionizing",
+      "self-guided",
+      "chatbot",
+      "repeated",
+      "keywords"
+    ],
+    "alias_terms": [
+      "leasingai",
+      "chatbotinsight",
+      "eliservicehandler",
+      "selfguidedtour",
+      "guestcard",
+      "callanalysis",
+      "dialplan",
+      "ivraction"
+    ],
+    "plain": "call analysis scorecards + Chat contact center already cover Leasing Call Analysis positioning",
+    "top_file": "Application/Tools/CallTrackerLogsTab/CallTrackerLogs/CCallTrackerController.class.php",
+    "parity_l2": "Existing"
+  },
+  {
+    "id": "9",
+    "parity": "Existing",
+    "verdict_reason": "Layer 2: Prospect Portal ships Engrain SightMap widget + check-availability tour scheduling — Jonah add-on stack already covered.",
+    "total_score": 90,
+    "files_with_hits": 22,
+    "apps_with_hits": 8,
+    "top_apps": [
+      {
+        "app": "ProspectPortal",
+        "score": 39,
+        "files": 7
+      },
+      {
+        "app": "Scripts",
+        "score": 17,
+        "files": 5
+      },
+      {
+        "app": "ResidentPortal",
+        "score": 11,
+        "files": 4
+      },
+      {
+        "app": "Entrata",
+        "score": 9,
+        "files": 1
+      },
+      {
+        "app": "MshIntegrations",
+        "score": 5,
+        "files": 1
+      }
+    ],
+    "top_files": [
+      {
+        "relativePath": "Application/CProspectPortalApp.class.php",
+        "app": "ProspectPortal",
+        "score": 10,
+        "matched_terms": [
+          "solution",
+          "keywords",
+          "repeated"
+        ]
+      },
+      {
+        "relativePath": "Api/app/Actions/Internal/OnlineApplicationWaitlist/V1/ApplicationWaitlistTagsAction.php",
+        "app": "Entrata",
+        "score": 9,
+        "matched_terms": [
+          "integration",
+          "experience"
+        ]
+      },
+      {
+        "relativePath": "Application/PropertySystem/PropertySitePlan/CPropertySitePlanModule.class.php",
+        "app": "ProspectPortal",
+        "score": 8,
+        "matched_terms": [
+          "siteplanxpos",
+          "siteplanypos"
+        ]
+      },
+      {
+        "relativePath": "Application/PropertySystem/CheckAvailability/CCheckAvailabilityModule.class.php",
+        "app": "ProspectPortal",
+        "score": 6,
+        "matched_terms": [
+          "integration",
+          "siteplanxpos",
+          "siteplanypos",
+          "loadsiteplandata"
+        ]
+      },
+      {
+        "relativePath": "Application/Admin/Scheduled/CPropertiesContractTerminationScript.class.php",
+        "app": "Scripts",
+        "score": 6,
+        "matched_terms": [
+          "integration",
+          "keywords"
+        ]
+      },
+      {
+        "relativePath": "Application/CMshIntegrationsApp.class.php",
+        "app": "MshIntegrations",
+        "score": 5,
+        "matched_terms": [
+          "integration",
+          "detected"
+        ]
+      }
+    ],
+    "grounding_terms": [
+      "jonah",
+      "digital",
+      "agency",
+      "multifamily",
+      "add-ons",
+      "engrain",
+      "sightmap",
+      "scheduler",
+      "detected",
+      "solution",
+      "themes",
+      "experience",
+      "retail",
+      "integration",
+      "repeated",
+      "keywords",
+      "cues"
+    ],
+    "alias_terms": [
+      "engrainsightmap",
+      "siteplanxpos",
+      "siteplanypos",
+      "loadsiteplandata"
+    ],
+    "plain": "Prospect Portal siteplan coordinates + check-availability tour scheduling",
+    "top_file": "Library/InternalPageWidgets/Widget/CEngrainSightMapWidget.class.php",
+    "parity_l2": "Existing"
+  }
+]
