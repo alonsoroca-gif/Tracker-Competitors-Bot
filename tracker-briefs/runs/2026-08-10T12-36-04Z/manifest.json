@@ -1,0 +1,40 @@
+{
+  "run_id": "2026-08-10T12-36-04Z",
+  "drop_run_id": "2026-08-10T12-36-04Z",
+  "published_at": "2026-08-10T18:58:45.134Z",
+  "source": "tracker-publish",
+  "day_type": "product",
+  "net_new_count": 75,
+  "weekend_mandatory_count": 72,
+  "weekend_drop_ids": [
+    "2026-06-20T13-15-11Z",
+    "2026-06-21T13-27-53Z",
+    "2026-06-27T12-58-33Z",
+    "2026-06-28T13-07-20Z",
+    "2026-07-04T12-49-36Z",
+    "2026-07-05T12-55-58Z",
+    "2026-07-11T12-43-26Z",
+    "2026-07-12T12-40-52Z",
+    "2026-07-18T12-41-51Z",
+    "2026-07-19T12-40-15Z",
+    "2026-07-25T12-48-29Z",
+    "2026-07-26T12-47-23Z",
+    "2026-08-01T12-42-54Z",
+    "2026-08-02T12-45-02Z",
+    "2026-08-08T12-06-01Z",
+    "2026-08-09T12-07-11Z"
+  ],
+  "catch_up_count": 3,
+  "content_refreshed_count": 0,
+  "carryover_count": 0,
+  "calendar_gap_days": 999,
+  "product_row_count": 24,
+  "tier_now_product_count": 0,
+  "prototype_count": 0,
+  "interpretation_pointer": "2026-08-10T12-36-04Z",
+  "prior_brief_run_id": "2026-07-22T13-13-37Z",
+  "parity_summary": {
+    "Existing": 24
+  },
+  "summary": "75 net-new/catch-up URLs · 58 in-scope rows · 24 Product (24 Existing) · 0 Tier — Now · 0 prototypes."
+}
