@@ -1,0 +1,522 @@
+[
+  {
+    "id": "11",
+    "parity": "Existing",
+    "verdict_reason": "763 matches across 142 files in 24 apps — likely already shipped",
+    "total_score": 763,
+    "files_with_hits": 142,
+    "apps_with_hits": 24,
+    "top_apps": [
+      {
+        "app": "ProspectPortal",
+        "score": 165,
+        "files": 22
+      },
+      {
+        "app": "Scripts",
+        "score": 153,
+        "files": 30
+      },
+      {
+        "app": "Services",
+        "score": 137,
+        "files": 22
+      },
+      {
+        "app": "ResidentPortal",
+        "score": 90,
+        "files": 15
+      },
+      {
+        "app": "Entrata",
+        "score": 66,
+        "files": 12
+      }
+    ],
+    "top_files": [
+      {
+        "relativePath": "Application/Development/CacheDeployments/CCacheDeploymentManager.class.php",
+        "app": "ClientAdmin",
+        "score": 15,
+        "matched_terms": [
+          "centralized",
+          "operations"
+        ]
+      },
+      {
+        "relativePath": "Application/ContactButton/CContactButtonModule.class.php",
+        "app": "ProspectPortal",
+        "score": 15,
+        "matched_terms": [
+          "need",
+          "guestcard"
+        ]
+      },
+      {
+        "relativePath": "Application/PropertySystem/PropertyPageSystem/GuestCard/CGuestCardModule.class.php",
+        "app": "ProspectPortal",
+        "score": 15,
+        "matched_terms": [
+          "guestcard",
+          "selfguidedtour",
+          "need",
+          "automation"
+        ]
+      },
+      {
+        "relativePath": "Application/PropertySystem/ApplicationSystem/ApplicationAuthentication/CApplicationAuthenticationModule.class.php",
+        "app": "ProspectPortal",
+        "score": 15,
+        "matched_terms": [
+          "guestcard",
+          "journey"
+        ]
+      },
+      {
+        "relativePath": "Application/Admin/Scheduled/CPostEftChargesScript.class.php",
+        "app": "Scripts",
+        "score": 15,
+        "matched_terms": [
+          "stage",
+          "operations",
+          "detected",
+          "need",
+          "every"
+        ]
+      },
+      {
+        "relativePath": "Application/Admin/Tools/CRotateGatewayApiKeysScript.class.php",
+        "app": "Scripts",
+        "score": 15,
+        "matched_terms": [
+          "every",
+          "need",
+          "stage"
+        ]
+      }
+    ],
+    "grounding_terms": [
+      "eliseai",
+      "industry",
+      "leading",
+      "detected",
+      "solution",
+      "themes",
+      "always-on",
+      "automation",
+      "centralized",
+      "operations",
+      "agentic",
+      "powers",
+      "every",
+      "stage",
+      "journey",
+      "omnichannel",
+      "singular",
+      "intelligence",
+      "everything",
+      "need"
+    ],
+    "alias_terms": [
+      "leasingai",
+      "chatbotinsight",
+      "eliservicehandler",
+      "selfguidedtour",
+      "guestcard"
+    ],
+    "l2_verified": false,
+    "l2_evidence": [],
+    "parity_plain": "Layer-2 review did not confirm the full marketed capability from an exact implementation",
+    "l2_reason": "Layer 2 found related platform vocabulary but not an exact implementation of the full marketed capability; manager review required.",
+    "top_file": null
+  },
+  {
+    "id": "12",
+    "parity": "Existing",
+    "verdict_reason": "129 matches across 30 files in 8 apps — likely already shipped",
+    "total_score": 129,
+    "files_with_hits": 30,
+    "apps_with_hits": 8,
+    "top_apps": [
+      {
+        "app": "ClientAdmin",
+        "score": 34,
+        "files": 7
+      },
+      {
+        "app": "ProspectPortal",
+        "score": 27,
+        "files": 4
+      },
+      {
+        "app": "Entrata",
+        "score": 24,
+        "files": 4
+      },
+      {
+        "app": "Scripts",
+        "score": 21,
+        "files": 7
+      },
+      {
+        "app": "ResidentPortal",
+        "score": 10,
+        "files": 4
+      }
+    ],
+    "top_files": [
+      {
+        "relativePath": "Application/AssignApplicationModules.php",
+        "app": "ClientAdmin",
+        "score": 15,
+        "matched_terms": [
+          "callanalysis",
+          "dialplan",
+          "help",
+          "automation"
+        ]
+      },
+      {
+        "relativePath": "Api/app/Actions/Internal/OnlineApplicationWaitlist/V1/ApplicationWaitlistTagsAction.php",
+        "app": "Entrata",
+        "score": 15,
+        "matched_terms": [
+          "comprehensive",
+          "automation",
+          "online",
+          "experience"
+        ]
+      },
+      {
+        "relativePath": "Application/CProspectPortalApp.class.php",
+        "app": "ProspectPortal",
+        "score": 15,
+        "matched_terms": [
+          "solution",
+          "keywords",
+          "repeated",
+          "online",
+          "help"
+        ]
+      },
+      {
+        "relativePath": "Application/HR/EmployeeAssessments/CEmployeeAssessmentManager.class.php",
+        "app": "ClientAdmin",
+        "score": 8,
+        "matched_terms": [
+          "role",
+          "experience"
+        ]
+      },
+      {
+        "relativePath": "Application/Admin/Tools/CRotateGatewayApiKeysScript.class.php",
+        "app": "Scripts",
+        "score": 8,
+        "matched_terms": [
+          "role",
+          "platform"
+        ]
+      },
+      {
+        "relativePath": "Application/FeeGuide/CFeeGuideModule.class.php",
+        "app": "ProspectPortal",
+        "score": 5,
+        "matched_terms": [
+          "help",
+          "comprehensive",
+          "experience"
+        ]
+      }
+    ],
+    "grounding_terms": [
+      "funnel",
+      "multifamily",
+      "detected",
+      "solution",
+      "themes",
+      "online",
+      "help",
+      "centralization",
+      "role",
+      "specialization",
+      "automation",
+      "ideal",
+      "renter",
+      "experience",
+      "comprehensive",
+      "platform",
+      "repeated",
+      "keywords"
+    ],
+    "alias_terms": [
+      "callanalysis",
+      "dialplan",
+      "ivraction"
+    ],
+    "l2_verified": false,
+    "l2_evidence": [],
+    "parity_plain": "Layer-2 review did not confirm the full marketed capability from an exact implementation",
+    "l2_reason": "Layer 2 found related platform vocabulary but not an exact implementation of the full marketed capability; manager review required.",
+    "top_file": null
+  },
+  {
+    "id": "13",
+    "parity": "Existing",
+    "verdict_reason": "414 matches across 55 files in 11 apps — likely already shipped",
+    "total_score": 414,
+    "files_with_hits": 55,
+    "apps_with_hits": 11,
+    "top_apps": [
+      {
+        "app": "ProspectPortal",
+        "score": 110,
+        "files": 12
+      },
+      {
+        "app": "Services",
+        "score": 92,
+        "files": 8
+      },
+      {
+        "app": "CallCenter",
+        "score": 50,
+        "files": 5
+      },
+      {
+        "app": "Scripts",
+        "score": 45,
+        "files": 10
+      },
+      {
+        "app": "ClientAdmin",
+        "score": 38,
+        "files": 5
+      }
+    ],
+    "top_files": [
+      {
+        "relativePath": "Application/DialPlan/CDialPlanDirective.class.php",
+        "app": "CallCenter",
+        "score": 15,
+        "matched_terms": [
+          "dialplan",
+          "center"
+        ]
+      },
+      {
+        "relativePath": "Application/DialPlan/CNewDialplanDirective.class.php",
+        "app": "CallCenter",
+        "score": 15,
+        "matched_terms": [
+          "dialplan",
+          "center"
+        ]
+      },
+      {
+        "relativePath": "Application/DialPlan/CNewDialplanDirectory.class.php",
+        "app": "CallCenter",
+        "score": 15,
+        "matched_terms": [
+          "dialplan",
+          "contact",
+          "center"
+        ]
+      },
+      {
+        "relativePath": "Application/Development/OperationsExecutiveDashboard/COperationsExecutiveDashboardManager.class.php",
+        "app": "ClientAdmin",
+        "score": 15,
+        "matched_terms": [
+          "callanalysis",
+          "center"
+        ]
+      },
+      {
+        "relativePath": "Application/AssignApplicationModules.php",
+        "app": "ClientAdmin",
+        "score": 15,
+        "matched_terms": [
+          "callanalysis",
+          "dialplan",
+          "contact",
+          "center",
+          "leasingai"
+        ]
+      },
+      {
+        "relativePath": "Application/PropertySystem/PropertyPageSystem/GuestCard/CGuestCardModule.class.php",
+        "app": "ProspectPortal",
+        "score": 15,
+        "matched_terms": [
+          "guestcard",
+          "contact",
+          "selfguidedtour",
+          "center"
+        ]
+      }
+    ],
+    "grounding_terms": [
+      "anyone",
+      "software",
+      "solutions",
+      "detected",
+      "solution",
+      "themes",
+      "revolutionizing",
+      "self-guided",
+      "chatbot",
+      "contact",
+      "center",
+      "repeated",
+      "keywords"
+    ],
+    "alias_terms": [
+      "leasingai",
+      "chatbotinsight",
+      "eliservicehandler",
+      "selfguidedtour",
+      "guestcard",
+      "callanalysis",
+      "dialplan",
+      "ivraction"
+    ],
+    "l2_verified": true,
+    "l2_evidence": [
+      "Applications/ClientAdmin/Jobs/Queued/Kafka/WorkflowStudio/CGuestCardSelfGuidedTourV1Message.php",
+      "Applications/ClientAdmin/Jobs/Queued/Kafka/WorkflowStudio/CGuestCardSelfGuidedTourV1EventProcessor.php",
+      "Applications/Services/Application/ServiceHandlers/External/v1/r1/CLeasingCenterServiceHandler.class.php",
+      "Applications/Chat/Application/Chat/CDrillLeasingCenterChat.class.php"
+    ],
+    "parity_plain": "Core implements self-guided-tour workflow events and leasing-center chat/service handling",
+    "l2_reason": "Layer 2 confirmed exact implementation files listed in l2_evidence.",
+    "top_file": "Applications/ClientAdmin/Jobs/Queued/Kafka/WorkflowStudio/CGuestCardSelfGuidedTourV1Message.php"
+  },
+  {
+    "id": "14",
+    "parity": "Existing",
+    "verdict_reason": "90 matches across 22 files in 8 apps — likely already shipped",
+    "total_score": 90,
+    "files_with_hits": 22,
+    "apps_with_hits": 8,
+    "top_apps": [
+      {
+        "app": "ProspectPortal",
+        "score": 39,
+        "files": 7
+      },
+      {
+        "app": "Scripts",
+        "score": 17,
+        "files": 5
+      },
+      {
+        "app": "ResidentPortal",
+        "score": 11,
+        "files": 4
+      },
+      {
+        "app": "Entrata",
+        "score": 9,
+        "files": 1
+      },
+      {
+        "app": "MshIntegrations",
+        "score": 5,
+        "files": 1
+      }
+    ],
+    "top_files": [
+      {
+        "relativePath": "Application/CProspectPortalApp.class.php",
+        "app": "ProspectPortal",
+        "score": 10,
+        "matched_terms": [
+          "solution",
+          "keywords",
+          "repeated"
+        ]
+      },
+      {
+        "relativePath": "Api/app/Actions/Internal/OnlineApplicationWaitlist/V1/ApplicationWaitlistTagsAction.php",
+        "app": "Entrata",
+        "score": 9,
+        "matched_terms": [
+          "integration",
+          "experience"
+        ]
+      },
+      {
+        "relativePath": "Application/PropertySystem/PropertySitePlan/CPropertySitePlanModule.class.php",
+        "app": "ProspectPortal",
+        "score": 8,
+        "matched_terms": [
+          "siteplanxpos",
+          "siteplanypos"
+        ]
+      },
+      {
+        "relativePath": "Application/PropertySystem/CheckAvailability/CCheckAvailabilityModule.class.php",
+        "app": "ProspectPortal",
+        "score": 6,
+        "matched_terms": [
+          "integration",
+          "siteplanxpos",
+          "siteplanypos",
+          "loadsiteplandata"
+        ]
+      },
+      {
+        "relativePath": "Application/Admin/Scheduled/CPropertiesContractTerminationScript.class.php",
+        "app": "Scripts",
+        "score": 6,
+        "matched_terms": [
+          "integration",
+          "keywords"
+        ]
+      },
+      {
+        "relativePath": "Application/CMshIntegrationsApp.class.php",
+        "app": "MshIntegrations",
+        "score": 5,
+        "matched_terms": [
+          "integration",
+          "detected"
+        ]
+      }
+    ],
+    "grounding_terms": [
+      "jonah",
+      "digital",
+      "agency",
+      "multifamily",
+      "add-ons",
+      "detected",
+      "solution",
+      "themes",
+      "engrain",
+      "sightmap",
+      "experience",
+      "retail",
+      "scheduler",
+      "integration",
+      "repeated",
+      "keywords",
+      "cues"
+    ],
+    "alias_terms": [
+      "engrainsightmap",
+      "siteplanxpos",
+      "siteplanypos",
+      "loadsiteplandata"
+    ],
+    "l2_verified": true,
+    "l2_evidence": [
+      "Applications/ProspectPortal/Application/PropertySystem/PropertySitePlan/CPropertySitePlanModule.class.php",
+      "Applications/ProspectPortal/Application/PropertySystem/CheckAvailability/CCheckAvailabilityModule.class.php",
+      "Applications/Scripts/Application/Voip/Scheduled/CScheduledImportEngrainSightMapAssetIdDataScript.class.php"
+    ],
+    "parity_plain": "Core implements the Engrain/SightMap site-plan module, unit coordinates, and asset import",
+    "l2_reason": "Layer 2 confirmed exact implementation files listed in l2_evidence.",
+    "top_file": "Applications/ProspectPortal/Application/PropertySystem/PropertySitePlan/CPropertySitePlanModule.class.php"
+  }
+]
