@@ -1,0 +1,253 @@
+{
+  "run_id": "2026-08-17T23-22-41Z",
+  "created_at": "2026-08-17T23:22:41.087Z",
+  "new_signals_added": 517,
+  "retention_days": 7,
+  "signals_kept_after_prune": 517,
+  "signals_removed_retention": 0,
+  "source": "tracker-publish-drop.js",
+  "collect_health": {
+    "ok": false,
+    "regressions": [
+      {
+        "competitor_id": "jonah-digital",
+        "prior": 44,
+        "current": 0
+      }
+    ],
+    "lane_failures": [
+      {
+        "competitor_id": "jonah-digital",
+        "lane": "features_url",
+        "url": "https://jonahdigital.com/add-ons/",
+        "error": "fetch failed"
+      }
+    ],
+    "lane_results": [
+      {
+        "competitor_id": "eliseai",
+        "lane": "features_url",
+        "url": "https://eliseai.com/platform-overview",
+        "status": "ok",
+        "signal_count": 1,
+        "error": null
+      },
+      {
+        "competitor_id": "eliseai",
+        "lane": "careers_url",
+        "url": "https://eliseai.com/careers/",
+        "status": "ok",
+        "signal_count": 1,
+        "error": null
+      },
+      {
+        "competitor_id": "eliseai",
+        "lane": "case_studies",
+        "url": "https://eliseai.com/customer-stories",
+        "status": "ok",
+        "signal_count": 1,
+        "error": null
+      },
+      {
+        "competitor_id": "eliseai",
+        "lane": "articles_index",
+        "url": "https://eliseai.com/blog",
+        "status": "ok",
+        "signal_count": 1,
+        "error": null
+      },
+      {
+        "competitor_id": "eliseai",
+        "lane": "articles_index",
+        "url": "https://eliseai.com/content-library",
+        "status": "ok",
+        "signal_count": 1,
+        "error": null
+      },
+      {
+        "competitor_id": "eliseai",
+        "lane": "articles_index",
+        "url": "https://eliseai.com/newsroom",
+        "status": "ok",
+        "signal_count": 1,
+        "error": null
+      },
+      {
+        "competitor_id": "funnel-leasing",
+        "lane": "blog",
+        "url": "https://funnelleasing.com/category/llm/feed/",
+        "status": "ok",
+        "signal_count": 5,
+        "error": null
+      },
+      {
+        "competitor_id": "funnel-leasing",
+        "lane": "press",
+        "url": "https://funnelleasing.com/category/press/feed/",
+        "status": "ok",
+        "signal_count": 2,
+        "error": null
+      },
+      {
+        "competitor_id": "funnel-leasing",
+        "lane": "insights",
+        "url": "https://funnelleasing.com/category/insights/feed/",
+        "status": "ok",
+        "signal_count": 2,
+        "error": null
+      },
+      {
+        "competitor_id": "funnel-leasing",
+        "lane": "media",
+        "url": "https://funnelleasing.com/category/media/feed/",
+        "status": "empty_window",
+        "signal_count": 0,
+        "error": null
+      },
+      {
+        "competitor_id": "funnel-leasing",
+        "lane": "podcast",
+        "url": "https://funnelleasing.com/category/podcast/feed/",
+        "status": "ok",
+        "signal_count": 1,
+        "error": null
+      },
+      {
+        "competitor_id": "funnel-leasing",
+        "lane": "features_url",
+        "url": "https://funnelleasing.com/products/",
+        "status": "ok",
+        "signal_count": 1,
+        "error": null
+      },
+      {
+        "competitor_id": "funnel-leasing",
+        "lane": "careers_url",
+        "url": "https://funnelleasing.com/about/careers/",
+        "status": "ok",
+        "signal_count": 1,
+        "error": null
+      },
+      {
+        "competitor_id": "funnel-leasing",
+        "lane": "reviews_url",
+        "url": "https://www.featuredcustomers.com/vendor/funnel-leasing",
+        "status": "ok",
+        "signal_count": 1,
+        "error": null
+      },
+      {
+        "competitor_id": "funnel-leasing",
+        "lane": "case_studies",
+        "url": "https://funnelleasing.com/comprehensive-leasing-platform/",
+        "status": "ok",
+        "signal_count": 1,
+        "error": null
+      },
+      {
+        "competitor_id": "funnel-leasing",
+        "lane": "articles_index",
+        "url": "https://funnelleasing.com/resources/",
+        "status": "ok",
+        "signal_count": 1,
+        "error": null
+      },
+      {
+        "competitor_id": "funnel-leasing",
+        "lane": "articles_index",
+        "url": "https://funnelleasing.com/why-funnel/",
+        "status": "ok",
+        "signal_count": 1,
+        "error": null
+      },
+      {
+        "competitor_id": "anyone-home",
+        "lane": "blog",
+        "url": "https://www.anyonehome.com/blog/feed/",
+        "status": "empty_window",
+        "signal_count": 0,
+        "error": null
+      },
+      {
+        "competitor_id": "anyone-home",
+        "lane": "changelog",
+        "url": "https://anyonehome-updates.com/feed/",
+        "status": "ok",
+        "signal_count": 23,
+        "error": null
+      },
+      {
+        "competitor_id": "anyone-home",
+        "lane": "pricing_url",
+        "url": "https://www.anyonehome.com/",
+        "status": "ok",
+        "signal_count": 1,
+        "error": null
+      },
+      {
+        "competitor_id": "anyone-home",
+        "lane": "features_url",
+        "url": "https://www.anyonehome.com/solutions/",
+        "status": "ok",
+        "signal_count": 1,
+        "error": null
+      },
+      {
+        "competitor_id": "anyone-home",
+        "lane": "careers_url",
+        "url": "https://www.anyonehome.com/career-opportunities/",
+        "status": "ok",
+        "signal_count": 1,
+        "error": null
+      },
+      {
+        "competitor_id": "anyone-home",
+        "lane": "case_studies",
+        "url": "https://www.anyonehome.com/customer-stories/",
+        "status": "ok",
+        "signal_count": 1,
+        "error": null
+      },
+      {
+        "competitor_id": "anyone-home",
+        "lane": "case_studies",
+        "url": "https://www.anyonehome.com/why-anyone-home/",
+        "status": "ok",
+        "signal_count": 1,
+        "error": null
+      },
+      {
+        "competitor_id": "jonah-digital",
+        "lane": "features_url",
+        "url": "https://jonahdigital.com/add-ons/",
+        "status": "error",
+        "signal_count": 0,
+        "error": "fetch failed"
+      },
+      {
+        "competitor_id": "jonah-digital",
+        "lane": "case_studies",
+        "url": "https://jonahdigital.com/",
+        "status": "empty",
+        "signal_count": 0,
+        "error": null
+      },
+      {
+        "competitor_id": "jonah-digital",
+        "lane": "case_studies",
+        "url": "https://jonahdigital.com/why-jonah/",
+        "status": "empty",
+        "signal_count": 0,
+        "error": null
+      },
+      {
+        "competitor_id": "jonah-digital",
+        "lane": "articles_index",
+        "url": "https://jonahdigital.com/articles/",
+        "status": "empty",
+        "signal_count": 0,
+        "error": null
+      }
+    ]
+  }
+}
