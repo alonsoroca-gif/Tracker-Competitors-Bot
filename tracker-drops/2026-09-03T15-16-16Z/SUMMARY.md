@@ -1,0 +1,112 @@
+# Tracker drop
+
+- **Run id:** `2026-09-03T15-16-16Z`
+- **Created (UTC):** 2026-09-03T15:16:16.209Z
+- **New signals added this collect:** 462
+- **Retention window (days):** 7
+- **Signals kept after prune:** 462 (removed as too old: 0)
+
+## Next
+
+1. Pull this branch in Cursor.
+2. Read this file, then `signals.json` for raw rows.
+3. Interpret in Chat / Composer using only committed files (see TRACKER-FLOW-END-TO-END.md §4).
+
+## Intel snapshot (from last run)
+
+```json
+{
+  "retention_days": 7,
+  "pillar_signal_counts_this_run": {
+    "1": 440,
+    "2": 44,
+    "3": 11,
+    "4": 0,
+    "unclassified": 0
+  },
+  "pillars_touched_this_run": [
+    1,
+    2,
+    3
+  ],
+  "distinct_pillars_this_run": 3,
+  "coverage_report": {
+    "competitors": [
+      {
+        "id": "eliseai",
+        "name": "EliseAI",
+        "coverage": {
+          "pillar_1_configured": true,
+          "pillar_2_configured": true,
+          "pillar_3_configured": false,
+          "pillar_4_in_app": false,
+          "missing_hints": [
+            "Pillar 3 (third party): set media_url and/or reviews_url",
+            "Pillar 4 (structural): not collected by this app yet — add LinkedIn/Crunchbase/etc. manually or future integration"
+          ]
+        }
+      },
+      {
+        "id": "funnel-leasing",
+        "name": "Funnel",
+        "coverage": {
+          "pillar_1_configured": true,
+          "pillar_2_configured": true,
+          "pillar_3_configured": true,
+          "pillar_4_in_app": false,
+          "missing_hints": [
+            "Pillar 4 (structural): not collected by this app yet — add LinkedIn/Crunchbase/etc. manually or future integration"
+          ]
+        }
+      },
+      {
+        "id": "anyone-home",
+        "name": "Anyone Home",
+        "coverage": {
+          "pillar_1_configured": true,
+          "pillar_2_configured": true,
+          "pillar_3_configured": false,
+          "pillar_4_in_app": false,
+          "missing_hints": [
+            "Pillar 3 (third party): set media_url and/or reviews_url",
+            "Pillar 4 (structural): not collected by this app yet — add LinkedIn/Crunchbase/etc. manually or future integration"
+          ]
+        }
+      },
+      {
+        "id": "jonah-digital",
+        "name": "Jonah Digital Agency",
+        "coverage": {
+          "pillar_1_configured": true,
+          "pillar_2_configured": false,
+          "pillar_3_configured": false,
+          "pillar_4_in_app": false,
+          "missing_hints": [
+            "Pillar 2 (behavioral): set pricing_url and/or careers_url",
+            "Pillar 3 (third party): set media_url and/or reviews_url",
+            "Pillar 4 (structural): not collected by this app yet — add LinkedIn/Crunchbase/etc. manually or future integration"
+          ]
+        }
+      }
+    ],
+    "summary": {
+      "competitors_weak_p3": [
+        "eliseai",
+        "anyone-home",
+        "jonah-digital"
+      ],
+      "note": "Strong weekly insights need signals from multiple pillars. Configure P1+P2+P3 per competitor where possible."
+    }
+  }
+}
+```
+
+## Collect health warning
+
+Configured scrape lanes **failed** (not silent empty — fix these):
+
+- `funnel-leasing` / `blog`: Status code 404 — https://funnelleasing.com/category/llm/feed/
+- `funnel-leasing` / `press`: Status code 404 — https://funnelleasing.com/category/press/feed/
+- `funnel-leasing` / `insights`: Status code 404 — https://funnelleasing.com/category/insights/feed/
+- `funnel-leasing` / `media`: Status code 404 — https://funnelleasing.com/category/media/feed/
+- `funnel-leasing` / `podcast`: Status code 404 — https://funnelleasing.com/category/podcast/feed/
